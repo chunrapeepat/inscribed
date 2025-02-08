@@ -9,6 +9,8 @@ export const SlideList: React.FC = () => {
     setCurrentSlide,
     reorderSlides,
     deleteSlide,
+    updateSlide,
+    addSlide,
   } = useStore();
 
   // Add keyboard navigation handler
@@ -28,12 +30,55 @@ export const SlideList: React.FC = () => {
           // Move to previous slide if available, otherwise stay at current index
           setCurrentSlide(Math.min(currentSlideIndex, slides.length - 2));
         }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        e.preventDefault();
+        const slideToStore = slides[currentSlideIndex];
+        const slideData = {
+          type: "PRESENTATION_SLIDE",
+          data: slideToStore,
+        };
+        navigator.clipboard
+          .writeText(JSON.stringify(slideData))
+          .catch((error) =>
+            console.error("Failed to copy to clipboard:", error)
+          );
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        e.preventDefault();
+        navigator.clipboard
+          .readText()
+          .then((clipboardText) => {
+            try {
+              const parsedData = JSON.parse(clipboardText);
+              if (parsedData.type !== "PRESENTATION_SLIDE") {
+                throw new Error("Invalid slide data format");
+              }
+              // Add new slide and move it to the correct position
+              addSlide();
+              const insertIndex = currentSlideIndex + 1;
+              updateSlide(insertIndex, parsedData.data.elements);
+              setCurrentSlide(insertIndex);
+            } catch (error) {
+              console.error("Failed to paste slide:", error);
+            }
+          })
+          .catch((error) =>
+            console.error("Failed to read from clipboard:", error)
+          );
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentSlideIndex, slides.length, setCurrentSlide, deleteSlide]);
+  }, [
+    currentSlideIndex,
+    slides.length,
+    setCurrentSlide,
+    deleteSlide,
+    slides,
+    reorderSlides,
+    addSlide,
+    updateSlide,
+  ]);
 
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
