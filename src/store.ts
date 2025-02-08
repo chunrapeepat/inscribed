@@ -19,11 +19,44 @@ interface PresentationState {
   setDocumentSize: (size: DocumentSize) => void;
 }
 
+const createDefaultFrame = ({
+  width,
+  height,
+}: DocumentSize): ExcalidrawElement => {
+  return {
+    id: "frame",
+    type: "rectangle",
+    x: 0,
+    y: 0,
+    width,
+    height,
+    angle: 0,
+    strokeColor: "#228be6",
+    backgroundColor: "transparent",
+    fillStyle: "solid",
+    strokeWidth: 1,
+    strokeStyle: "dashed",
+    roughness: 0,
+    opacity: 100,
+    groupIds: [],
+    frameId: null,
+    roundness: null,
+    seed: 500058849,
+    version: 80,
+    versionNonce: 1663891759,
+    isDeleted: false,
+    boundElements: null,
+    updated: 1739002348526,
+    link: null,
+    locked: true,
+  };
+};
+
 export const useStore = create<PresentationState>((set) => ({
   slides: [
     {
       id: "1",
-      elements: [],
+      elements: [createDefaultFrame({ width: 1920, height: 1080 })],
       name: "Slide 1",
     },
   ],
@@ -38,7 +71,7 @@ export const useStore = create<PresentationState>((set) => ({
         ...state.slides,
         {
           id: Date.now().toString(),
-          elements: [],
+          elements: [createDefaultFrame(state.documentSize)],
           name: `Slide ${state.slides.length + 1}`,
         },
       ],
