@@ -19,8 +19,8 @@ interface PresentationState {
   setDocumentSize: (size: DocumentSize) => void;
 }
 
-const DEFAULT_FRAME_WIDTH = 512;
-const DEFAULT_FRAME_HEIGHT = 512;
+const DEFAULT_FRAME_WIDTH = 1080;
+const DEFAULT_FRAME_HEIGHT = 1080;
 
 const createDefaultFrame = (
   { width, height }: DocumentSize = {

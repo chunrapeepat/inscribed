@@ -12,6 +12,13 @@ export const Canvas: React.FC = () => {
   );
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
+  const scrollToContent = () => {
+    excalidrawAPIRef.current?.scrollToContent(undefined, {
+      fitToViewport: true,
+      viewportZoomFactor: 0.9,
+    });
+  };
+
   useEffect(() => {
     // Update the ref and excalidraw elements when currentSlideIndex changes
     previousElementsRef.current = currentSlide.elements;
@@ -25,9 +32,10 @@ export const Canvas: React.FC = () => {
   return (
     <div className="fixed left-72 top-20 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden">
       <Excalidraw
-        excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+        excalidrawAPI={(api) => {
+          excalidrawAPIRef.current = api;
+        }}
         initialData={{
-          elements: currentSlide.elements,
           appState: {
             viewBackgroundColor: "#ffffff",
             width: documentSize.width,
@@ -35,6 +43,14 @@ export const Canvas: React.FC = () => {
           },
         }}
         onChange={(elements) => {
+          if (elements.length === 0) {
+            excalidrawAPIRef.current?.updateScene({
+              elements: currentSlide.elements,
+            });
+            scrollToContent();
+            return;
+          }
+
           const newElements = elements as ExcalidrawElement[];
           if (
             JSON.stringify(previousElementsRef.current) !==
