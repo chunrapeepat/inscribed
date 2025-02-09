@@ -12,11 +12,16 @@ export const Canvas: React.FC = () => {
   );
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
-  const scrollToContent = () => {
-    excalidrawAPIRef.current?.scrollToContent(undefined, {
-      fitToViewport: true,
-      viewportZoomFactor: 0.9,
-    });
+  const scrollToFrame = () => {
+    const frame = currentSlide.elements.find(
+      (element) => element.id === "frame"
+    );
+    if (frame) {
+      excalidrawAPIRef.current?.scrollToContent(frame, {
+        fitToViewport: true,
+        viewportZoomFactor: 0.9,
+      });
+    }
   };
 
   useEffect(() => {
@@ -47,7 +52,7 @@ export const Canvas: React.FC = () => {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
             });
-            scrollToContent();
+            scrollToFrame();
             return;
           }
 
