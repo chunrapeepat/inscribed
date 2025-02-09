@@ -13,9 +13,16 @@ export const SlideList: React.FC = () => {
     addSlide,
   } = useStore();
 
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+
   // Add keyboard navigation handler
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if the sidebar contains the focused element
+      if (!sidebarRef.current?.contains(document.activeElement)) {
+        return;
+      }
+
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setCurrentSlide(Math.max(0, currentSlideIndex - 1));
@@ -112,7 +119,11 @@ export const SlideList: React.FC = () => {
   };
 
   return (
-    <div className="fixed left-4 top-20 bottom-4 w-64 bg-white rounded-lg shadow-lg overflow-y-auto">
+    <div
+      ref={sidebarRef}
+      className="fixed left-4 top-20 bottom-4 w-64 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
+      tabIndex={0}
+    >
       <div className="p-4">
         <h2 className="text-lg font-semibold mb-4">Slides</h2>
         <div className="space-y-4">
