@@ -38,7 +38,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
         // Scale and append the SVG
         svg.setAttribute("width", "100%");
         svg.setAttribute("height", "100%");
-        svg.style.backgroundColor = "white";
+        svg.style.backgroundColor = "#fafafa";
         previewRef.current.appendChild(svg);
       } catch (error) {
         console.error("Failed to generate preview:", error);
@@ -51,7 +51,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
   return (
     <div
       ref={previewRef}
-      className="w-full h-20 bg-white rounded border border-gray-200 overflow-hidden"
+      className="w-full h-28 bg-white rounded border border-gray-200 overflow-hidden"
     />
   );
 };
