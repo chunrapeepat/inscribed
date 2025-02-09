@@ -19,10 +19,15 @@ interface PresentationState {
   setDocumentSize: (size: DocumentSize) => void;
 }
 
-const createDefaultFrame = ({
-  width,
-  height,
-}: DocumentSize): ExcalidrawElement => {
+const DEFAULT_FRAME_WIDTH = 512;
+const DEFAULT_FRAME_HEIGHT = 512;
+
+const createDefaultFrame = (
+  { width, height }: DocumentSize = {
+    width: DEFAULT_FRAME_WIDTH,
+    height: DEFAULT_FRAME_HEIGHT,
+  }
+): ExcalidrawElement => {
   return {
     id: "frame",
     type: "rectangle",
@@ -56,14 +61,14 @@ export const useStore = create<PresentationState>((set) => ({
   slides: [
     {
       id: "1",
-      elements: [createDefaultFrame({ width: 1920, height: 1080 })],
+      elements: [createDefaultFrame()],
       name: "Slide 1",
     },
   ],
   currentSlideIndex: 0,
   documentSize: {
-    width: 1920,
-    height: 1080,
+    width: DEFAULT_FRAME_WIDTH,
+    height: DEFAULT_FRAME_HEIGHT,
   },
   addSlide: () =>
     set((state) => ({
