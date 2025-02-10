@@ -45,8 +45,33 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
     try {
       if (selectedOption === "import") {
-        // Handle file upload logic here
-        console.log("Uploading file");
+        const fileInput = document.getElementById(
+          "fileUpload"
+        ) as HTMLInputElement;
+        if (!fileInput.files?.length) return;
+
+        const file = fileInput.files[0];
+        const fileContent = await file.text();
+        const importedData = JSON.parse(fileContent);
+
+        // Reset the store with imported data
+        documentStore.resetStore({
+          backgroundColor: importedData.document.backgroundColor,
+          slides: importedData.document.slides,
+          files: importedData.document.files,
+          documentSize: importedData.document.documentSize,
+        });
+
+        // Reset fonts if present
+        if (importedData.fonts?.customFonts) {
+          Object.keys(importedData.fonts.customFonts).forEach((fontFamily) => {
+            if (!fontsStore.customFonts[fontFamily]) {
+              fontsStore.addFonts(importedData.fonts.customFonts[fontFamily]);
+            }
+          });
+        }
+
+        onClose();
       } else if (selectedOption === "export-data") {
         // prune unused files
         const usedFileIds = documentStore.slides
@@ -130,7 +155,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     {
       id: "import",
       title: "Import",
-      description: "Import slides from external sources",
+      description:
+        "Import .ins data (warning: this will overwrite your current data, please export your current data before importing)",
     },
     {
       id: "export-data",

@@ -23,6 +23,12 @@ interface PresentationState {
   setDocumentSize: (size: DocumentSize) => void;
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
+  resetStore: (data: {
+    backgroundColor: string;
+    slides: Slide[];
+    files: BinaryFiles;
+    documentSize: DocumentSize;
+  }) => void;
 }
 
 const DEFAULT_FRAME_WIDTH = 1080;
@@ -130,6 +136,14 @@ export const useStore = create<PresentationState>()(
       setDocumentSize: (size) => set({ documentSize: size }),
       setFiles: (files) => set({ files }),
       setBackgroundColor: (color) => set({ backgroundColor: color }),
+      resetStore: (data) =>
+        set({
+          backgroundColor: data.backgroundColor,
+          slides: data.slides,
+          files: data.files,
+          documentSize: data.documentSize,
+          currentSlideIndex: 0,
+        }),
     }),
     {
       name: "document-store",
