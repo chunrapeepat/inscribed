@@ -15,14 +15,16 @@ interface DocumentData {
     width: number;
     height: number;
   };
-  customFonts?: {
-    [fontFamily: string]: Array<{
-      fontFamily: string;
-      src: string;
-      fontStyle: string;
-      fontWeight: string | number;
-      unicodeRange?: string;
-    }>;
+  fonts: {
+    customFonts?: {
+      [fontFamily: string]: Array<{
+        fontFamily: string;
+        src: string;
+        fontStyle: string;
+        fontWeight: string | number;
+        unicodeRange?: string;
+      }>;
+    };
   };
 }
 
@@ -59,7 +61,7 @@ export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
         }
 
         const gistData = await response.json();
-        setData(gistData.document);
+        setData({ ...gistData.document, fonts: gistData.fonts });
         setLoading(false);
       } catch (error: unknown) {
         console.error("Failed to load template:", error);
@@ -73,31 +75,32 @@ export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
 
   // Register fonts when data is loaded
   React.useEffect(() => {
-    if (!data?.customFonts) {
+    if (!data?.fonts?.customFonts) {
       setFontsLoaded(true);
       return;
     }
 
     const loadFonts = async () => {
       try {
-        const fontLoadPromises = Object.entries(data.customFonts).map(
-          ([fontFamily, fontFaces]) =>
-            Promise.all(
-              fontFaces.map(async (fontFace) => {
-                const ff = new FontFace(fontFamily, fontFace.src, {
-                  style: fontFace.fontStyle,
-                  weight: fontFace.fontWeight.toString(),
-                  unicodeRange: fontFace.unicodeRange,
-                });
+        const fontLoadPromises = Object.entries(
+          data.fonts.customFonts || {}
+        ).map(([fontFamily, fontFaces]) =>
+          Promise.all(
+            fontFaces.map(async (fontFace) => {
+              const ff = new FontFace(fontFamily, fontFace.src, {
+                style: fontFace.fontStyle,
+                weight: fontFace.fontWeight.toString(),
+                unicodeRange: fontFace.unicodeRange,
+              });
 
-                await ff.load();
-                document.fonts.add(ff);
+              await ff.load();
+              document.fonts.add(ff);
 
-                // Register with Excalidraw
-                (FONT_FAMILY as { [k: string]: number })[fontFamily] =
-                  getExcalidrawFontId(fontFamily);
-              })
-            )
+              // Register with Excalidraw
+              (FONT_FAMILY as { [k: string]: number })[fontFamily] =
+                getExcalidrawFontId(fontFamily);
+            })
+          )
         );
 
         await Promise.all(fontLoadPromises);
@@ -110,7 +113,7 @@ export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
     };
 
     loadFonts();
-  }, [data?.customFonts]);
+  }, [data]);
 
   const handleNextSlide = () => {
     if (data && currentSlideIndex < data.slides.length - 1) {

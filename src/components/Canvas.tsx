@@ -209,7 +209,7 @@ export const Canvas: React.FC = () => {
             previousFilesRef.current = files;
 
             const latestFileId = Object.keys(files).sort((a, b) => {
-              return files[b].created - files[a].created;
+              return (files[b]?.created ?? 0) - (files[a]?.created ?? 0);
             })[0];
 
             elements.forEach((element) => {
