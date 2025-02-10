@@ -166,6 +166,7 @@ export const Canvas: React.FC = () => {
             errorMessage: null,
             gridSize: null,
           },
+          libraryItems: libraryItems,
         }}
         gridModeEnabled={false}
         onLibraryChange={(items) => {
