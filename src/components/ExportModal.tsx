@@ -36,7 +36,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     )
       return;
     if (
-      (selectedOption === "template" || selectedOption === "slider") &&
+      (selectedOption === "embed-slides" || selectedOption === "slider") &&
       !gistId.trim()
     )
       return;
@@ -138,7 +138,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setSelectedOption(null);
         setExportFileName("");
         setFrameDelay("100");
-      } else if (selectedOption === "template" || selectedOption === "slider") {
+      } else if (
+        selectedOption === "embed-slides" ||
+        selectedOption === "slider"
+      ) {
         // Handle template/slider export with gistId
         console.log("Exporting with Gist ID:", gistId);
       }
@@ -169,9 +172,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       description: "Create an animated GIF of your slides",
     },
     {
-      id: "template",
-      title: "Export as Template",
-      description: "Save your slides as a reusable template",
+      id: "embed-slides",
+      title: "Embed Slides",
+      description: "Create an iframe embed of your slides",
     },
     {
       id: "slider",
@@ -305,13 +308,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             </div>
           )}
 
-          {(selectedOption === "template" || selectedOption === "slider") && (
+          {(selectedOption === "embed-slides" ||
+            selectedOption === "slider") && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <label
                 htmlFor="gistId"
                 className="block text-sm font-medium text-gray-700"
               >
-                Gist ID
+                Gist URL
               </label>
               <input
                 type="text"
@@ -319,7 +323,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 value={gistId}
                 onChange={(e) => setGistId(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Enter Gist ID"
+                placeholder="Enter GitHub Gist URL"
                 required
               />
             </div>
@@ -335,7 +339,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 (!exportFileName.trim() ||
                   !frameDelay ||
                   parseInt(frameDelay) < 1)) ||
-              ((selectedOption === "template" || selectedOption === "slider") &&
+              ((selectedOption === "embed-slides" ||
+                selectedOption === "slider") &&
                 !gistId.trim())
             }
             className={`w-full py-2 px-4 rounded-lg transition-colors ${
@@ -348,7 +353,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   parseInt(frameDelay) < 1)
               ) &&
               !(
-                (selectedOption === "template" ||
+                (selectedOption === "embed-slides" ||
                   selectedOption === "slider") &&
                 !gistId.trim()
               )

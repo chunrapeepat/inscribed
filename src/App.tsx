@@ -6,11 +6,11 @@ const App: React.FC = () => {
   // Parse URL parameters
   const params = new URLSearchParams(window.location.search);
   const isEmbed = params.get("type") === "template";
-  const gistId = params.get("gist_id");
+  const gistUrl = params.get("gist_url");
 
   // Render embed view or main app
-  if (isEmbed && gistId) {
-    return <EmbedPage gistId={gistId} />;
+  if (isEmbed && gistUrl) {
+    return <EmbedPage gistUrl={gistUrl} />;
   }
 
   return <MainApp />;

@@ -10,6 +10,7 @@ import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
 import { getExcalidrawFontId } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
+import { AppState } from "@excalidraw/excalidraw/types/appState";
 
 interface CanvasProps {
   readOnly?: boolean;
@@ -80,7 +81,8 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
   };
 
   useEffect(() => {
-    // handle font selection
+    if (readOnly) return;
+
     const handleFontSelected = (e: Event) => {
       const customEvent = e as CustomEvent;
       const { fontFamily } = customEvent.detail;
@@ -104,7 +106,7 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
     return () => {
       window.removeEventListener("fontSelected", handleFontSelected);
     };
-  }, []);
+  }, [readOnly]);
 
   useEffect(() => {
     // handle document size change
@@ -164,19 +166,23 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
           excalidrawAPIRef.current = api;
         }}
         initialData={{
+          elements: currentSlide.elements,
+          files,
           appState: {
             viewBackgroundColor: backgroundColor,
             width: documentSize.width,
             height: documentSize.height,
-            readOnly,
-            showHelpDialog: false,
-            gridSize: null,
+            isLoading: false,
+            errorMessage: null,
+            viewModeEnabled: readOnly,
             zenModeEnabled: readOnly,
-            hideInterface: readOnly,
-          },
-          libraryItems: libraryItems,
-          files,
+            gridSize: null,
+            showHelpDialog: false,
+          } as Partial<AppState>,
         }}
+        viewModeEnabled={readOnly}
+        zenModeEnabled={readOnly}
+        gridModeEnabled={false}
         onLibraryChange={(items) => {
           if (!readOnly) {
             setItems(items);
