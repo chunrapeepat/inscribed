@@ -114,7 +114,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[200px] overflow-y-auto">
             {filteredFonts.map(([fontFamily]) => (
               <div
                 key={fontFamily}
