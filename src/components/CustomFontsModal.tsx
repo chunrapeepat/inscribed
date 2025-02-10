@@ -19,6 +19,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
 }) => {
   const { customFonts, addFonts, removeFont } = useFontsStore();
   const [embedCode, setEmbedCode] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
     fontFaces.forEach((fontFace) => {
@@ -85,11 +86,15 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const filteredFonts = Object.entries(customFonts).filter(([fontFamily]) =>
+    fontFamily.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">Manage Fonts</h2>
+      <div className="bg-white rounded-lg w-full max-w-md border-b">
+        <div className="flex items-center justify-between p-4">
+          <h2 className="text-xl font-semibold">Custom Fonts</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -97,6 +102,43 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
             <X size={20} />
           </button>
         </div>
+
+        <div className="p-4 border-b">
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search fonts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-2">
+            {filteredFonts.map(([fontFamily]) => (
+              <div
+                key={fontFamily}
+                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+              >
+                <span style={{ fontFamily: fontFamily }}>{fontFamily}</span>
+                <button
+                  onClick={() => removeFont(fontFamily)}
+                  className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            {filteredFonts.length === 0 && (
+              <p className="text-gray-500 text-sm">
+                {Object.keys(customFonts).length === 0
+                  ? "No fonts added yet"
+                  : "No matching fonts found"}
+              </p>
+            )}
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
             <label
@@ -121,29 +163,6 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
             Add Font
           </button>
         </form>
-
-        <div className="p-4 border-t">
-          <h3 className="text-lg font-medium mb-3">All Fonts</h3>
-          <div className="space-y-2">
-            {Object.entries(customFonts).map(([fontFamily]) => (
-              <div
-                key={fontFamily}
-                className="flex items-center justify-between p-2 bg-gray-50 rounded"
-              >
-                <span style={{ fontFamily: fontFamily }}>{fontFamily}</span>
-                <button
-                  onClick={() => removeFont(fontFamily)}
-                  className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-            {Object.keys(customFonts).length === 0 && (
-              <p className="text-gray-500 text-sm">No fonts added yet</p>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
