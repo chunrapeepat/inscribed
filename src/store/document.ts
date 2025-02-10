@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { Slide } from "../types";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import {
+  ExcalidrawElement,
+  FileId,
+} from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 
 interface DocumentSize {
@@ -60,20 +63,46 @@ const createDefaultFrame = (
   };
 };
 
-export const useStore = create<PresentationState>((set) => ({
-  slides: [
+const loadInitialData = () => {
+  const slides = [
     {
       id: "1",
       elements: [createDefaultFrame()],
       name: "Slide 1",
     },
-  ],
+  ];
+  const files: BinaryFiles = {};
+
+  // prune unused files
+  const usedFileIds = slides
+    .map((slide) => slide.elements)
+    .flat()
+    .filter((e) => e.type === "image")
+    .map((e) => e.fileId);
+
+  const unusedFileIds = Object.keys(files).filter(
+    (fileId) => !usedFileIds.includes(fileId as FileId)
+  );
+  unusedFileIds.forEach((fileId) => {
+    delete files[fileId as FileId];
+  });
+
+  return {
+    slides,
+    files,
+  };
+};
+
+const { slides, files } = loadInitialData();
+
+export const useStore = create<PresentationState>((set) => ({
+  slides,
+  files,
   currentSlideIndex: 0,
   documentSize: {
     width: DEFAULT_FRAME_WIDTH,
     height: DEFAULT_FRAME_HEIGHT,
   },
-  files: {},
   addSlide: () =>
     set((state) => ({
       slides: [
