@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { useStore } from '../store';
+import React, { useState } from "react";
+import { X } from "lucide-react";
+import { useStore } from "../store";
 
 interface DocumentSizeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({ isOpen, onClose }) => {
+export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { documentSize, setDocumentSize } = useStore();
   const [width, setWidth] = useState(documentSize.width.toString());
   const [height, setHeight] = useState(documentSize.height.toString());
@@ -17,8 +20,8 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({ isOpen, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setDocumentSize({
-      width: Math.max(100, Math.min(4000, parseInt(width) || 1920)),
-      height: Math.max(100, Math.min(4000, parseInt(height) || 1080))
+      width: Math.max(100, Math.min(4000, parseInt(width) || 100)),
+      height: Math.max(100, Math.min(4000, parseInt(height) || 100)),
     });
     onClose();
   };
@@ -38,7 +41,10 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({ isOpen, on
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="space-y-4">
             <div>
-              <label htmlFor="width" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="width"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Width (px)
               </label>
               <input
@@ -53,7 +59,10 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({ isOpen, on
               />
             </div>
             <div>
-              <label htmlFor="height" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="height"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Height (px)
               </label>
               <input

@@ -3,6 +3,7 @@ import { Excalidraw } from "@excalidraw/excalidraw";
 import { useStore } from "../store";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import { Slide, Writeable } from "../types";
 
 export const Canvas: React.FC = () => {
   const { slides, currentSlideIndex, updateSlide, documentSize } = useStore();
@@ -12,17 +13,41 @@ export const Canvas: React.FC = () => {
   );
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
-  const scrollToFrame = () => {
-    const frame = currentSlide.elements.find(
-      (element) => element.id === "frame"
-    );
-    if (frame) {
-      excalidrawAPIRef.current?.scrollToContent(frame, {
-        fitToViewport: true,
-        viewportZoomFactor: 0.9,
-      });
-    }
+  const scrollToFrame = (frame: ExcalidrawElement) => {
+    excalidrawAPIRef.current?.scrollToContent(frame, {
+      fitToViewport: true,
+      viewportZoomFactor: 0.9,
+    });
   };
+
+  useEffect(() => {
+    // handle document size change
+    if (!excalidrawAPIRef.current) return;
+    const _slides = JSON.parse(JSON.stringify(slides));
+    _slides.forEach((_slide: Slide, index: number) => {
+      const frame: Writeable<ExcalidrawElement> | undefined =
+        _slide.elements.find(
+          (element: ExcalidrawElement) => element.id === "frame"
+        );
+      if (frame) {
+        frame.width = documentSize.width;
+        frame.height = documentSize.height;
+      }
+
+      updateSlide(index, _slide.elements);
+
+      if (index === currentSlideIndex) {
+        excalidrawAPIRef.current?.updateScene({
+          elements: _slide.elements,
+        });
+        scrollToFrame(
+          _slide.elements.find(
+            (element) => element.id === "frame"
+          ) as ExcalidrawElement
+        );
+      }
+    });
+  }, [slides, updateSlide, documentSize, currentSlideIndex]);
 
   useEffect(() => {
     // Update the ref and excalidraw elements when currentSlideIndex changes
@@ -52,7 +77,11 @@ export const Canvas: React.FC = () => {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
             });
-            scrollToFrame();
+            scrollToFrame(
+              currentSlide.elements.find(
+                (element) => element.id === "frame"
+              ) as ExcalidrawElement
+            );
             return;
           }
 
