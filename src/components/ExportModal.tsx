@@ -1,6 +1,8 @@
 import React from "react";
 import { X } from "lucide-react";
 import { exportToGif } from "../utils/export-gif";
+import { useStore } from "../store/document";
+import { useFontsStore } from "../store/custom-fonts";
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -11,6 +13,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const documentStore = useStore();
+  const fontsStore = useFontsStore();
   const [selectedOption, setSelectedOption] = React.useState<string | null>(
     null
   );
@@ -43,8 +47,46 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         // Handle file upload logic here
         console.log("Uploading file");
       } else if (selectedOption === "export-data") {
-        // Handle export data with exportFileName
-        console.log("Exporting data with filename:", exportFileName);
+        // Get data from both stores
+        const documentData = {
+          backgroundColor: documentStore.backgroundColor,
+          slides: documentStore.slides,
+          files: documentStore.files,
+          documentSize: documentStore.documentSize,
+        };
+        const fontsData = {
+          customFonts: fontsStore.customFonts,
+        };
+
+        // Combine the data
+        const exportData = {
+          name: exportFileName,
+          document: documentData,
+          fonts: fontsData,
+        };
+
+        const jsonData = JSON.stringify(exportData, null, 2);
+
+        // Create blob and download link
+        const blob = new Blob([jsonData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        // Ensure filename has .ins extension
+        const filename = exportFileName.endsWith(".ins")
+          ? exportFileName
+          : `${exportFileName}.ins`;
+
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setExportFileName("");
+        setSelectedOption(null);
       } else if (selectedOption === "gif") {
         setExportProgress(0);
         await exportToGif({
@@ -78,7 +120,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     {
       id: "export-data",
       title: "Export Data",
-      description: "Export your presentation data in various formats",
+      description: "Export your data for later editing",
     },
     {
       id: "gif",
