@@ -5,6 +5,7 @@ import {
   FileId,
 } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface DocumentSize {
   width: number;
@@ -63,99 +64,82 @@ const createDefaultFrame = (
   };
 };
 
-const loadInitialData = () => {
-  const slides = [
-    {
-      id: "1",
-      elements: [createDefaultFrame()],
-      name: "Slide 1",
-    },
-  ];
-  const files: BinaryFiles = {};
-
-  // prune unused files
-  const usedFileIds = slides
-    .map((slide) => slide.elements)
-    .flat()
-    .filter((e) => e.type === "image")
-    .map((e) => e.fileId);
-
-  const unusedFileIds = Object.keys(files).filter(
-    (fileId) => !usedFileIds.includes(fileId as FileId)
-  );
-  unusedFileIds.forEach((fileId) => {
-    delete files[fileId as FileId];
-  });
-
-  return {
-    slides,
-    files,
-  };
-};
-
-const { slides, files } = loadInitialData();
-
-export const useStore = create<PresentationState>((set) => ({
-  slides,
-  files,
-  currentSlideIndex: 0,
-  documentSize: {
-    width: DEFAULT_FRAME_WIDTH,
-    height: DEFAULT_FRAME_HEIGHT,
-  },
-  addSlide: () =>
-    set((state) => ({
+export const useStore = create<PresentationState>()(
+  persist(
+    (set) => ({
       slides: [
-        ...state.slides,
         {
-          id: Date.now().toString(),
-          elements: [createDefaultFrame(state.documentSize)],
-          name: `Slide ${state.slides.length + 1}`,
+          id: "1",
+          elements: [createDefaultFrame()],
+          name: "Slide 1",
         },
       ],
-      currentSlideIndex: state.slides.length,
-    })),
-  updateSlide: (index, elements) =>
-    set((state) => {
-      const currentElements = state.slides[index]?.elements;
-      if (JSON.stringify(currentElements) === JSON.stringify(elements)) {
-        return state;
-      }
+      files: {},
+      currentSlideIndex: 0,
+      documentSize: {
+        width: DEFAULT_FRAME_WIDTH,
+        height: DEFAULT_FRAME_HEIGHT,
+      },
+      addSlide: () =>
+        set((state) => ({
+          slides: [
+            ...state.slides,
+            {
+              id: Date.now().toString(),
+              elements: [createDefaultFrame(state.documentSize)],
+              name: `Slide ${state.slides.length + 1}`,
+            },
+          ],
+          currentSlideIndex: state.slides.length,
+        })),
+      updateSlide: (index, elements) =>
+        set((state) => {
+          const currentElements = state.slides[index]?.elements;
+          if (JSON.stringify(currentElements) === JSON.stringify(elements)) {
+            return state;
+          }
 
-      return {
-        slides: state.slides.map((slide, i) =>
-          i === index ? { ...slide, elements } : slide
-        ),
-      };
-    }),
-  setCurrentSlide: (index) => set({ currentSlideIndex: index }),
-  deleteSlide: (index) =>
-    set((state) => {
-      if (state.slides.length <= 1) {
-        return state;
-      }
-      return {
-        slides: state.slides.filter((_, i) => i !== index),
-        currentSlideIndex: Math.max(
-          0,
-          state.currentSlideIndex - (index <= state.currentSlideIndex ? 1 : 0)
-        ),
-      };
-    }),
-  reorderSlides: (fromIndex, toIndex) =>
-    set((state) => {
-      const newSlides = [...state.slides];
-      const [movedSlide] = newSlides.splice(fromIndex, 1);
-      newSlides.splice(toIndex, 0, movedSlide);
+          return {
+            slides: state.slides.map((slide, i) =>
+              i === index ? { ...slide, elements } : slide
+            ),
+          };
+        }),
+      setCurrentSlide: (index) => set({ currentSlideIndex: index }),
+      deleteSlide: (index) =>
+        set((state) => {
+          if (state.slides.length <= 1) {
+            return state;
+          }
+          return {
+            slides: state.slides.filter((_, i) => i !== index),
+            currentSlideIndex: Math.max(
+              0,
+              state.currentSlideIndex -
+                (index <= state.currentSlideIndex ? 1 : 0)
+            ),
+          };
+        }),
+      reorderSlides: (fromIndex, toIndex) =>
+        set((state) => {
+          const newSlides = [...state.slides];
+          const [movedSlide] = newSlides.splice(fromIndex, 1);
+          newSlides.splice(toIndex, 0, movedSlide);
 
-      return {
-        slides: newSlides,
-        currentSlideIndex:
-          state.currentSlideIndex === fromIndex
-            ? toIndex
-            : state.currentSlideIndex,
-      };
+          return {
+            slides: newSlides,
+            currentSlideIndex:
+              state.currentSlideIndex === fromIndex
+                ? toIndex
+                : state.currentSlideIndex,
+          };
+        }),
+      setDocumentSize: (size) => set({ documentSize: size }),
+      setFiles: (files) => set({ files }),
     }),
-  setDocumentSize: (size) => set({ documentSize: size }),
-  setFiles: (files) => set({ files }),
-}));
+    {
+      name: "document-store",
+      storage: createJSONStorage(() => localStorage, {}),
+    }
+  )
+);
