@@ -1,9 +1,6 @@
 import { create } from "zustand";
 import { Slide } from "../types";
-import {
-  ExcalidrawElement,
-  FileId,
-} from "@excalidraw/excalidraw/types/element/types";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -71,7 +68,6 @@ export const useStore = create<PresentationState>()(
         {
           id: "1",
           elements: [createDefaultFrame()],
-          name: "Slide 1",
         },
       ],
       files: {},
@@ -87,7 +83,6 @@ export const useStore = create<PresentationState>()(
             {
               id: Date.now().toString(),
               elements: [createDefaultFrame(state.documentSize)],
-              name: `Slide ${state.slides.length + 1}`,
             },
           ],
           currentSlideIndex: state.slides.length,
