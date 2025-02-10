@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Slide } from "../types";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 
 interface DocumentSize {
   width: number;
@@ -8,6 +9,7 @@ interface DocumentSize {
 }
 
 interface PresentationState {
+  files: BinaryFiles;
   slides: Slide[];
   currentSlideIndex: number;
   documentSize: DocumentSize;
@@ -17,6 +19,7 @@ interface PresentationState {
   deleteSlide: (index: number) => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
   setDocumentSize: (size: DocumentSize) => void;
+  setFiles: (files: BinaryFiles) => void;
 }
 
 const DEFAULT_FRAME_WIDTH = 1080;
@@ -70,6 +73,7 @@ export const useStore = create<PresentationState>((set) => ({
     width: DEFAULT_FRAME_WIDTH,
     height: DEFAULT_FRAME_HEIGHT,
   },
+  files: {},
   addSlide: () =>
     set((state) => ({
       slides: [
@@ -124,4 +128,5 @@ export const useStore = create<PresentationState>((set) => ({
       };
     }),
   setDocumentSize: (size) => set({ documentSize: size }),
+  setFiles: (files) => set({ files }),
 }));

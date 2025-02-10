@@ -2,15 +2,26 @@ import React, { useRef, useEffect } from "react";
 import { Excalidraw, FONT_FAMILY } from "@excalidraw/excalidraw";
 import { useStore } from "../store/document";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import {
+  BinaryFiles,
+  ExcalidrawImperativeAPI,
+} from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
 
 export const Canvas: React.FC = () => {
-  const { slides, currentSlideIndex, updateSlide, documentSize } = useStore();
+  const {
+    slides,
+    currentSlideIndex,
+    updateSlide,
+    documentSize,
+    files,
+    setFiles,
+  } = useStore();
   const currentSlide = slides[currentSlideIndex];
   const previousElementsRef = useRef<ExcalidrawElement[]>(
     currentSlide.elements
   );
+  const previousFilesRef = useRef<BinaryFiles | null>(null);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
@@ -68,8 +79,9 @@ export const Canvas: React.FC = () => {
             width: documentSize.width,
             height: documentSize.height,
           },
+          files,
         }}
-        onChange={(elements) => {
+        onChange={(elements, _, files) => {
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
@@ -82,6 +94,7 @@ export const Canvas: React.FC = () => {
             return;
           }
 
+          // handle element change
           const newElements = elements as ExcalidrawElement[];
           if (
             JSON.stringify(previousElementsRef.current) !==
@@ -89,6 +102,14 @@ export const Canvas: React.FC = () => {
           ) {
             previousElementsRef.current = newElements;
             updateSlide(currentSlideIndex, newElements);
+          }
+
+          // handle file change
+          if (
+            JSON.stringify(previousFilesRef.current) !== JSON.stringify(files)
+          ) {
+            setFiles(files);
+            previousFilesRef.current = files;
           }
         }}
       />
