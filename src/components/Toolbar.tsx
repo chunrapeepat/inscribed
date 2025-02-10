@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Presentation as Present, Share2, Maximize2 } from 'lucide-react';
-import { useStore } from '../store';
-import { ExportModal } from './ExportModal';
-import { DocumentSizeModal } from './DocumentSizeModal';
+import React, { useState } from "react";
+import {
+  Plus,
+  Trash2,
+  Presentation as Present,
+  Share2,
+  Maximize2,
+} from "lucide-react";
+import { useStore } from "../store/document";
+import { ExportModal } from "./ExportModal";
+import { DocumentSizeModal } from "./DocumentSizeModal";
+import { FontsManagerModal } from "./FontsManagerModal";
 
 export const Toolbar: React.FC = () => {
   const { addSlide, deleteSlide, currentSlideIndex } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
+  const [isFontsManagerModalOpen, setIsFontsManagerModalOpen] = useState(false);
 
   return (
     <>
@@ -26,9 +34,7 @@ export const Toolbar: React.FC = () => {
           <Trash2 size={20} />
           <span>Delete Slide</span>
         </button>
-        <button
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 text-green-600"
-        >
+        <button className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 text-green-600">
           <Present size={20} />
           <span>Present</span>
         </button>
@@ -46,15 +52,25 @@ export const Toolbar: React.FC = () => {
           <Maximize2 size={20} />
           <span>Document Size</span>
         </button>
+        <button
+          onClick={() => setIsFontsManagerModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100"
+        >
+          <span>Fonts</span>
+        </button>
       </div>
 
-      <ExportModal 
+      <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
       />
       <DocumentSizeModal
         isOpen={isDocumentSizeModalOpen}
         onClose={() => setIsDocumentSizeModalOpen(false)}
+      />
+      <FontsManagerModal
+        isOpen={isFontsManagerModalOpen}
+        onClose={() => setIsFontsManagerModalOpen(false)}
       />
     </>
   );

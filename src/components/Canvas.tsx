@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Excalidraw, FONT_FAMILY } from "@excalidraw/excalidraw";
-import { useStore } from "../store";
+import { useStore } from "../store/document";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";

@@ -1,5 +1,5 @@
 import React from "react";
-import { useStore } from "../store";
+import { useStore } from "../store/document";
 import { SlidePreview } from "./SlidePreview";
 
 export const SlideList: React.FC = () => {

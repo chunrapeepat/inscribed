@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Slide } from "./types";
+import { Slide } from "../types";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 
 interface DocumentSize {

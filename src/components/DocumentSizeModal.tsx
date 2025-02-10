@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useStore } from "../store";
+import { useStore } from "../store/document";
 
 interface DocumentSizeModalProps {
   isOpen: boolean;
