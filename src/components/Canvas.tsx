@@ -11,7 +11,11 @@ import { useModalStore } from "../store/modal";
 import { getExcalidrawFontId } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
 
-export const Canvas: React.FC = () => {
+interface CanvasProps {
+  readOnly?: boolean;
+}
+
+export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
   const {
     slides,
     currentSlideIndex,
@@ -150,8 +154,10 @@ export const Canvas: React.FC = () => {
 
   return (
     <div
-      style={{ left: "17rem" }}
-      className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden"
+      style={{ left: readOnly ? "0" : "17rem" }}
+      className={`fixed ${
+        readOnly ? "inset-0" : "top-24 right-4 bottom-4"
+      } bg-white rounded-lg shadow-lg overflow-hidden`}
     >
       <Excalidraw
         excalidrawAPI={(api) => {
@@ -162,14 +168,23 @@ export const Canvas: React.FC = () => {
             viewBackgroundColor: backgroundColor,
             width: documentSize.width,
             height: documentSize.height,
+            readOnly,
+            showHelpDialog: false,
+            gridSize: null,
+            zenModeEnabled: readOnly,
+            hideInterface: readOnly,
           },
           libraryItems: libraryItems,
           files,
         }}
         onLibraryChange={(items) => {
-          setItems(items);
+          if (!readOnly) {
+            setItems(items);
+          }
         }}
         onChange={(elements, appState, files) => {
+          if (readOnly) return;
+
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
