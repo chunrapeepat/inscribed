@@ -13,6 +13,7 @@ import {
 import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
 import { getExcalidrawFontId } from "../utils/fonts";
+import { useLibraryStore } from "../store/library";
 
 export const Canvas: React.FC = () => {
   const {
@@ -25,6 +26,7 @@ export const Canvas: React.FC = () => {
     backgroundColor,
   } = useStore();
   const { openModal } = useModalStore();
+  const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];
   const previousElementsRef = useRef<ExcalidrawElement[]>(
     currentSlide.elements
@@ -164,7 +166,11 @@ export const Canvas: React.FC = () => {
             width: documentSize.width,
             height: documentSize.height,
           },
+          libraryItems: libraryItems,
           files,
+        }}
+        onLibraryChange={(items) => {
+          setItems(items);
         }}
         onChange={(elements, appState, files) => {
           if (elements.length === 0) {
