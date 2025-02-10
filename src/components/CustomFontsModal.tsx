@@ -21,6 +21,25 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
   const [embedCode, setEmbedCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Add ref for the search input
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Add useEffect to focus the input and handle Escape key
+  useEffect(() => {
+    if (isOpen) {
+      searchInputRef.current?.focus();
+
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+        }
+      };
+
+      window.addEventListener("keydown", handleEscape);
+      return () => window.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
     fontFaces.forEach((fontFace) => {
       document.fonts.add(
@@ -114,6 +133,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
         <div className="p-4 border-b">
           <div className="mb-3">
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search fonts..."
               value={searchQuery}
