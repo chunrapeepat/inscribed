@@ -5,7 +5,7 @@ import { MainApp } from "./pages/MainApp";
 const App: React.FC = () => {
   // Parse URL parameters
   const params = new URLSearchParams(window.location.search);
-  const isEmbed = params.get("type") === "template";
+  const isEmbed = params.get("type") === "slide";
   const gistUrl = params.get("gist_url");
 
   // Render embed view or main app
