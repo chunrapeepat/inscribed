@@ -7,6 +7,7 @@ import {
   ExcalidrawImperativeAPI,
 } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
+import { useModalStore } from "../store/modal";
 
 export const Canvas: React.FC = () => {
   const {
@@ -18,11 +19,13 @@ export const Canvas: React.FC = () => {
     setFiles,
     backgroundColor,
   } = useStore();
+  const { openModal } = useModalStore();
   const currentSlide = slides[currentSlideIndex];
   const previousElementsRef = useRef<ExcalidrawElement[]>(
     currentSlide.elements
   );
   const previousFilesRef = useRef<BinaryFiles | null>(null);
+  const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
@@ -30,6 +33,29 @@ export const Canvas: React.FC = () => {
       fitToViewport: true,
       viewportZoomFactor: 0.9,
     });
+  };
+
+  const handleTextSelectionChange = (ids: string[]) => {
+    // add custom fonts to the popup
+    const fontFamilyPopup = document.querySelector(
+      "div.Stack.Stack_vertical.App-menu_top__left fieldset:nth-child(3) > div"
+    );
+    if (!fontFamilyPopup) return;
+
+    const codeLabel = document.createElement("label");
+    codeLabel.title = "Custom Fonts";
+    codeLabel.innerHTML = `
+        <input type="radio" name="custom-fonts">
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" class="" fill="none" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="1.5"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><line x1="4" y1="20" x2="7" y2="20"></line><line x1="14" y1="20" x2="21" y2="20"></line><line x1="6.9" y1="15" x2="13.8" y2="15"></line><line x1="10.2" y1="6.3" x2="16" y2="20"></line><polyline points="5 20 11 4 13 4 20 20"></polyline></g></svg>
+      `;
+
+    codeLabel.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openModal("fonts-manager");
+    });
+
+    fontFamilyPopup.appendChild(codeLabel);
   };
 
   useEffect(() => {
@@ -95,7 +121,7 @@ export const Canvas: React.FC = () => {
           },
           files,
         }}
-        onChange={(elements, _, files) => {
+        onChange={(elements, appState, files) => {
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
@@ -124,6 +150,15 @@ export const Canvas: React.FC = () => {
           ) {
             setFiles(files);
             previousFilesRef.current = files;
+          }
+
+          // handle selection change
+          if (
+            JSON.stringify(appState.selectedElementIds) !==
+            JSON.stringify(previousSelectionIdsRef.current)
+          ) {
+            handleTextSelectionChange(Object.keys(appState.selectedElementIds));
+            previousSelectionIdsRef.current = appState.selectedElementIds;
           }
         }}
       />

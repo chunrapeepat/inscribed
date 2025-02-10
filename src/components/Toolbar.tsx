@@ -9,13 +9,14 @@ import {
 import { useStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
 import { DocumentSettingModal } from "./DocumentSettingModal";
-// import { FontsManagerModal } from "./FontsManagerModal";
+import { FontsManagerModal } from "./FontsManagerModal";
+import { useModalStore } from "../store/modal";
 
 export const Toolbar: React.FC = () => {
   const { addSlide, deleteSlide, currentSlideIndex } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
-  const [isFontsManagerModalOpen, setIsFontsManagerModalOpen] = useState(false);
+  const { openFontsManagerModal, closeModal } = useModalStore();
 
   return (
     <>
@@ -70,10 +71,10 @@ export const Toolbar: React.FC = () => {
         isOpen={isDocumentSizeModalOpen}
         onClose={() => setIsDocumentSizeModalOpen(false)}
       />
-      {/* <FontsManagerModal
-        isOpen={isFontsManagerModalOpen}
-        onClose={() => setIsFontsManagerModalOpen(false)}
-      /> */}
+      <FontsManagerModal
+        isOpen={openFontsManagerModal}
+        onClose={() => closeModal("fonts-manager")}
+      />
     </>
   );
 };
