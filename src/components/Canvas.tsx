@@ -1,7 +1,11 @@
 import React, { useRef, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useStore } from "../store/document";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import {
+  ExcalidrawElement,
+  ExcalidrawImageElement,
+  FileId,
+} from "@excalidraw/excalidraw/types/element/types";
 import {
   BinaryFiles,
   ExcalidrawImperativeAPI,
@@ -203,6 +207,20 @@ export const Canvas: React.FC = () => {
           ) {
             setFiles(files);
             previousFilesRef.current = files;
+
+            const latestFileId = Object.keys(files).sort((a, b) => {
+              return files[b].created - files[a].created;
+            })[0];
+
+            elements.forEach((element) => {
+              if (element.type === "image" && element.fileId === null) {
+                (element as Writeable<ExcalidrawImageElement>).fileId =
+                  latestFileId as FileId;
+                excalidrawAPIRef.current?.updateScene({
+                  elements: elements,
+                });
+              }
+            });
           }
 
           // handle selection change
