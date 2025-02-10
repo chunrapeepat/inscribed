@@ -121,7 +121,7 @@ export const SlideList: React.FC = () => {
   return (
     <div
       ref={sidebarRef}
-      className="fixed left-4 top-20 bottom-4 w-64 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
+      className="fixed left-4 top-24 bottom-4 w-64 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
       tabIndex={0}
     >
       <div className="p-4">

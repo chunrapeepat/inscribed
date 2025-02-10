@@ -68,7 +68,7 @@ export const Canvas: React.FC = () => {
   }, [currentSlideIndex, currentSlide.elements]);
 
   return (
-    <div className="fixed left-72 top-20 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="fixed left-72 top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden">
       <Excalidraw
         excalidrawAPI={(api) => {
           excalidrawAPIRef.current = api;
@@ -81,7 +81,7 @@ export const Canvas: React.FC = () => {
           },
           files,
         }}
-        onChange={(elements, _, files) => {
+        onChange={(elements, files) => {
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,

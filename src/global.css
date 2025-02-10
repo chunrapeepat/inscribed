@@ -1,0 +1,6 @@
+.HelpDialog__header {
+  display: none !important;
+}
+button.dropdown-menu-button.main-menu-trigger.zen-mode-transition {
+  display: none !important;
+}

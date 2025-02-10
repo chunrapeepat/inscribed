@@ -3,13 +3,13 @@ import {
   Plus,
   Trash2,
   Presentation as Present,
-  Share2,
-  Maximize2,
+  Cloudy,
+  FileCog,
 } from "lucide-react";
 import { useStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
 import { DocumentSizeModal } from "./DocumentSizeModal";
-import { FontsManagerModal } from "./FontsManagerModal";
+// import { FontsManagerModal } from "./FontsManagerModal";
 
 export const Toolbar: React.FC = () => {
   const { addSlide, deleteSlide, currentSlideIndex } = useStore();
@@ -19,45 +19,47 @@ export const Toolbar: React.FC = () => {
 
   return (
     <>
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg px-4 py-2 flex gap-4">
-        <button
-          onClick={addSlide}
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100"
-        >
-          <Plus size={20} />
-          <span>New Slide</span>
-        </button>
-        <button
-          onClick={() => deleteSlide(currentSlideIndex)}
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 text-red-600"
-        >
-          <Trash2 size={20} />
-          <span>Delete Slide</span>
-        </button>
-        <button className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 text-green-600">
-          <Present size={20} />
-          <span>Present</span>
-        </button>
-        <button
-          onClick={() => setIsExportModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 text-blue-600"
-        >
-          <Share2 size={20} />
-          <span>Share / Export</span>
-        </button>
-        <button
-          onClick={() => setIsDocumentSizeModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100"
-        >
-          <Maximize2 size={20} />
-          <span>Document Size</span>
-        </button>
-        <button
-          onClick={() => setIsFontsManagerModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100"
-        >
-          <span>Fonts</span>
-        </button>
+      <div className="fixed top-4 left-0 right-0 mx-4 bg-white rounded-lg shadow-lg px-2 py-2 flex justify-between">
+        <div className="flex gap-2">
+          <button
+            onClick={addSlide}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+          >
+            <Plus size={16} />
+            <span className="text-xs">New Slide</span>
+          </button>
+          <button
+            onClick={() => deleteSlide(currentSlideIndex)}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-red-600"
+          >
+            <Trash2 size={16} />
+            <span className="text-xs">Delete Slide</span>
+          </button>
+        </div>
+
+        <div className="flex">
+          <button className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-green-600">
+            <Present size={16} />
+            <span className="text-xs">Preview</span>
+          </button>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-blue-600"
+          >
+            <Cloudy size={16} />
+            <span className="text-xs">Import/Export</span>
+          </button>
+          <button
+            onClick={() => setIsDocumentSizeModalOpen(true)}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+          >
+            <FileCog size={16} />
+            <span className="text-xs">Document Setting</span>
+          </button>
+        </div>
       </div>
 
       <ExportModal
@@ -68,10 +70,10 @@ export const Toolbar: React.FC = () => {
         isOpen={isDocumentSizeModalOpen}
         onClose={() => setIsDocumentSizeModalOpen(false)}
       />
-      <FontsManagerModal
+      {/* <FontsManagerModal
         isOpen={isFontsManagerModalOpen}
         onClose={() => setIsFontsManagerModalOpen(false)}
-      />
+      /> */}
     </>
   );
 };
