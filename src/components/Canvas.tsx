@@ -1,13 +1,18 @@
 import React, { useRef, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useStore } from "../store/document";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import {
+  ExcalidrawDiamondElement,
+  ExcalidrawElement,
+  ExcalidrawTextElement,
+} from "@excalidraw/excalidraw/types/element/types";
 import {
   BinaryFiles,
   ExcalidrawImperativeAPI,
 } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
+import { getExcalidrawFontId } from "../utils/fonts";
 
 export const Canvas: React.FC = () => {
   const {
@@ -63,14 +68,40 @@ export const Canvas: React.FC = () => {
         <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" class="" fill="none" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g stroke-width="1.5"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><line x1="4" y1="20" x2="7" y2="20"></line><line x1="14" y1="20" x2="21" y2="20"></line><line x1="6.9" y1="15" x2="13.8" y2="15"></line><line x1="10.2" y1="6.3" x2="16" y2="20"></line><polyline points="5 20 11 4 13 4 20 20"></polyline></g></svg>
       `;
 
+    fontFamilyPopup.appendChild(label);
     label.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       openModal("custom-fonts-modal");
     });
-
-    fontFamilyPopup.appendChild(label);
   };
+
+  useEffect(() => {
+    // handle font selection
+    const handleFontSelected = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { fontFamily } = customEvent.detail;
+
+      // apply font to selected ids
+      const selectedIds = Object.keys(previousSelectionIdsRef.current);
+      const selectedElements: Writeable<ExcalidrawElement>[] = JSON.parse(
+        JSON.stringify(excalidrawAPIRef.current?.getSceneElements())
+      );
+      selectedElements?.forEach((e: Writeable<ExcalidrawElement>) => {
+        if (e.type === "text" && selectedIds.includes(e.id)) {
+          e.fontFamily = getExcalidrawFontId(fontFamily);
+        }
+      });
+      excalidrawAPIRef.current?.updateScene({
+        elements: selectedElements,
+      });
+    };
+
+    window.addEventListener("fontSelected", handleFontSelected);
+    return () => {
+      window.removeEventListener("fontSelected", handleFontSelected);
+    };
+  }, []);
 
   useEffect(() => {
     // handle document size change

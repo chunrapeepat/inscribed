@@ -84,6 +84,14 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
     registerExcalidrawFonts(unregisteredFonts);
   }, [customFonts]);
 
+  const handleFontClick = (fontFamily: string) => {
+    const event = new CustomEvent("fontSelected", {
+      detail: { fontFamily },
+    });
+    window.dispatchEvent(event);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const filteredFonts = Object.entries(customFonts).filter(([fontFamily]) =>
@@ -120,7 +128,13 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
                 key={fontFamily}
                 className="flex items-center justify-between p-2 bg-gray-50 rounded"
               >
-                <span style={{ fontFamily: fontFamily }}>{fontFamily}</span>
+                <span
+                  style={{ fontFamily: fontFamily }}
+                  onClick={() => handleFontClick(fontFamily)}
+                  className="cursor-pointer hover:opacity-75"
+                >
+                  {fontFamily}
+                </span>
                 <button
                   onClick={() => removeFont(fontFamily)}
                   className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -151,7 +165,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
               id="embedCode"
               value={embedCode}
               onChange={(e) => setEmbedCode(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 min-h-[100px]"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[100px]"
               placeholder="Paste Google Fonts <link> tag here..."
               required
             />
