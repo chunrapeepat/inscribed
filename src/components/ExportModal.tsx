@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { exportToGif } from "../utils/export-gif";
 import { useStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
+import { FileId } from "@excalidraw/excalidraw/types/element/types";
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -47,11 +48,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         // Handle file upload logic here
         console.log("Uploading file");
       } else if (selectedOption === "export-data") {
+        // prune unused files
+        const usedFileIds = documentStore.slides
+          .map((slide) => slide.elements)
+          .flat()
+          .filter((e) => e.type === "image")
+          .map((e) => e.fileId);
+        const unusedFileIds = Object.keys(documentStore.files).filter(
+          (fileId) => !usedFileIds.includes(fileId as FileId)
+        );
+        const files = { ...documentStore.files };
+        unusedFileIds.forEach((fileId) => {
+          delete files[fileId as FileId];
+        });
+
         // Get data from both stores
         const documentData = {
           backgroundColor: documentStore.backgroundColor,
           slides: documentStore.slides,
-          files: documentStore.files,
+          files,
           documentSize: documentStore.documentSize,
         };
         const fontsData = {
