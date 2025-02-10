@@ -23,11 +23,15 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
 
   // Add ref for the search input
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [hasInitiallyFocused, setHasInitiallyFocused] = useState(false);
 
-  // Add useEffect to focus the input and handle Escape key
+  // Modify useEffect to only focus on initial open
   useEffect(() => {
-    if (isOpen) {
-      searchInputRef.current?.focus();
+    if (isOpen && !hasInitiallyFocused) {
+      const timeoutId = setTimeout(() => {
+        searchInputRef.current?.focus();
+        setHasInitiallyFocused(true);
+      }, 0);
 
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -36,9 +40,17 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
       };
 
       window.addEventListener("keydown", handleEscape);
-      return () => window.removeEventListener("keydown", handleEscape);
+      return () => {
+        window.removeEventListener("keydown", handleEscape);
+        clearTimeout(timeoutId);
+      };
     }
-  }, [isOpen, onClose]);
+
+    // Reset the focus state when modal closes
+    if (!isOpen) {
+      setHasInitiallyFocused(false);
+    }
+  }, [isOpen, onClose, hasInitiallyFocused]);
 
   const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
     fontFaces.forEach((fontFace) => {
