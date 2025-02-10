@@ -52,7 +52,7 @@ export const Canvas: React.FC = () => {
     codeLabel.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      openModal("fonts-manager");
+      openModal("custom-fonts-modal");
     });
 
     fontFamilyPopup.appendChild(codeLabel);

@@ -8,12 +8,12 @@ import {
 } from "../utils/fonts";
 import { FONT_FAMILY } from "@excalidraw/excalidraw";
 
-interface FontsManagerModalProps {
+interface CustomFontsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
+export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
   isOpen,
   onClose,
 }) => {
