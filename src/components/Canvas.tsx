@@ -68,7 +68,10 @@ export const Canvas: React.FC = () => {
   }, [currentSlideIndex, currentSlide.elements]);
 
   return (
-    <div className="fixed left-72 top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden">
+    <div
+      style={{ left: "17rem" }}
+      className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden"
+    >
       <Excalidraw
         excalidrawAPI={(api) => {
           excalidrawAPIRef.current = api;

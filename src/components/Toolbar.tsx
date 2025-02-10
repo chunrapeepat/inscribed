@@ -46,18 +46,18 @@ export const Toolbar: React.FC = () => {
 
         <div className="flex gap-2">
           <button
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-blue-600"
-          >
-            <Cloudy size={16} />
-            <span className="text-xs">Import/Export</span>
-          </button>
-          <button
             onClick={() => setIsDocumentSizeModalOpen(true)}
             className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
           >
             <FileCog size={16} />
             <span className="text-xs">Document Setting</span>
+          </button>
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-blue-600"
+          >
+            <Cloudy size={16} />
+            <span className="text-xs">Import/Export</span>
           </button>
         </div>
       </div>

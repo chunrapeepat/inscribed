@@ -121,11 +121,10 @@ export const SlideList: React.FC = () => {
   return (
     <div
       ref={sidebarRef}
-      className="fixed left-4 top-24 bottom-4 w-64 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
+      className="fixed left-4 top-24 bottom-4 w-60 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
       tabIndex={0}
     >
       <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Slides</h2>
         <div className="space-y-4">
           {slides.map((slide, index) => (
             <div
@@ -137,17 +136,16 @@ export const SlideList: React.FC = () => {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onClick={() => setCurrentSlide(index)}
-              className={`p-3 rounded-lg cursor-move transition-colors ${
+              className={`p-2 rounded-lg cursor-move transition-colors ${
                 currentSlideIndex === index
                   ? "bg-blue-100 border-2 border-blue-500"
                   : "hover:bg-gray-100 border-2 border-transparent"
               }`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-gray-500 text-sm font-medium">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="text-gray-500 text-xs font-medium">
                   Slide {index + 1}
                 </div>
-                <div className="flex-1 text-sm truncate">{slide.name}</div>
               </div>
               <SlidePreview elements={slide.elements} />
             </div>
