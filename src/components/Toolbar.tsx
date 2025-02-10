@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
-import { DocumentSizeModal } from "./DocumentSizeModal";
+import { DocumentSettingModal } from "./DocumentSettingModal";
 // import { FontsManagerModal } from "./FontsManagerModal";
 
 export const Toolbar: React.FC = () => {
@@ -66,7 +66,7 @@ export const Toolbar: React.FC = () => {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
       />
-      <DocumentSizeModal
+      <DocumentSettingModal
         isOpen={isDocumentSizeModalOpen}
         onClose={() => setIsDocumentSizeModalOpen(false)}
       />

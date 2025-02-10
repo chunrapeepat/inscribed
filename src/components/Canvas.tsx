@@ -16,6 +16,7 @@ export const Canvas: React.FC = () => {
     documentSize,
     files,
     setFiles,
+    backgroundColor,
   } = useStore();
   const currentSlide = slides[currentSlideIndex];
   const previousElementsRef = useRef<ExcalidrawElement[]>(
@@ -57,6 +58,17 @@ export const Canvas: React.FC = () => {
   }, [documentSize, currentSlideIndex]);
 
   useEffect(() => {
+    // handle background color change
+    if (!excalidrawAPIRef.current) return;
+
+    excalidrawAPIRef.current.updateScene({
+      appState: {
+        viewBackgroundColor: backgroundColor,
+      },
+    });
+  }, [backgroundColor]);
+
+  useEffect(() => {
     // Update the ref and excalidraw elements when currentSlideIndex changes
     previousElementsRef.current = currentSlide.elements;
     if (excalidrawAPIRef.current) {
@@ -77,13 +89,13 @@ export const Canvas: React.FC = () => {
         }}
         initialData={{
           appState: {
-            viewBackgroundColor: "#ffffff",
+            viewBackgroundColor: backgroundColor,
             width: documentSize.width,
             height: documentSize.height,
           },
           files,
         }}
-        onChange={(elements, files) => {
+        onChange={(elements, _, files) => {
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,

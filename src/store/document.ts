@@ -10,6 +10,7 @@ interface DocumentSize {
 }
 
 interface PresentationState {
+  backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
   currentSlideIndex: number;
@@ -21,6 +22,7 @@ interface PresentationState {
   reorderSlides: (fromIndex: number, toIndex: number) => void;
   setDocumentSize: (size: DocumentSize) => void;
   setFiles: (files: BinaryFiles) => void;
+  setBackgroundColor: (color: string) => void;
 }
 
 const DEFAULT_FRAME_WIDTH = 1080;
@@ -64,6 +66,7 @@ const createDefaultFrame = (
 export const useStore = create<PresentationState>()(
   persist(
     (set) => ({
+      backgroundColor: "#ffffff",
       slides: [
         {
           id: "1",
@@ -131,6 +134,7 @@ export const useStore = create<PresentationState>()(
         }),
       setDocumentSize: (size) => set({ documentSize: size }),
       setFiles: (files) => set({ files }),
+      setBackgroundColor: (color) => set({ backgroundColor: color }),
     }),
     {
       name: "document-store",

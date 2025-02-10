@@ -1,19 +1,23 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useStore } from "../store/document";
+import { HexColorPicker } from "react-colorful";
 
-interface DocumentSizeModalProps {
+interface DocumentSettingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({
+export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { documentSize, setDocumentSize } = useStore();
+  const { documentSize, setDocumentSize, backgroundColor, setBackgroundColor } =
+    useStore();
   const [width, setWidth] = useState(documentSize.width.toString());
   const [height, setHeight] = useState(documentSize.height.toString());
+  const [color, setColor] = useState(backgroundColor);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   if (!isOpen) return null;
 
@@ -23,6 +27,7 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({
       width: Math.max(100, Math.min(4000, parseInt(width) || 100)),
       height: Math.max(100, Math.min(4000, parseInt(height) || 100)),
     });
+    setBackgroundColor(color);
     onClose();
   };
 
@@ -30,7 +35,7 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">Document Size</h2>
+          <h2 className="text-xl font-semibold">Document Setting</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -76,21 +81,60 @@ export const DocumentSizeModal: React.FC<DocumentSizeModalProps> = ({
                 required
               />
             </div>
+            <div>
+              <label
+                htmlFor="backgroundColor"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Background Color
+              </label>
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  className="w-10 h-10 rounded border border-gray-300"
+                  style={{ backgroundColor: color }}
+                  aria-label="Choose background color"
+                />
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="#FFFFFF"
+                />
+              </div>
+              {showColorPicker && (
+                <div className="absolute mt-2 z-10">
+                  <div
+                    className="fixed inset-0"
+                    onClick={() => setShowColorPicker(false)}
+                  />
+                  <HexColorPicker
+                    color={color}
+                    onChange={setColor}
+                    className="relative"
+                  />
+                </div>
+              )}
+            </div>
             <div className="text-sm text-gray-500">
-              <p>Recommended sizes:</p>
+              <p>Recommanded size:</p>
               <ul className="list-disc list-inside">
-                <li>HD (1920 × 1080)</li>
-                <li>4K (3840 × 2160)</li>
-                <li>Square (1080 × 1080)</li>
+                <li>16:9 Widescreen (1920 × 1080)</li>
+                <li>4:3 Standard (1600 × 1200)</li>
+                <li>1:1 Square (1080 × 1080)</li>
+                <li>9:16 Portrait (1080 × 1920)</li>
               </ul>
             </div>
           </div>
+
           <div className="pt-4 border-t">
             <button
               type="submit"
               className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Apply Size
+              Apply Change
             </button>
           </div>
         </form>
