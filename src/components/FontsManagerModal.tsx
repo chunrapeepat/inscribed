@@ -12,7 +12,7 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { addFonts } = useFontsStore();
+  const { customFonts, addFonts, removeFont } = useFontsStore();
   const [embedCode, setEmbedCode] = useState("");
 
   if (!isOpen) return null;
@@ -81,25 +81,25 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
         </form>
 
         <div className="p-4 border-t">
-          <h3 className="text-lg font-medium mb-3">Added Fonts</h3>
+          <h3 className="text-lg font-medium mb-3">All Fonts</h3>
           <div className="space-y-2">
-            {/* {fonts.map((font, index) => (
+            {Object.entries(customFonts).map(([fontFamily, fontFaces]) => (
               <div
-                key={index}
+                key={fontFamily}
                 className="flex items-center justify-between p-2 bg-gray-50 rounded"
               >
-                <span style={{ fontFamily: font.family }}>{font.family}</span>
+                <span style={{ fontFamily: fontFamily }}>{fontFamily}</span>
                 <button
-                  onClick={() => removeFont(font.family)}
+                  onClick={() => removeFont(fontFamily)}
                   className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             ))}
-            {fonts.length === 0 && (
+            {Object.keys(customFonts).length === 0 && (
               <p className="text-gray-500 text-sm">No fonts added yet</p>
-            )} */}
+            )}
           </div>
         </div>
       </div>
