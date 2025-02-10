@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { exportToGif } from "../utils/export-gif";
 import { useStore } from "../store/document";
@@ -25,8 +25,47 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [exportProgress, setExportProgress] = React.useState<number | null>(
     null
   );
+  const [showEmbedCode, setShowEmbedCode] = useState(false);
+  const [embedCode, setEmbedCode] = useState("");
 
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setShowEmbedCode(false);
+    setEmbedCode("");
+    setGistId("");
+    setSelectedOption(null);
+    onClose();
+  };
+
+  const validateGistUrl = async (url: string) => {
+    // Validate URL format
+    if (!url.startsWith("https://gist.github.com/")) {
+      throw new Error("Please enter a valid GitHub Gist URL");
+    }
+
+    // Convert to raw URL and validate content
+    const rawUrl = url.replace("gist.github.com", "gist.githubusercontent.com");
+
+    const response = await fetch(`${rawUrl}/raw`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Failed to fetch Gist. Please check the URL and try again."
+      );
+    }
+
+    const gistData = await response.json();
+    if (!gistData?.document?.slides) {
+      throw new Error("Invalid presentation data format");
+    }
+
+    return true;
+  };
 
   const handleExport = async () => {
     if (!selectedOption) return;
@@ -36,7 +75,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     )
       return;
     if (
-      (selectedOption === "embed-slides" || selectedOption === "slider") &&
+      (selectedOption === "embed-presentation" ||
+        selectedOption === "slider") &&
       !gistId.trim()
     )
       return;
@@ -138,10 +178,28 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setSelectedOption(null);
         setExportFileName("");
         setFrameDelay("100");
-      } else if (
-        selectedOption === "embed-slides" ||
-        selectedOption === "slider"
-      ) {
+      } else if (selectedOption === "embed-presentation") {
+        try {
+          await validateGistUrl(gistId);
+        } catch (error) {
+          alert(
+            error instanceof Error ? error.message : "Failed to validate Gist"
+          );
+          return;
+        }
+
+        const iframeCode = `<iframe
+  src="${window.location.origin}/embed?type=presentation&gist_url=${gistId}"
+  width="100%"
+  height="500"
+  frameborder="0"
+  allowfullscreen
+></iframe>`;
+
+        setEmbedCode(iframeCode);
+        setShowEmbedCode(true);
+        return;
+      } else if (selectedOption === "slider") {
         // Handle template/slider export with gistId
         console.log("Exporting with Gist ID:", gistId);
       }
@@ -172,14 +230,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       description: "Create an animated GIF of your slides",
     },
     {
-      id: "embed-slides",
-      title: "Embed Slides",
+      id: "embed-presentation",
+      title: "Embed Presentation",
       description: "Create an iframe embed of your slides",
     },
     {
-      id: "slider",
-      title: "Export as Slider",
-      description: "Create a standalone presentation viewer",
+      id: "embed-slider-template",
+      title: "Export Slider Template",
+      description: "Create an iframe embed of your slides with slider template",
     },
   ];
 
@@ -196,178 +254,214 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </button>
         </div>
         <div className="p-4 space-y-4">
-          {exportOptions.map((option) => (
-            <div
-              key={option.id}
-              className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                selectedOption === option.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-500"
-              }`}
-              onClick={() => setSelectedOption(option.id)}
-            >
-              <h3 className="font-medium text-lg">{option.title}</h3>
-              <p className="text-gray-600 text-sm mt-1">{option.description}</p>
-            </div>
-          ))}
-
-          {selectedOption === "import" && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <label
-                htmlFor="fileUpload"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Select File
-              </label>
-              <input
-                type="file"
-                id="fileUpload"
-                accept=".ins"
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100
-                  file:cursor-pointer cursor-pointer"
-                required
-              />
-            </div>
-          )}
-
-          {selectedOption === "export-data" && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <label
-                htmlFor="fileName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Export File Name
-              </label>
-              <input
-                type="text"
-                id="fileName"
-                value={exportFileName}
-                onChange={(e) => setExportFileName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Enter file name"
-                required
-              />
-            </div>
-          )}
-
-          {selectedOption === "gif" && (
-            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-              <div>
-                <label
-                  htmlFor="gifFileName"
-                  className="block text-sm font-medium text-gray-700"
+          {!showEmbedCode ? (
+            <>
+              {exportOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedOption === option.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-500"
+                  }`}
+                  onClick={() => setSelectedOption(option.id)}
                 >
-                  GIF File Name
-                </label>
-                <input
-                  type="text"
-                  id="gifFileName"
-                  value={exportFileName}
-                  onChange={(e) => setExportFileName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter file name (.gif)"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="frameDelay"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Frame Delay (ms)
-                </label>
-                <input
-                  type="number"
-                  id="frameDelay"
-                  value={frameDelay}
-                  onChange={(e) => setFrameDelay(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter delay in milliseconds"
-                  min="1"
-                  required
-                />
-              </div>
-              {exportProgress !== null && (
-                <div className="mt-2">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-600 transition-all duration-300"
-                      style={{ width: `${exportProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1 text-center">
-                    Generating GIF: {Math.round(exportProgress)}%
+                  <h3 className="font-medium text-lg">{option.title}</h3>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {option.description}
                   </p>
                 </div>
-              )}
-            </div>
-          )}
+              ))}
 
-          {(selectedOption === "embed-slides" ||
-            selectedOption === "slider") && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <label
-                htmlFor="gistId"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Gist URL
-              </label>
-              <input
-                type="text"
-                id="gistId"
-                value={gistId}
-                onChange={(e) => setGistId(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Enter GitHub Gist URL"
-                required
+              {selectedOption === "import" && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label
+                    htmlFor="fileUpload"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Select File
+                  </label>
+                  <input
+                    type="file"
+                    id="fileUpload"
+                    accept=".ins"
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100
+                      file:cursor-pointer cursor-pointer"
+                    required
+                  />
+                </div>
+              )}
+
+              {selectedOption === "export-data" && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label
+                    htmlFor="fileName"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Export File Name
+                  </label>
+                  <input
+                    type="text"
+                    id="fileName"
+                    value={exportFileName}
+                    onChange={(e) => setExportFileName(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter file name"
+                    required
+                  />
+                </div>
+              )}
+
+              {selectedOption === "gif" && (
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                  <div>
+                    <label
+                      htmlFor="gifFileName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      GIF File Name
+                    </label>
+                    <input
+                      type="text"
+                      id="gifFileName"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter file name (.gif)"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="frameDelay"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Frame Delay (ms)
+                    </label>
+                    <input
+                      type="number"
+                      id="frameDelay"
+                      value={frameDelay}
+                      onChange={(e) => setFrameDelay(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter delay in milliseconds"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  {exportProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-300"
+                          style={{ width: `${exportProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating GIF: {Math.round(exportProgress)}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(selectedOption === "embed-presentation" ||
+                selectedOption === "slider") && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label
+                    htmlFor="gistId"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Gist URL
+                  </label>
+                  <input
+                    type="text"
+                    id="gistId"
+                    value={gistId}
+                    onChange={(e) => setGistId(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter GitHub Gist URL"
+                    required
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="font-medium text-lg">Embed Presentation</h3>
+              <textarea
+                value={embedCode}
+                readOnly
+                onClick={(e) => e.currentTarget.select()}
+                className="w-full h-32 p-3 border rounded-md font-mono text-sm"
               />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(embedCode);
+                    alert("Copied to clipboard!");
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Copy Code
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           )}
         </div>
-        <div className="p-4 border-t bg-gray-50 rounded-b-lg">
-          <button
-            onClick={handleExport}
-            disabled={
-              !selectedOption ||
-              (selectedOption === "export-data" && !exportFileName.trim()) ||
-              (selectedOption === "gif" &&
-                (!exportFileName.trim() ||
-                  !frameDelay ||
-                  parseInt(frameDelay) < 1)) ||
-              ((selectedOption === "embed-slides" ||
-                selectedOption === "slider") &&
-                !gistId.trim())
-            }
-            className={`w-full py-2 px-4 rounded-lg transition-colors ${
-              selectedOption &&
-              !(selectedOption === "export-data" && !exportFileName.trim()) &&
-              !(
-                selectedOption === "gif" &&
-                (!exportFileName.trim() ||
-                  !frameDelay ||
-                  parseInt(frameDelay) < 1)
-              ) &&
-              !(
-                (selectedOption === "embed-slides" ||
+
+        {!showEmbedCode && (
+          <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+            <button
+              onClick={handleExport}
+              disabled={
+                !selectedOption ||
+                (selectedOption === "export-data" && !exportFileName.trim()) ||
+                (selectedOption === "gif" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)) ||
+                ((selectedOption === "embed-presentation" ||
                   selectedOption === "slider") &&
-                !gistId.trim()
-              )
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-gray-300 cursor-not-allowed text-gray-500"
-            }`}
-          >
-            {selectedOption === "import"
-              ? "Upload File"
-              : selectedOption
-              ? "Export"
-              : "Select an option"}
-          </button>
-        </div>
+                  !gistId.trim())
+              }
+              className={`w-full py-2 px-4 rounded-lg transition-colors ${
+                selectedOption &&
+                !(selectedOption === "export-data" && !exportFileName.trim()) &&
+                !(
+                  selectedOption === "gif" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)
+                ) &&
+                !(
+                  (selectedOption === "embed-presentation" ||
+                    selectedOption === "slider") &&
+                  !gistId.trim()
+                )
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-gray-300 cursor-not-allowed text-gray-500"
+              }`}
+            >
+              {selectedOption === "import"
+                ? "Upload File"
+                : selectedOption
+                ? "Export"
+                : "Select an option"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
