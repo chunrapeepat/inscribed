@@ -5,17 +5,6 @@ import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
 
-(FONT_FAMILY as { [k: string]: number })["Sarabun"] = 55;
-document.fonts.add(
-  new FontFace(
-    "Sarabun",
-    "https://fonts.gstatic.com/s/sarabun/v15/DtVnJx26TKEr37c9aBBx_kwfzg38pQhMruE.woff2"
-  )
-);
-document.fonts.ready.then(() => {
-  console.log("debug", FONT_FAMILY, document.fonts);
-});
-
 export const Canvas: React.FC = () => {
   const { slides, currentSlideIndex, updateSlide, documentSize } = useStore();
   const currentSlide = slides[currentSlideIndex];

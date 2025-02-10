@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { useFontsStore } from "../store/custom-fonts";
-import { parseFontFaces } from "../utils/fonts";
+import {
+  type FontFace as CustomFontFace,
+  getExcalidrawFontId,
+  parseFontFaces,
+} from "../utils/fonts";
+import { FONT_FAMILY } from "@excalidraw/excalidraw";
 
 interface FontsManagerModalProps {
   isOpen: boolean;
@@ -15,7 +20,26 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
   const { customFonts, addFonts, removeFont } = useFontsStore();
   const [embedCode, setEmbedCode] = useState("");
 
-  if (!isOpen) return null;
+  const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
+    fontFaces.forEach((fontFace) => {
+      document.fonts.add(
+        new FontFace(fontFace.fontFamily, fontFace.src, {
+          style: fontFace.fontStyle,
+          weight: fontFace.fontWeight.toString(),
+          unicodeRange: fontFace.unicodeRange,
+        })
+      );
+    });
+
+    // register fonts to Excalidraw
+    const fontFamilies = [
+      ...new Set(fontFaces.map((fontFace) => fontFace.fontFamily)),
+    ];
+    fontFamilies.forEach((fontFamily) => {
+      (FONT_FAMILY as { [k: string]: number })[fontFamily] =
+        getExcalidrawFontId(fontFamily);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +58,6 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
       return;
     }
 
-    // fetch the font content
     const response = await fetch(fontUrl);
     const content = await response.text();
     const fontFaces = parseFontFaces(content);
@@ -42,6 +65,25 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
     addFonts(fontFaces);
     setEmbedCode("");
   };
+
+  useEffect(() => {
+    const unregisteredFonts: CustomFontFace[] = [];
+    Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
+      fontFaces.forEach((fontFace) => {
+        const ff = new FontFace(fontFamily, fontFace.src, {
+          style: fontFace.fontStyle,
+          weight: fontFace.fontWeight.toString(),
+          unicodeRange: fontFace.unicodeRange,
+        });
+        if (!document.fonts.has(ff)) {
+          unregisteredFonts.push(fontFace);
+        }
+      });
+    });
+    registerExcalidrawFonts(unregisteredFonts);
+  }, [customFonts]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -83,7 +125,7 @@ export const FontsManagerModal: React.FC<FontsManagerModalProps> = ({
         <div className="p-4 border-t">
           <h3 className="text-lg font-medium mb-3">All Fonts</h3>
           <div className="space-y-2">
-            {Object.entries(customFonts).map(([fontFamily, fontFaces]) => (
+            {Object.entries(customFonts).map(([fontFamily]) => (
               <div
                 key={fontFamily}
                 className="flex items-center justify-between p-2 bg-gray-50 rounded"

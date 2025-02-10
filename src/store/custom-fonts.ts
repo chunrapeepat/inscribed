@@ -13,17 +13,19 @@ export const useFontsStore = create<CustomFontsState>((set, get) => ({
   customFonts: {},
   addFonts: (fontFaces: FontFace[]) =>
     set((state) => {
+      const newState = { ...state.customFonts };
       fontFaces.forEach((fontFace) => {
-        state.customFonts[fontFace.fontFamily] = [
-          ...(state.customFonts[fontFace.fontFamily] || []),
+        newState[fontFace.fontFamily] = [
+          ...(newState[fontFace.fontFamily] || []),
           fontFace,
         ];
       });
-      return state;
+      return { customFonts: newState };
     }),
   removeFont: (fontFamily) =>
     set((state) => {
-      const { [fontFamily]: _, ...rest } = state.customFonts;
-      return { customFonts: rest };
+      const newState = { ...state.customFonts };
+      delete newState[fontFamily];
+      return { customFonts: newState };
     }),
 }));

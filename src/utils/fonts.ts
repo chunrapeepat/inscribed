@@ -8,6 +8,16 @@ export type FontFace = {
   unicodeRange: string;
 };
 
+export const getExcalidrawFontId = (fontFamily: string): number => {
+  let hash = 0;
+  for (let i = 0; i < fontFamily.length; i++) {
+    const char = fontFamily.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+};
+
 export const parseFontFaces = (content: string): FontFace[] => {
   const fontFaces: Array<FontFace> = [];
 
