@@ -92,11 +92,6 @@ export const useStore = create<PresentationState>()(
         })),
       updateSlide: (index, elements) =>
         set((state) => {
-          const currentElements = state.slides[index]?.elements;
-          if (JSON.stringify(currentElements) === JSON.stringify(elements)) {
-            return state;
-          }
-
           return {
             slides: state.slides.map((slide, i) =>
               i === index ? { ...slide, elements } : slide

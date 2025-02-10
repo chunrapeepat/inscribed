@@ -1,11 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useStore } from "../store/document";
-import {
-  ExcalidrawDiamondElement,
-  ExcalidrawElement,
-  ExcalidrawTextElement,
-} from "@excalidraw/excalidraw/types/element/types";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import {
   BinaryFiles,
   ExcalidrawImperativeAPI,
@@ -34,6 +30,7 @@ export const Canvas: React.FC = () => {
   const previousFilesRef = useRef<BinaryFiles | null>(null);
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
+  const updateTimeoutRef = useRef<number | null>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -186,14 +183,16 @@ export const Canvas: React.FC = () => {
           }
 
           // handle element change
-          const newElements = elements as ExcalidrawElement[];
-          if (
-            JSON.stringify(previousElementsRef.current) !==
-            JSON.stringify(newElements)
-          ) {
-            previousElementsRef.current = newElements;
-            updateSlide(currentSlideIndex, newElements);
+          if (updateTimeoutRef.current) {
+            clearTimeout(updateTimeoutRef.current);
           }
+
+          updateTimeoutRef.current = setTimeout(() => {
+            updateSlide(
+              currentSlideIndex,
+              JSON.parse(JSON.stringify(elements))
+            );
+          }, 100);
 
           // handle file change
           if (

@@ -48,7 +48,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
     };
 
     generatePreview();
-  }, [elements]);
+  }, [elements, backgroundColor]);
 
   return (
     <div
