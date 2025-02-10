@@ -178,7 +178,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setSelectedOption(null);
         setExportFileName("");
         setFrameDelay("100");
-      } else if (selectedOption === "embed-presentation") {
+      } else if (
+        selectedOption === "embed-presentation" ||
+        selectedOption === "embed-slider-template"
+      ) {
         try {
           await validateGistUrl(gistId);
         } catch (error) {
@@ -188,8 +191,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           return;
         }
 
+        const embedType =
+          selectedOption === "embed-presentation"
+            ? "presentation"
+            : "slider-template";
         const iframeCode = `<iframe
-  src="${window.location.origin}/embed?type=presentation&gist_url=${gistId}"
+  src="${window.location.origin}/embed?type=${embedType}&gist_url=${gistId}"
   width="100%"
   height="500"
   frameborder="0"
@@ -371,7 +378,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               )}
 
               {(selectedOption === "embed-presentation" ||
-                selectedOption === "slider") && (
+                selectedOption === "embed-slider-template") && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <label
                     htmlFor="gistId"
@@ -393,7 +400,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             </>
           ) : (
             <div className="space-y-4">
-              <h3 className="font-medium text-lg">Embed Presentation</h3>
+              <h3 className="font-medium text-lg">
+                {selectedOption === "embed-presentation"
+                  ? "Embed Presentation"
+                  : "Embed Slider Template"}
+              </h3>
               <textarea
                 value={embedCode}
                 readOnly
@@ -433,7 +444,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
                 ((selectedOption === "embed-presentation" ||
-                  selectedOption === "slider") &&
+                  selectedOption === "embed-slider-template") &&
                   !gistId.trim())
               }
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
@@ -447,7 +458,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ) &&
                 !(
                   (selectedOption === "embed-presentation" ||
-                    selectedOption === "slider") &&
+                    selectedOption === "embed-slider-template") &&
                   !gistId.trim()
                 )
                   ? "bg-blue-600 hover:bg-blue-700 text-white"
