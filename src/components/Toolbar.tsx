@@ -11,12 +11,14 @@ import { ExportModal } from "./ExportModal";
 import { DocumentSettingModal } from "./DocumentSettingModal";
 import { CustomFontsModal } from "./CustomFontsModal";
 import { useModalStore } from "../store/modal";
+import { PresentationMode } from "./PresentationMode";
 
 export const Toolbar: React.FC = () => {
   const { addSlide, deleteSlide, currentSlideIndex } = useStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
   const { openCustomFontsModal, closeModal } = useModalStore();
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   return (
     <>
@@ -39,9 +41,12 @@ export const Toolbar: React.FC = () => {
         </div>
 
         <div className="flex">
-          <button className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-green-600">
+          <button
+            onClick={() => setIsPresentationMode(true)}
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100 text-green-600"
+          >
             <Present size={16} />
-            <span className="text-xs">Preview</span>
+            <span className="text-xs">Present</span>
           </button>
         </div>
 
@@ -75,6 +80,10 @@ export const Toolbar: React.FC = () => {
         isOpen={openCustomFontsModal}
         onClose={() => closeModal("custom-fonts-modal")}
       />
+
+      {isPresentationMode && (
+        <PresentationMode onClose={() => setIsPresentationMode(false)} />
+      )}
     </>
   );
 };
