@@ -52,7 +52,6 @@ export const Canvas: React.FC = () => {
         excalidrawAPIRef.current?.updateScene({
           elements: _slide.elements,
         });
-        scrollToFrame(frame as ExcalidrawElement);
       }
     });
   }, [documentSize, currentSlideIndex]);
