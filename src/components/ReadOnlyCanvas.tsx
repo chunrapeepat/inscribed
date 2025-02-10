@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import {
@@ -20,6 +20,9 @@ interface ReadOnlyCanvasProps {
   };
   onNextSlide?: () => void;
   onPrevSlide?: () => void;
+  currentSlide: number;
+  totalSlides: number;
+  onJumpToSlide?: (slide: number) => void;
 }
 
 export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
@@ -29,8 +32,12 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   documentSize,
   onNextSlide,
   onPrevSlide,
+  currentSlide,
+  totalSlides,
+  onJumpToSlide,
 }) => {
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
+  const [inputValue, setInputValue] = useState((currentSlide + 1).toString());
 
   // Function to center content
   const centerContent = useCallback(() => {
@@ -96,6 +103,11 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNextSlide, onPrevSlide]);
 
+  // Update input value when currentSlide changes
+  useEffect(() => {
+    setInputValue((currentSlide + 1).toString());
+  }, [currentSlide]);
+
   return (
     <div className="fixed inset-0 bg-white">
       {/* Hide zoom controls */}
@@ -108,7 +120,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
       </style>
 
       {/* Interaction blocker overlay */}
-      <div className="fixed inset-0 z-50" />
+      <div className="fixed inset-0 z-10" />
 
       <Excalidraw
         excalidrawAPI={(api) => {
@@ -148,6 +160,68 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           },
         }}
       />
+
+      {/* Navigation bar */}
+      <div
+        className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-4 p-4 
+                      bg-gray-100 border border-gray-200 backdrop-blur z-20"
+      >
+        <button
+          onClick={onPrevSlide}
+          className="p-2 rounded-lg hover:bg-white/80 disabled:opacity-50 transition-colors"
+          disabled={currentSlide === 0}
+        >
+          ←
+        </button>
+
+        <div className="flex items-center gap-2 px-2 border-l border-r border-gray-200">
+          <input
+            type="number"
+            min={1}
+            max={totalSlides}
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const page = parseInt(inputValue) - 1;
+                if (!isNaN(page) && page >= 0 && page < totalSlides) {
+                  onJumpToSlide?.(page);
+                } else {
+                  // Reset to current slide if invalid
+                  setInputValue((currentSlide + 1).toString());
+                }
+              }
+            }}
+            onBlur={() => {
+              // Reset to current slide on blur
+              setInputValue((currentSlide + 1).toString());
+            }}
+            className="w-16 px-2 py-1 text-center border rounded bg-white"
+          />
+          <span className="text-sm text-gray-600">/ {totalSlides}</span>
+        </div>
+
+        <button
+          onClick={onNextSlide}
+          className="p-2 rounded-lg hover:bg-white/80 disabled:opacity-50 transition-colors"
+          disabled={currentSlide === totalSlides - 1}
+        >
+          →
+        </button>
+
+        <div className="absolute right-4">
+          <a
+            href="https://inscribed.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Made by inscribed.app
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

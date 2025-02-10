@@ -71,6 +71,10 @@ export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
     }
   };
 
+  const handleJumpToSlide = (index: number) => {
+    setCurrentSlideIndex(index);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -103,6 +107,9 @@ export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
       documentSize={data.documentSize}
       onNextSlide={handleNextSlide}
       onPrevSlide={handlePrevSlide}
+      currentSlide={currentSlideIndex}
+      totalSlides={data.slides.length}
+      onJumpToSlide={handleJumpToSlide}
     />
   );
 };
