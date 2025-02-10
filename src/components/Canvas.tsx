@@ -23,6 +23,9 @@ export const Canvas: React.FC = () => {
   useEffect(() => {
     // handle document size change
     if (!excalidrawAPIRef.current) return;
+
+    console.log("documentSize", documentSize);
+
     const _slides = JSON.parse(JSON.stringify(slides));
     _slides.forEach((_slide: Slide, index: number) => {
       const frame: Writeable<ExcalidrawElement> | undefined =
@@ -40,14 +43,10 @@ export const Canvas: React.FC = () => {
         excalidrawAPIRef.current?.updateScene({
           elements: _slide.elements,
         });
-        scrollToFrame(
-          _slide.elements.find(
-            (element) => element.id === "frame"
-          ) as ExcalidrawElement
-        );
+        scrollToFrame(frame as ExcalidrawElement);
       }
     });
-  }, [slides, updateSlide, documentSize, currentSlideIndex]);
+  }, [documentSize, currentSlideIndex]);
 
   useEffect(() => {
     // Update the ref and excalidraw elements when currentSlideIndex changes
