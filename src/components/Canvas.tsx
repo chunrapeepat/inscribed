@@ -10,13 +10,8 @@ import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
 import { getExcalidrawFontId } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
-import { AppState } from "@excalidraw/excalidraw/types/appState";
 
-interface CanvasProps {
-  readOnly?: boolean;
-}
-
-export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
+export const Canvas: React.FC = () => {
   const {
     slides,
     currentSlideIndex,
@@ -81,8 +76,6 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
   };
 
   useEffect(() => {
-    if (readOnly) return;
-
     const handleFontSelected = (e: Event) => {
       const customEvent = e as CustomEvent;
       const { fontFamily } = customEvent.detail;
@@ -106,7 +99,7 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
     return () => {
       window.removeEventListener("fontSelected", handleFontSelected);
     };
-  }, [readOnly]);
+  }, []);
 
   useEffect(() => {
     // handle document size change
@@ -156,17 +149,14 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
 
   return (
     <div
-      style={{ left: readOnly ? "0" : "17rem" }}
-      className={`fixed ${
-        readOnly ? "inset-0" : "top-24 right-4 bottom-4"
-      } bg-white rounded-lg shadow-lg overflow-hidden`}
+      style={{ left: "17rem" }}
+      className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden"
     >
       <Excalidraw
         excalidrawAPI={(api) => {
           excalidrawAPIRef.current = api;
         }}
         initialData={{
-          elements: currentSlide.elements,
           files,
           appState: {
             viewBackgroundColor: backgroundColor,
@@ -174,23 +164,14 @@ export const Canvas: React.FC<CanvasProps> = ({ readOnly = false }) => {
             height: documentSize.height,
             isLoading: false,
             errorMessage: null,
-            viewModeEnabled: readOnly,
-            zenModeEnabled: readOnly,
             gridSize: null,
-            showHelpDialog: false,
-          } as Partial<AppState>,
+          },
         }}
-        viewModeEnabled={readOnly}
-        zenModeEnabled={readOnly}
         gridModeEnabled={false}
         onLibraryChange={(items) => {
-          if (!readOnly) {
-            setItems(items);
-          }
+          setItems(items);
         }}
         onChange={(elements, appState, files) => {
-          if (readOnly) return;
-
           if (elements.length === 0) {
             excalidrawAPIRef.current?.updateScene({
               elements: currentSlide.elements,
