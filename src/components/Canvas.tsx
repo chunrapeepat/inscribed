@@ -1,9 +1,20 @@
 import React, { useRef, useEffect } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, FONT_FAMILY } from "@excalidraw/excalidraw";
 import { useStore } from "../store";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
+
+(FONT_FAMILY as { [k: string]: number })["Sarabun"] = 55;
+document.fonts.add(
+  new FontFace(
+    "Sarabun",
+    "https://fonts.gstatic.com/s/sarabun/v15/DtVnJx26TKEr37c9aBBx_kwfzg38pQhMruE.woff2"
+  )
+);
+document.fonts.ready.then(() => {
+  console.log("debug", FONT_FAMILY, document.fonts);
+});
 
 export const Canvas: React.FC = () => {
   const { slides, currentSlideIndex, updateSlide, documentSize } = useStore();
@@ -23,8 +34,6 @@ export const Canvas: React.FC = () => {
   useEffect(() => {
     // handle document size change
     if (!excalidrawAPIRef.current) return;
-
-    console.log("documentSize", documentSize);
 
     const _slides = JSON.parse(JSON.stringify(slides));
     _slides.forEach((_slide: Slide, index: number) => {
