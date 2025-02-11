@@ -10,6 +10,7 @@ import {
   AppState,
   BinaryFiles,
   ExcalidrawImperativeAPI,
+  Gesture,
 } from "@excalidraw/excalidraw/types/types";
 import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
@@ -37,6 +38,7 @@ export const Canvas: React.FC = () => {
   const previousFilesRef = useRef<BinaryFiles | null>(null);
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
+  const previousPointerRef = useRef<PointerEvent | null>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -156,6 +158,30 @@ export const Canvas: React.FC = () => {
     }
   }, [currentSlideIndex, currentSlide.elements]);
 
+  const onPointerUpdate = (payload: {
+    pointer: {
+      x: number;
+      y: number;
+      tool: "pointer" | "laser";
+    };
+    button: "down" | "up";
+    pointersMap: Gesture["pointers"];
+  }) => {
+    if (payload.button === "down") {
+      previousPointerRef.current = { type: "down" } as PointerEvent;
+    } else if (
+      payload.button === "up" &&
+      previousPointerRef.current?.type === "down"
+    ) {
+      previousPointerRef.current = null;
+
+      updateSlide(
+        currentSlideIndex,
+        copy(excalidrawAPIRef.current?.getSceneElements() as object)
+      );
+    }
+  };
+
   const onChange = useCallback(
     (
       elements: readonly ExcalidrawElement[],
@@ -229,6 +255,7 @@ export const Canvas: React.FC = () => {
         excalidrawAPI={(api) => {
           excalidrawAPIRef.current = api;
         }}
+        onPointerUpdate={onPointerUpdate}
         initialData={{
           files,
           appState: {
