@@ -10,10 +10,6 @@ interface SliderEmbedProps {
   gistUrl: string;
 }
 
-const theme = createTheme({
-  // Optional: customize theme if needed
-});
-
 export const SliderEmbed: React.FC<SliderEmbedProps> = ({ gistUrl }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -80,13 +76,10 @@ export const SliderEmbed: React.FC<SliderEmbedProps> = ({ gistUrl }) => {
   }
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={createTheme()}>
       <div className="relative h-screen">
         <ReadOnlyCanvas
-          elements={data.document.slides[currentSlideIndex].elements}
-          files={data.document.files}
-          backgroundColor={data.document.backgroundColor}
-          documentSize={data.document.documentSize}
+          initialData={data}
           currentSlide={currentSlideIndex}
           totalSlides={data.document.slides.length}
           onJumpToSlide={handleJumpToSlide}

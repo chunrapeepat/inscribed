@@ -1,23 +1,15 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import {
-  BinaryFiles,
-  ExcalidrawImperativeAPI,
-} from "@excalidraw/excalidraw/types/types";
+import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import {
   AppState,
   NormalizedZoomValue,
 } from "@excalidraw/excalidraw/types/types";
+import { ExportData } from "../../types";
 
 interface ReadOnlyCanvasProps {
-  elements: ExcalidrawElement[];
-  files: BinaryFiles;
-  backgroundColor: string;
-  documentSize: {
-    width: number;
-    height: number;
-  };
+  initialData: ExportData;
   onNextSlide?: () => void;
   onPrevSlide?: () => void;
   currentSlide: number;
@@ -26,31 +18,33 @@ interface ReadOnlyCanvasProps {
 }
 
 export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
-  elements,
-  files,
-  backgroundColor,
-  documentSize,
+  initialData,
   onNextSlide,
   onPrevSlide,
   currentSlide,
   totalSlides,
   onJumpToSlide,
 }) => {
+  const {
+    document: { slides, files, backgroundColor, documentSize },
+  } = initialData;
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const [inputValue, setInputValue] = useState((currentSlide + 1).toString());
 
   // Function to center content
   const centerContent = useCallback(() => {
-    if (!excalidrawAPIRef.current || elements.length === 0) return;
+    if (!excalidrawAPIRef.current || slides.length === 0) return;
 
-    const frame = elements.find((element) => element.id === "frame");
+    const frame = slides[currentSlide].elements.find(
+      (element) => element.id === "frame"
+    );
     if (frame) {
       excalidrawAPIRef.current?.scrollToContent(frame, {
         fitToViewport: true,
         viewportZoomFactor: 1,
       });
     }
-  }, [elements]);
+  }, [slides, currentSlide]);
 
   // Handle window resize
   useEffect(() => {
@@ -60,19 +54,18 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [elements, centerContent]);
+  }, [slides, currentSlide]);
 
-  // Initial setup and elements change handler
   useEffect(() => {
+    // wait for the canvas to load; refactor this later
     setTimeout(() => {
-      if (!excalidrawAPIRef.current || elements.length === 0) return;
-
-      // Find the frame element
-      const frame = elements.find((element) => element.id === "frame");
+      if (!excalidrawAPIRef.current || slides.length === 0) return;
+      const frame = slides[currentSlide].elements.find(
+        (element) => element.id === "frame"
+      );
       if (frame) {
-        // Update frame stroke color through the API
         excalidrawAPIRef.current?.updateScene({
-          elements: elements.map((el: ExcalidrawElement) =>
+          elements: slides[currentSlide].elements.map((el: ExcalidrawElement) =>
             el.id === "frame"
               ? {
                   ...el,
@@ -86,10 +79,10 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
         centerContent();
       }
-    }, 50);
-  }, [elements]);
+    }, 100);
+  }, [slides, currentSlide]);
 
-  // Handle keyboard events
+  // handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
@@ -103,14 +96,13 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onNextSlide, onPrevSlide]);
 
-  // Update input value when currentSlide changes
+  // update input value when currentSlide changes
   useEffect(() => {
     setInputValue((currentSlide + 1).toString());
   }, [currentSlide]);
 
   return (
     <div className="fixed inset-0 bg-white">
-      {/* Hide zoom controls */}
       <style>
         {`
           .Stack.Stack_vertical.zoom-actions {
@@ -118,8 +110,6 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           }
         `}
       </style>
-
-      {/* Interaction blocker overlay */}
       <div className="fixed inset-0 z-10" />
 
       <Excalidraw
@@ -127,7 +117,6 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           excalidrawAPIRef.current = api;
         }}
         initialData={{
-          elements,
           files,
           appState: {
             viewBackgroundColor: backgroundColor,
@@ -163,8 +152,8 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
       {/* Navigation bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-4 p-4 
-                      bg-gray-100 border border-gray-200 backdrop-blur z-20"
+        className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-4 p-2 
+                      bg-gray-100 border-t border-gray-300 backdrop-blur z-20"
       >
         <button
           onClick={onPrevSlide}

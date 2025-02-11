@@ -88,10 +88,7 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
 
   return (
     <ReadOnlyCanvas
-      elements={data.document.slides[currentSlideIndex].elements}
-      files={data.document.files}
-      backgroundColor={data.document.backgroundColor}
-      documentSize={data.document.documentSize}
+      initialData={data}
       onNextSlide={handleNextSlide}
       onPrevSlide={handlePrevSlide}
       currentSlide={currentSlideIndex}

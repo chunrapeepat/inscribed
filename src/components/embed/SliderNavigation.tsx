@@ -12,10 +12,11 @@ const StyledSlider = styled(Slider)({
   color: "#1a73e8",
   height: 8,
   width: "100%",
-  maxWidth: "800px",
+  maxWidth: "700px",
+  transform: "translateY(3px)",
   "& .MuiSlider-thumb": {
-    height: 20,
-    width: 20,
+    height: 15,
+    width: 15,
     backgroundColor: "#fff",
     border: "2px solid currentColor",
     "&:focus, &:hover, &.Mui-active, &.Mui-focusVisible": {
@@ -23,11 +24,11 @@ const StyledSlider = styled(Slider)({
     },
   },
   "& .MuiSlider-track": {
-    height: 8,
+    height: 5,
     borderRadius: 4,
   },
   "& .MuiSlider-rail": {
-    height: 8,
+    height: 5,
     borderRadius: 4,
     opacity: 0.3,
   },
@@ -64,8 +65,8 @@ export const SliderNavigation: React.FC<SliderNavigationProps> = ({
   }, [currentSlide, totalSlides, onSlideChange]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 flex items-center justify-center p-4 bg-gray-100 border border-gray-200 backdrop-blur z-20">
-      <div className="flex items-center justify-center gap-6 w-full max-w-[1000px] px-4">
+    <div className="fixed bottom-0 left-0 right-0 flex items-center justify-center p-2 bg-gray-100 border-t border-gray-300 backdrop-blur z-20">
+      <div className="flex items-center justify-center gap-3 w-full max-w-[1000px] px-4">
         <div className="flex items-center gap-2 min-w-[100px] justify-end">
           <input
             type="number"
