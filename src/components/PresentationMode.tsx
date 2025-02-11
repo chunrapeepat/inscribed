@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDocumentStore } from "../store/document";
-import { exportToBlob } from "@excalidraw/excalidraw";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { exportToImageUrls } from "../utils/export";
 
 interface PresentationModeProps {
   onClose: () => void;
@@ -18,78 +17,29 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
   const [loadingText, setLoadingText] = useState(
     "Initializing presentation..."
   );
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   // generate slide images
   useEffect(() => {
-    const urls: string[] = [];
-    let mounted = true;
+    setLoadingText("Generating presentation slides...");
 
     const generateSlideImages = async () => {
-      setLoadingText("Generating presentation slides...");
-      const tempImages: string[] = new Array(slides.length).fill("");
+      const tempImages = await exportToImageUrls({
+        slides,
+        backgroundColor,
+        documentSize,
+        files,
+      });
 
-      for (let i = 0; i < slides.length; i++) {
-        if (!mounted) return;
-
-        const slide = slides[i];
-        const elements = slide.elements.filter(
-          (el: ExcalidrawElement) => el.id !== "frame"
-        );
-
-        try {
-          setLoadingText(`Generating slide ${i + 1} of ${slides.length}...`);
-          const blob = await exportToBlob({
-            elements,
-            appState: {
-              exportWithDarkMode: false,
-              exportBackground: true,
-              viewBackgroundColor: backgroundColor,
-              width: documentSize.width,
-              height: documentSize.height,
-            },
-            files,
-            getDimensions: () => ({
-              width: documentSize.width,
-              height: documentSize.height,
-            }),
-          });
-
-          const url = URL.createObjectURL(blob);
-          urls.push(url);
-          tempImages[i] = url;
-
-          if (mounted) {
-            setProgress(((i + 1) / slides.length) * 100);
-            setSlideImages([...tempImages]);
-          }
-        } catch (error) {
-          console.error(`Error generating slide ${i + 1}:`, error);
-          setError(`Error generating slide ${i + 1}. Please try again.`);
-          if (mounted) {
-            setLoadingText(
-              `Error generating slide ${i + 1}. Please try again.`
-            );
-          }
-        }
-      }
-
-      if (mounted) {
-        setLoadingText("Presentation ready!");
-        setLoading(false);
-      }
+      setSlideImages(tempImages);
+      setLoadingText("Presentation ready!");
+      setLoading(false);
     };
 
     generateSlideImages();
-
-    return () => {
-      mounted = false;
-      urls.forEach((url) => URL.revokeObjectURL(url));
-    };
   }, []);
 
+  // handle keyboard navigation
   const handleNavigation = useCallback(
     (direction: "prev" | "next") => {
       setCurrentSlideIndex((prev) => {
@@ -102,7 +52,6 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
     [slides.length]
   );
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -116,9 +65,9 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, handleNavigation]);
+  }, [handleNavigation]);
 
-  // Handle click/touch navigation
+  // handle click/touch navigation
   const handleInteraction = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       const clientX =
@@ -130,11 +79,10 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
     [handleNavigation]
   );
 
-  // Add touch swipe support
+  // add touch swipe support
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
   };
-
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStart === null) return;
 
@@ -142,25 +90,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
     const diff = touchStart - touchEnd;
 
     if (Math.abs(diff) > 50) {
-      // Minimum swipe distance
+      // minimum swipe distance
       handleNavigation(diff > 0 ? "next" : "prev");
     }
     setTouchStart(null);
   };
-
-  if (error) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white gap-4 z-[9999]">
-        <div className="text-red-500">{error}</div>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200"
-        >
-          Exit Presentation
-        </button>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -168,12 +102,6 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           <div>{loadingText}</div>
-        </div>
-        <div className="w-48 h-1 bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-white transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
         </div>
       </div>
     );

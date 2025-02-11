@@ -5,9 +5,10 @@ import { useFontsStore } from "../store/custom-fonts";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExportData } from "../types";
 
-export const exportToImageUrls = async (): Promise<string[]> => {
-  const state = useDocumentStore.getState();
-  const { slides, backgroundColor, documentSize } = state;
+export const exportToImageUrls = async (
+  data: ExportData["document"]
+): Promise<string[]> => {
+  const { slides, backgroundColor, documentSize, files } = data;
 
   const urls: string[] = [];
 
@@ -26,7 +27,7 @@ export const exportToImageUrls = async (): Promise<string[]> => {
         width: documentSize.width,
         height: documentSize.height,
       },
-      files: state.files,
+      files,
       getDimensions: () => ({
         width: documentSize.width,
         height: documentSize.height,
@@ -51,7 +52,7 @@ export const exportToGif = async ({
   onProgress,
 }: ExportGifOptions): Promise<void> => {
   const state = useDocumentStore.getState();
-  const { documentSize } = state;
+  const { slides, backgroundColor, documentSize } = state;
 
   const gif = new GIF({
     workers: 2,
@@ -62,7 +63,12 @@ export const exportToGif = async ({
   });
 
   try {
-    const imageUrls = await exportToImageUrls();
+    const imageUrls = await exportToImageUrls({
+      slides,
+      backgroundColor,
+      documentSize,
+      files: state.files,
+    });
 
     // Convert URLs to Images and add to GIF
     for (let i = 0; i < imageUrls.length; i++) {
