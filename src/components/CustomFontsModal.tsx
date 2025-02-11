@@ -165,7 +165,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
             <p className="mt-2 text-sm text-gray-500">
               Need help?{" "}
               <a
-                href="/docs/custom-fonts"
+                href="https://github.com/chunrapeepat/inscribed/blob/master/docs/custom-fonts.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800"
