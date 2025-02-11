@@ -2,19 +2,11 @@
 
 A slide-based tool for fast sketching and animating ideas.
 
-TODO: add screenshots and demo
+![Inscribed App Interface](./docs/imgs/screenshot.png)
 
-TODO: link to docs
-
-TODO: add credits
-
-TODO: add feedback link
-
-## What is this?
+🎥 [Watch Demo on YouTube](https://youtu.be/Aw5mxqPXhKE) | 🚀 [Try Inscribed](https://inscribed.app) | [Feedback](https://github.com/chunrapeepat/inscribed/issues)
 
 ## Features
-
-### Core Drawing Features
 
 - 🎨 Interactive drawing canvas powered by Excalidraw
 - ⌨️ Keyboard shortcuts support
@@ -23,35 +15,20 @@ TODO: add feedback link
   - Delete items
 - 📏 Customizable document size
 - 🖼️ Image import and manipulation
-
-### Typography & Fonts
-
 - 🔤 Google Fonts integration
-- ✨ Custom font support with live preview
-- 🔍 Searchable font interface
-- 💾 Font persistence across sessions
-
-### Presentation Features
-
 - 🎭 Presentation mode for slideshows
-- 📺 Live preview of slide items
-- 🎬 Frame-based navigation
-- 🔄 Smooth transitions between slides
-
-### Export & Sharing
-
 - 📤 Export presentations as GIF
 - 💾 Export/Import data functionality
 - 🔗 Embed support via iframe
-  - Presentation mode embedding
-  - Slider mode embedding
-- 🧹 Automatic cleanup of unused assets
 
-### Storage & Performance
+## Getting Started
 
-- 📁 Local storage support
-- 📚 Library management
-- ⚡ Optimized asset loading
-- 🔄 State persistence across refreshes
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/inscribed.git`
+3. Create a new branch: `git checkout -b feature/your-feature-name`
+4. Install dependencies: `npm install`
+5. Start the development server: `npm run dev`
 
-## Contribution Guide
+---
+
+Crafted with 🧡 by [@chunrapeepat](https://chunrapeepat.com)
