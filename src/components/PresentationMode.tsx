@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { exportToBlob } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 
@@ -17,7 +17,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
   const [loadingText, setLoadingText] = useState(
     "Initializing presentation..."
   );
-  const { slides, backgroundColor, documentSize, files } = useStore();
+  const { slides, backgroundColor, documentSize, files } = useDocumentStore();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 

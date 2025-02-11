@@ -1,5 +1,5 @@
 import React from "react";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { SlidePreview } from "./SlidePreview";
 
 export const SlideList: React.FC = () => {
@@ -11,7 +11,7 @@ export const SlideList: React.FC = () => {
     deleteSlide,
     updateSlide,
     addSlide,
-  } = useStore();
+  } = useDocumentStore();
 
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 

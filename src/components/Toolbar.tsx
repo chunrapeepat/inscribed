@@ -6,7 +6,7 @@ import {
   Cloudy,
   FileCog,
 } from "lucide-react";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
 import { DocumentSettingModal } from "./DocumentSettingModal";
 import { CustomFontsModal } from "./CustomFontsModal";
@@ -14,7 +14,7 @@ import { useModalStore } from "../store/modal";
 import { PresentationMode } from "./PresentationMode";
 
 export const Toolbar: React.FC = () => {
-  const { addSlide, deleteSlide, currentSlideIndex } = useStore();
+  const { addSlide, deleteSlide, currentSlideIndex } = useDocumentStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
   const { openCustomFontsModal, closeModal } = useModalStore();

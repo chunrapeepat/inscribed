@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { CustomFontFace } from "../types";
 
+// handle excalidraw custom fonts
 interface CustomFontsState {
   customFonts: {
     [fontFamily: string]: CustomFontFace[];
@@ -12,7 +13,7 @@ interface CustomFontsState {
 
 export const useFontsStore = create<CustomFontsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       customFonts: {},
       addFonts: (fontFaces: CustomFontFace[]) =>
         set((state) => {

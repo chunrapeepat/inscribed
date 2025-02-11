@@ -7,7 +7,7 @@ import {
   generateEmbedCode,
   handleImport,
 } from "../utils/export";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
 import { FileId } from "@excalidraw/excalidraw/types/element/types";
 
@@ -20,7 +20,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const documentStore = useStore();
+  const documentStore = useDocumentStore();
   const fontsStore = useFontsStore();
   const [selectedOption, setSelectedOption] = React.useState<string | null>(
     null

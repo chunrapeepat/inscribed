@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Slide } from "../types";
+import { ExportData, Slide } from "../types";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -8,8 +8,7 @@ interface DocumentSize {
   width: number;
   height: number;
 }
-
-interface PresentationState {
+interface DocumentState {
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
@@ -23,16 +22,12 @@ interface PresentationState {
   setDocumentSize: (size: DocumentSize) => void;
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
-  resetStore: (data: {
-    backgroundColor: string;
-    slides: Slide[];
-    files: BinaryFiles;
-    documentSize: DocumentSize;
-  }) => void;
+  resetStore: (data: ExportData["document"]) => void;
 }
 
 const DEFAULT_FRAME_WIDTH = 1080;
 const DEFAULT_FRAME_HEIGHT = 1080;
+const DEFAULT_BACKGROUND_COLOR = "#ffffff";
 
 const createDefaultFrame = (
   { width, height }: DocumentSize = {
@@ -59,23 +54,27 @@ const createDefaultFrame = (
     frameId: null,
     roundness: null,
     seed: 500058849,
-    version: 80,
+    version: 1,
     versionNonce: 1663891759,
     isDeleted: false,
     boundElements: null,
-    updated: 1739002348526,
+    updated: Date.now(),
     link: null,
     locked: true,
   };
 };
 
-export const useStore = create<PresentationState>()(
+const generateFrameId = () => {
+  return Date.now().toString();
+};
+
+export const useDocumentStore = create<DocumentState>()(
   persist(
     (set) => ({
-      backgroundColor: "#ffffff",
+      backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
-          id: "1",
+          id: generateFrameId(),
           elements: [createDefaultFrame()],
         },
       ],
@@ -90,7 +89,7 @@ export const useStore = create<PresentationState>()(
           slides: [
             ...state.slides,
             {
-              id: Date.now().toString(),
+              id: generateFrameId(),
               elements: [createDefaultFrame(state.documentSize)],
             },
           ],

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import {
   ExcalidrawElement,
   ExcalidrawImageElement,
@@ -24,7 +24,7 @@ export const Canvas: React.FC = () => {
     files,
     setFiles,
     backgroundColor,
-  } = useStore();
+  } = useDocumentStore();
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];

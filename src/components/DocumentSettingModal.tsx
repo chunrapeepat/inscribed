@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { HexColorPicker } from "react-colorful";
 
 interface DocumentSettingModalProps {
@@ -13,7 +13,7 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
   onClose,
 }) => {
   const { documentSize, setDocumentSize, backgroundColor, setBackgroundColor } =
-    useStore();
+    useDocumentStore();
   const [width, setWidth] = useState(documentSize.width.toString());
   const [height, setHeight] = useState(documentSize.height.toString());
   const [color, setColor] = useState(backgroundColor);

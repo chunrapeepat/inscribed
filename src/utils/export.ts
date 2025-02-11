@@ -1,6 +1,6 @@
 import GIF from "gif.js";
 import { exportToBlob } from "@excalidraw/excalidraw";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExportData } from "../types";
@@ -15,7 +15,7 @@ export const exportToGif = async ({
   frameDelay,
   onProgress,
 }: ExportGifOptions): Promise<void> => {
-  const state = useStore.getState();
+  const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize } = state;
 
   const gif = new GIF({
@@ -151,19 +151,14 @@ type ImportData = {
   fonts: ExportData["fonts"];
 };
 export const handleImport = async (file: File) => {
-  const documentStore = useStore.getState();
+  const documentStore = useDocumentStore.getState();
   const fontsStore = useFontsStore.getState();
 
   const fileContent = await file.text();
   const importData: ImportData = JSON.parse(fileContent);
 
-  // reset the store with imported data
-  documentStore.resetStore({
-    backgroundColor: importData.document.backgroundColor,
-    slides: importData.document.slides,
-    files: importData.document.files,
-    documentSize: importData.document.documentSize,
-  });
+  // reset the store with import data
+  documentStore.resetStore(importData.document);
 
   // add fonts if not already present
   if (importData.fonts?.customFonts) {

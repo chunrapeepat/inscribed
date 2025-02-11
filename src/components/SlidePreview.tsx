@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { exportToSvg } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { useStore } from "../store/document";
+import { useDocumentStore } from "../store/document";
 
 interface SlidePreviewProps {
   elements: ExcalidrawElement[];
@@ -9,7 +9,7 @@ interface SlidePreviewProps {
 
 export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
   const previewRef = useRef<HTMLDivElement>(null);
-  const { backgroundColor, files } = useStore();
+  const { backgroundColor, files } = useDocumentStore();
 
   useEffect(() => {
     const generatePreview = async () => {
