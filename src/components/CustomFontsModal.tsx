@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { useFontsStore } from "../store/custom-fonts";
-import { getExcalidrawFontId, parseFontFaces } from "../utils/fonts";
-import { FONT_FAMILY } from "@excalidraw/excalidraw";
+import { parseFontFaces, registerExcalidrawFonts } from "../utils/fonts";
 import { CustomFontFace } from "../types";
 
 interface CustomFontsModalProps {
@@ -17,60 +16,32 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
   const { customFonts, addFonts, removeFont } = useFontsStore();
   const [embedCode, setEmbedCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Add ref for the search input
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const [hasInitiallyFocused, setHasInitiallyFocused] = useState(false);
 
-  // Modify useEffect to only focus on initial open
+  // handle search input focus
   useEffect(() => {
     if (isOpen && !hasInitiallyFocused) {
-      const timeoutId = setTimeout(() => {
-        searchInputRef.current?.focus();
-        setHasInitiallyFocused(true);
-      }, 0);
-
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
-
-      window.addEventListener("keydown", handleEscape);
-      return () => {
-        window.removeEventListener("keydown", handleEscape);
-        clearTimeout(timeoutId);
-      };
+      searchInputRef.current?.focus();
+      setHasInitiallyFocused(true);
     }
 
-    // Reset the focus state when modal closes
     if (!isOpen) {
       setHasInitiallyFocused(false);
     }
-  }, [isOpen, onClose, hasInitiallyFocused]);
+  }, [isOpen, hasInitiallyFocused]);
 
-  const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
-    fontFaces.forEach((fontFace) => {
-      document.fonts.add(
-        new FontFace(fontFace.fontFamily, fontFace.src, {
-          style: fontFace.fontStyle,
-          weight: fontFace.fontWeight.toString(),
-          unicodeRange: fontFace.unicodeRange,
-        })
-      );
+  // register fonts to Excalidraw when custom fonts are updated
+  useEffect(() => {
+    const fonts: CustomFontFace[] = [];
+    Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
+      console.log("registering font", fontFamily);
+      fonts.push(...fontFaces);
     });
+    registerExcalidrawFonts(fonts);
+  }, [customFonts]);
 
-    // register fonts to Excalidraw
-    const fontFamilies = [
-      ...new Set(fontFaces.map((fontFace) => fontFace.fontFamily)),
-    ];
-    fontFamilies.forEach((fontFamily) => {
-      (FONT_FAMILY as { [k: string]: number })[fontFamily] =
-        getExcalidrawFontId(fontFamily);
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmbedFonts = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const linkPattern =
@@ -94,23 +65,6 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
     addFonts(fontFaces);
     setEmbedCode("");
   };
-
-  useEffect(() => {
-    const unregisteredFonts: CustomFontFace[] = [];
-    Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
-      fontFaces.forEach((fontFace) => {
-        const ff = new FontFace(fontFamily, fontFace.src, {
-          style: fontFace.fontStyle,
-          weight: fontFace.fontWeight.toString(),
-          unicodeRange: fontFace.unicodeRange,
-        });
-        if (!document.fonts.has(ff)) {
-          unregisteredFonts.push(fontFace);
-        }
-      });
-    });
-    registerExcalidrawFonts(unregisteredFonts);
-  }, [customFonts]);
 
   const handleFontClick = (fontFamily: string) => {
     const event = new CustomEvent("fontSelected", {
@@ -155,7 +109,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
             {filteredFonts.map(([fontFamily]) => (
               <div
                 key={fontFamily}
-                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                className="flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 rounded transition-colors"
               >
                 <span
                   style={{ fontFamily: fontFamily }}
@@ -182,22 +136,43 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleEmbedFonts} className="p-4 space-y-4">
           <div>
-            <label
-              htmlFor="embedCode"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Google Fonts Embed Code
-            </label>
+            <div className="flex justify-between items-center">
+              <label
+                htmlFor="embedCode"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Embed New Fonts
+              </label>
+              <a
+                href="https://fonts.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                browse google fonts →
+              </a>
+            </div>
             <textarea
               id="embedCode"
               value={embedCode}
               onChange={(e) => setEmbedCode(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[100px]"
-              placeholder="Paste Google Fonts <link> tag here..."
+              placeholder="Paste Google Fonts embed code <link> or @import here..."
               required
             />
+            <p className="mt-2 text-sm text-gray-500">
+              Need help?{" "}
+              <a
+                href="/docs/custom-fonts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Learn how to add custom fonts
+              </a>
+            </p>
           </div>
           <button
             type="submit"

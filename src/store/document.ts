@@ -25,8 +25,8 @@ interface DocumentState {
   resetStore: (data: ExportData["document"]) => void;
 }
 
-const DEFAULT_FRAME_WIDTH = 1080;
-const DEFAULT_FRAME_HEIGHT = 1080;
+export const DEFAULT_FRAME_WIDTH = 1080;
+export const DEFAULT_FRAME_HEIGHT = 1080;
 const DEFAULT_BACKGROUND_COLOR = "#ffffff";
 
 const createDefaultFrame = (

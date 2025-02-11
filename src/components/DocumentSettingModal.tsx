@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useDocumentStore } from "../store/document";
+import {
+  DEFAULT_FRAME_HEIGHT,
+  DEFAULT_FRAME_WIDTH,
+  useDocumentStore,
+} from "../store/document";
 import { HexColorPicker } from "react-colorful";
 
 interface DocumentSettingModalProps {
@@ -24,8 +28,20 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setDocumentSize({
-      width: Math.max(100, Math.min(4000, parseInt(width) || 100)),
-      height: Math.max(100, Math.min(4000, parseInt(height) || 100)),
+      width: Math.max(
+        100,
+        Math.min(
+          DEFAULT_FRAME_WIDTH * 5,
+          parseInt(width) || DEFAULT_FRAME_WIDTH
+        )
+      ),
+      height: Math.max(
+        100,
+        Math.min(
+          DEFAULT_FRAME_HEIGHT * 5,
+          parseInt(height) || DEFAULT_FRAME_HEIGHT
+        )
+      ),
     });
     setBackgroundColor(color);
     onClose();
