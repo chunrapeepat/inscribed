@@ -3,7 +3,7 @@ import { Toolbar } from "../components/Toolbar";
 import { SlideList } from "../components/SlideList";
 import { Canvas } from "../components/Canvas";
 
-export const MainApp: React.FC = () => {
+export const InscribedEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Toolbar />

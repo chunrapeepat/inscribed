@@ -28,11 +28,13 @@ interface DocumentData {
   };
 }
 
-interface EmbedPageProps {
+interface PresentationEmbedProps {
   gistUrl: string;
 }
 
-export const EmbedPage: React.FC<EmbedPageProps> = ({ gistUrl }) => {
+export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
+  gistUrl,
+}) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<DocumentData | null>(null);

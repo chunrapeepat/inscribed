@@ -28,7 +28,7 @@ interface DocumentData {
   };
 }
 
-interface EmbedSliderProps {
+interface SliderEmbedProps {
   gistUrl: string;
 }
 
@@ -36,7 +36,7 @@ const theme = createTheme({
   // Optional: customize theme if needed
 });
 
-export const EmbedSlider: React.FC<EmbedSliderProps> = ({ gistUrl }) => {
+export const SliderEmbed: React.FC<SliderEmbedProps> = ({ gistUrl }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<DocumentData | null>(null);
