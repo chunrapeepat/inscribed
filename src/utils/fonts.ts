@@ -11,19 +11,19 @@ export const getExcalidrawFontId = (fontFamily: string): number => {
   return Math.abs(hash);
 };
 
-export const registerExcalidrawFonts = (fontFaces: CustomFontFace[]) => {
+export const registerExcalidrawFonts = async (fontFaces: CustomFontFace[]) => {
   // register fonts to browser
-  fontFaces.forEach((fontFace) => {
-    const ff = new FontFace(fontFace.fontFamily, fontFace.src, {
-      style: fontFace.fontStyle,
-      weight: fontFace.fontWeight.toString(),
-      unicodeRange: fontFace.unicodeRange,
-    });
-    if (document.fonts.has(ff)) {
-      return;
-    }
-    document.fonts.add(ff);
-  });
+  await Promise.all(
+    fontFaces.map(async (fontFace) => {
+      const ff = new FontFace(fontFace.fontFamily, fontFace.src, {
+        style: fontFace.fontStyle,
+        weight: fontFace.fontWeight.toString(),
+        unicodeRange: fontFace.unicodeRange,
+      });
+      await ff.load();
+      document.fonts.add(ff);
+    })
+  );
 
   // register fonts to Excalidraw
   const fontFamilies = [

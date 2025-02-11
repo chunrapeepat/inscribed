@@ -1,32 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ReadOnlyCanvas } from "../../components/embed/ReadOnlyCanvas";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
-import { FONT_FAMILY } from "@excalidraw/excalidraw";
-import { getExcalidrawFontId } from "../../utils/fonts";
-
-interface DocumentData {
-  slides: Array<{
-    elements: ExcalidrawElement[];
-  }>;
-  files: BinaryFiles;
-  backgroundColor: string;
-  documentSize: {
-    width: number;
-    height: number;
-  };
-  fonts: {
-    customFonts?: {
-      [fontFamily: string]: Array<{
-        fontFamily: string;
-        src: string;
-        fontStyle: string;
-        fontWeight: string | number;
-        unicodeRange?: string;
-      }>;
-    };
-  };
-}
+import { registerExcalidrawFonts } from "../../utils/fonts";
+import { ExportData } from "../../types";
+import { fetchDataFromGist } from "../../utils/export";
 
 interface PresentationEmbedProps {
   gistUrl: string;
@@ -37,92 +13,45 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
 }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [data, setData] = React.useState<DocumentData | null>(null);
+  const [data, setData] = React.useState<ExportData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
-  React.useEffect(() => {
-    const loadTemplate = async () => {
+  useEffect(() => {
+    const loadData = async () => {
       try {
-        // Convert GitHub Gist URL to raw content URL
-        // From: https://gist.github.com/username/gistid
-        // To: https://gist.githubusercontent.com/username/gistid/raw
-        const rawUrl = gistUrl.replace(
-          "gist.github.com",
-          "gist.githubusercontent.com"
-        );
-
-        const response = await fetch(`${rawUrl}/raw`, {
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const gistData = await response.json();
-        setData({ ...gistData.document, fonts: gistData.fonts });
+        const gistData = await fetchDataFromGist(gistUrl);
+        setData(gistData);
         setLoading(false);
-      } catch (error: unknown) {
-        console.error("Failed to load template:", error);
+      } catch (e: unknown) {
+        console.error("Failed to load template:", e);
         setError("Failed to load template");
         setLoading(false);
       }
     };
 
-    loadTemplate();
+    loadData();
   }, [gistUrl]);
 
-  // Register fonts when data is loaded
-  React.useEffect(() => {
+  // register fonts when data is loaded
+  useEffect(() => {
     if (!data?.fonts?.customFonts) {
-      setFontsLoaded(true);
       return;
     }
 
-    const loadFonts = async () => {
-      try {
-        const fontLoadPromises = Object.entries(
-          data.fonts.customFonts || {}
-        ).map(([fontFamily, fontFaces]) =>
-          Promise.all(
-            fontFaces.map(async (fontFace) => {
-              const ff = new FontFace(fontFamily, fontFace.src, {
-                style: fontFace.fontStyle,
-                weight: fontFace.fontWeight.toString(),
-                unicodeRange: fontFace.unicodeRange,
-              });
-
-              await ff.load();
-              document.fonts.add(ff);
-
-              // Register with Excalidraw
-              (FONT_FAMILY as { [k: string]: number })[fontFamily] =
-                getExcalidrawFontId(fontFamily);
-            })
-          )
-        );
-
-        await Promise.all(fontLoadPromises);
-        setFontsLoaded(true);
-      } catch (err) {
-        console.error("Failed to load fonts:", err);
-        // Continue without custom fonts
-        setFontsLoaded(true);
-      }
-    };
-
-    loadFonts();
+    const customFonts = [];
+    for (const fontFamily in data.fonts.customFonts) {
+      customFonts.push(...data.fonts.customFonts[fontFamily]);
+    }
+    registerExcalidrawFonts(customFonts);
+    setFontsLoaded(true);
   }, [data]);
 
   const handleNextSlide = () => {
-    if (data && currentSlideIndex < data.slides.length - 1) {
+    if (data && currentSlideIndex < data.document.slides.length - 1) {
       setCurrentSlideIndex((prev) => prev + 1);
     }
   };
-
   const handlePrevSlide = () => {
     if (data && currentSlideIndex > 0) {
       setCurrentSlideIndex((prev) => prev - 1);
@@ -159,14 +88,14 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
 
   return (
     <ReadOnlyCanvas
-      elements={data.slides[currentSlideIndex].elements}
-      files={data.files}
-      backgroundColor={data.backgroundColor}
-      documentSize={data.documentSize}
+      elements={data.document.slides[currentSlideIndex].elements}
+      files={data.document.files}
+      backgroundColor={data.document.backgroundColor}
+      documentSize={data.document.documentSize}
       onNextSlide={handleNextSlide}
       onPrevSlide={handlePrevSlide}
       currentSlide={currentSlideIndex}
-      totalSlides={data.slides.length}
+      totalSlides={data.document.slides.length}
       onJumpToSlide={handleJumpToSlide}
     />
   );

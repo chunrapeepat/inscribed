@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import {
   exportToGif,
-  validateGistUrl,
+  fetchDataFromGist,
   downloadInsFile,
   generateEmbedCode,
   handleImport,
@@ -149,7 +149,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         selectedOption === "embed-presentation" ||
         selectedOption === "embed-slider-template"
       ) {
-        await validateGistUrl(gistId);
+        await fetchDataFromGist(gistId);
         const embedType =
           selectedOption === "embed-presentation"
             ? "presentation"

@@ -112,7 +112,7 @@ export const exportToGif = async ({
   }
 };
 
-export const validateGistUrl = async (url: string): Promise<boolean> => {
+export const fetchDataFromGist = async (url: string): Promise<ExportData> => {
   if (!url.startsWith("https://gist.github.com/")) {
     throw new Error("Please enter a valid GitHub Gist URL");
   }
@@ -136,7 +136,7 @@ export const validateGistUrl = async (url: string): Promise<boolean> => {
     throw new Error("Invalid presentation data format");
   }
 
-  return true;
+  return gistData;
 };
 
 // download a file with the .ins extension
