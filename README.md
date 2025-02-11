@@ -2,6 +2,16 @@
 
 A slide-based tool for fast sketching and animating ideas.
 
+TODO: add screenshots and demo
+
+TODO: link to docs
+
+TODO: add credits
+
+TODO: add feedback link
+
+## What is this?
+
 ## Features
 
 ### Core Drawing Features
@@ -44,12 +54,4 @@ A slide-based tool for fast sketching and animating ideas.
 - ⚡ Optimized asset loading
 - 🔄 State persistence across refreshes
 
-## Tech Stack
-
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Material-UI
-- Excalidraw
-- Zustand (State Management)
+## Contribution Guide

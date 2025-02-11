@@ -4,6 +4,7 @@ import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExportData } from "../types";
+import { copy } from "./general";
 
 export const exportToImageUrls = async (
   data: ExportData["document"]
@@ -14,9 +15,11 @@ export const exportToImageUrls = async (
 
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i];
-    const elements = slide.elements.filter(
-      (el: ExcalidrawElement) => el.id !== "frame"
-    );
+    const elements = copy(slide.elements);
+    const frame = elements.find((el: ExcalidrawElement) => el.id === "frame");
+    if (frame) {
+      frame.strokeColor = "transparent";
+    }
 
     const blob = await exportToBlob({
       elements,
