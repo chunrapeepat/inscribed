@@ -16,6 +16,38 @@ interface ExportModalProps {
   onClose: () => void;
 }
 
+const exportOptions = [
+  {
+    id: "import",
+    title: "Import",
+    description:
+      "Import inscribed data (.ins file) This option will overwrite your data, backup your current data before importing",
+  },
+  {
+    id: "export-data",
+    title: "Export Data",
+    description: "Export your current data for later editing",
+  },
+  {
+    id: "gif",
+    title: "Export as GIF",
+    description:
+      "Create an animated GIF of your slides. Good for sharing or posting on social media.",
+  },
+  {
+    id: "embed-presentation",
+    title: "Embed Presentation",
+    description:
+      "Create an iframe embed of your slides. Good for embeding on website, documentation, Notion/Obsidian.",
+  },
+  {
+    id: "embed-slider-template",
+    title: "Embed with Slider Template",
+    description:
+      "Create an iframe embed with slider template. Good for visualizing a step by step process e.g. algorithm",
+  },
+];
+
 export const ExportModal: React.FC<ExportModalProps> = ({
   isOpen,
   onClose,
@@ -138,35 +170,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     }
   };
 
-  const exportOptions = [
-    {
-      id: "import",
-      title: "Import",
-      description:
-        "Import .ins data (warning: this will overwrite your current data, please export your current data before importing)",
-    },
-    {
-      id: "export-data",
-      title: "Export Data",
-      description: "Export your data for later editing",
-    },
-    {
-      id: "gif",
-      title: "Export as GIF",
-      description: "Create an animated GIF of your slides",
-    },
-    {
-      id: "embed-presentation",
-      title: "Embed Presentation",
-      description: "Create an iframe embed of your slides",
-    },
-    {
-      id: "embed-slider-template",
-      title: "Export Slider Template",
-      description: "Create an iframe embed of your slides with slider template",
-    },
-  ];
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md">
@@ -179,20 +182,31 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <X size={20} />
           </button>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
+          <p className="mb-2 text-sm text-gray-500">
+            Need help?{" "}
+            <a
+              href="https://github.com/chunrapeepat/inscribed/blob/master/docs/export.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              Learn how each option works
+            </a>
+          </p>
           {!showEmbedCode ? (
             <>
               {exportOptions.map((option) => (
                 <div
                   key={option.id}
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                  className={`p-3 border-2 rounded-lg cursor-pointer transition-colors ${
                     selectedOption === option.id
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-blue-500"
                   }`}
                   onClick={() => setSelectedOption(option.id)}
                 >
-                  <h3 className="font-medium text-lg">{option.title}</h3>
+                  <h3 className="font-medium">{option.title}</h3>
                   <p className="text-gray-600 text-sm mt-1">
                     {option.description}
                   </p>
