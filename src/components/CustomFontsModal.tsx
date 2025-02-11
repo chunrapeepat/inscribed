@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { useFontsStore } from "../store/custom-fonts";
-import {
-  type FontFace as CustomFontFace,
-  getExcalidrawFontId,
-  parseFontFaces,
-} from "../utils/fonts";
+import { getExcalidrawFontId, parseFontFaces } from "../utils/fonts";
 import { FONT_FAMILY } from "@excalidraw/excalidraw";
+import { CustomFontFace } from "../types";
 
 interface CustomFontsModalProps {
   isOpen: boolean;

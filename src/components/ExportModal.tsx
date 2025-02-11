@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { exportToGif } from "../utils/export-gif";
+import {
+  exportToGif,
+  validateGistUrl,
+  downloadInsFile,
+  generateEmbedCode,
+  handleImport,
+} from "../utils/export";
 import { useStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
 import { FileId } from "@excalidraw/excalidraw/types/element/types";
@@ -38,35 +44,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     onClose();
   };
 
-  const validateGistUrl = async (url: string) => {
-    // Validate URL format
-    if (!url.startsWith("https://gist.github.com/")) {
-      throw new Error("Please enter a valid GitHub Gist URL");
-    }
-
-    // Convert to raw URL and validate content
-    const rawUrl = url.replace("gist.github.com", "gist.githubusercontent.com");
-
-    const response = await fetch(`${rawUrl}/raw`, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        "Failed to fetch Gist. Please check the URL and try again."
-      );
-    }
-
-    const gistData = await response.json();
-    if (!gistData?.document?.slides) {
-      throw new Error("Invalid presentation data format");
-    }
-
-    return true;
-  };
-
   const handleExport = async () => {
     if (!selectedOption) return;
     if (
@@ -90,27 +67,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         ) as HTMLInputElement;
         if (!fileInput.files?.length) return;
 
-        const file = fileInput.files[0];
-        const fileContent = await file.text();
-        const importedData = JSON.parse(fileContent);
-
-        // Reset the store with imported data
-        documentStore.resetStore({
-          backgroundColor: importedData.document.backgroundColor,
-          slides: importedData.document.slides,
-          files: importedData.document.files,
-          documentSize: importedData.document.documentSize,
-        });
-
-        // Reset fonts if present
-        if (importedData.fonts?.customFonts) {
-          Object.keys(importedData.fonts.customFonts).forEach((fontFamily) => {
-            if (!fontsStore.customFonts[fontFamily]) {
-              fontsStore.addFonts(importedData.fonts.customFonts[fontFamily]);
-            }
-          });
-        }
-
+        await handleImport(fileInput.files[0]);
         onClose();
       } else if (selectedOption === "export-data") {
         // prune unused files
@@ -127,44 +84,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           delete files[fileId as FileId];
         });
 
-        // Get data from both stores
-        const documentData = {
-          backgroundColor: documentStore.backgroundColor,
-          slides: documentStore.slides,
-          files,
-          documentSize: documentStore.documentSize,
-        };
-        const fontsData = {
-          customFonts: fontsStore.customFonts,
-        };
-
-        // Combine the data
         const exportData = {
           name: exportFileName,
-          document: documentData,
-          fonts: fontsData,
+          document: {
+            backgroundColor: documentStore.backgroundColor,
+            slides: documentStore.slides,
+            files,
+            documentSize: documentStore.documentSize,
+          },
+          fonts: {
+            customFonts: fontsStore.customFonts,
+          },
         };
 
-        const jsonData = JSON.stringify(exportData, null, 2);
-
-        // Create blob and download link
-        const blob = new Blob([jsonData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-
-        // Ensure filename has .ins extension
-        const filename = exportFileName.endsWith(".ins")
-          ? exportFileName
-          : `${exportFileName}.ins`;
-
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-
-        // Cleanup
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        downloadInsFile(exportData, exportFileName);
         setExportFileName("");
         setSelectedOption(null);
       } else if (selectedOption === "gif") {
@@ -182,39 +115,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         selectedOption === "embed-presentation" ||
         selectedOption === "embed-slider-template"
       ) {
-        try {
-          await validateGistUrl(gistId);
-        } catch (error) {
-          alert(
-            error instanceof Error ? error.message : "Failed to validate Gist"
-          );
-          return;
-        }
-
+        await validateGistUrl(gistId);
         const embedType =
           selectedOption === "embed-presentation"
             ? "presentation"
             : "slider-template";
-        const iframeCode = `<iframe
-  src="${window.location.origin}/embed?type=${embedType}&gist_url=${gistId}"
-  width="100%"
-  height="500"
-  frameborder="0"
-  allowfullscreen
-></iframe>`;
-
+        const iframeCode = generateEmbedCode(embedType, gistId);
         setEmbedCode(iframeCode);
         setShowEmbedCode(true);
         return;
-      } else if (selectedOption === "slider") {
-        // Handle template/slider export with gistId
-        console.log("Exporting with Gist ID:", gistId);
       }
 
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
-      alert("Export failed. Please try again.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Export failed. Please try again."
+      );
       setExportProgress(null);
     }
   };

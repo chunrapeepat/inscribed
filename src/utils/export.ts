@@ -1,0 +1,176 @@
+import GIF from "gif.js";
+import { exportToBlob } from "@excalidraw/excalidraw";
+import { useStore } from "../store/document";
+import { useFontsStore } from "../store/custom-fonts";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { ExportData } from "../types";
+
+interface ExportGifOptions {
+  fileName: string;
+  frameDelay: number;
+  onProgress?: (progress: number) => void;
+}
+export const exportToGif = async ({
+  fileName,
+  frameDelay,
+  onProgress,
+}: ExportGifOptions): Promise<void> => {
+  const state = useStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  const gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: documentSize.width,
+    height: documentSize.height,
+    workerScript: "/public/gif.worker.js",
+  });
+
+  // convert each slide to an image
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i];
+
+    const elements = slide.elements.filter(
+      (el: ExcalidrawElement) => el.id !== "frame"
+    );
+
+    try {
+      const blob = await exportToBlob({
+        elements,
+        appState: {
+          exportWithDarkMode: false,
+          exportBackground: true,
+          viewBackgroundColor: backgroundColor,
+          width: documentSize.width,
+          height: documentSize.height,
+        },
+        files: state.files,
+        getDimensions: () => ({
+          width: documentSize.width,
+          height: documentSize.height,
+        }),
+      });
+
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = URL.createObjectURL(blob);
+      });
+
+      gif.addFrame(image, { delay: frameDelay });
+
+      // update progress
+      if (onProgress) {
+        onProgress(((i + 1) / slides.length) * 100);
+      }
+    } catch (error) {
+      console.error(`Error processing slide ${i}:`, error);
+      throw new Error(`Failed to process slide ${i}`);
+    }
+  }
+
+  // render and download gif
+  return new Promise((resolve) => {
+    gif.on("finished", (blob: Blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName.endsWith(".gif") ? fileName : `${fileName}.gif`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      resolve();
+    });
+
+    gif.render();
+  });
+};
+
+export const validateGistUrl = async (url: string): Promise<boolean> => {
+  if (!url.startsWith("https://gist.github.com/")) {
+    throw new Error("Please enter a valid GitHub Gist URL");
+  }
+
+  const rawUrl =
+    url.replace("gist.github.com", "gist.githubusercontent.com") + "/raw";
+
+  const response = await fetch(rawUrl, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(
+      "Failed to fetch Gist. Please check the URL and try again."
+    );
+  }
+
+  const gistData = await response.json();
+  if (!gistData?.document?.slides) {
+    throw new Error("Invalid presentation data format");
+  }
+
+  return true;
+};
+
+// download a file with the .ins extension
+export const downloadInsFile = (data: ExportData, fileName: string) => {
+  const jsonData = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonData], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  const fullFileName = fileName.endsWith(".ins") ? fileName : `${fileName}.ins`;
+
+  link.href = url;
+  link.download = fullFileName;
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+export const generateEmbedCode = (
+  type: "presentation" | "slider-template",
+  gistUrl: string
+): string => {
+  return `<iframe
+  src="${window.location.origin}/embed?type=${type}&gist_url=${gistUrl}"
+  width="100%"
+  height="500"
+  frameborder="0"
+  allowfullscreen
+></iframe>`;
+};
+
+type ImportData = {
+  document: ExportData["document"];
+  fonts: ExportData["fonts"];
+};
+export const handleImport = async (file: File) => {
+  const documentStore = useStore.getState();
+  const fontsStore = useFontsStore.getState();
+
+  const fileContent = await file.text();
+  const importData: ImportData = JSON.parse(fileContent);
+
+  // reset the store with imported data
+  documentStore.resetStore({
+    backgroundColor: importData.document.backgroundColor,
+    slides: importData.document.slides,
+    files: importData.document.files,
+    documentSize: importData.document.documentSize,
+  });
+
+  // add fonts if not already present
+  if (importData.fonts?.customFonts) {
+    Object.keys(importData.fonts.customFonts).forEach((fontFamily) => {
+      if (!fontsStore.customFonts[fontFamily]) {
+        fontsStore.addFonts(importData.fonts.customFonts[fontFamily]);
+      }
+    });
+  }
+};

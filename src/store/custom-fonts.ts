@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { FontFace } from "../utils/fonts";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { CustomFontFace } from "../types";
 
 interface CustomFontsState {
   customFonts: {
-    [fontFamily: string]: FontFace[];
+    [fontFamily: string]: CustomFontFace[];
   };
-  addFonts: (fontFaces: FontFace[]) => void;
+  addFonts: (fontFaces: CustomFontFace[]) => void;
   removeFont: (fontFamily: string) => void;
 }
 
@@ -14,7 +14,7 @@ export const useFontsStore = create<CustomFontsState>()(
   persist(
     (set, get) => ({
       customFonts: {},
-      addFonts: (fontFaces: FontFace[]) =>
+      addFonts: (fontFaces: CustomFontFace[]) =>
         set((state) => {
           const newState = { ...state.customFonts };
           fontFaces.forEach((fontFace) => {

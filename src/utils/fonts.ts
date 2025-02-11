@@ -1,12 +1,4 @@
-export type FontFace = {
-  subset: string;
-  fontFamily: string;
-  fontStyle: string;
-  fontWeight: number;
-  fontDisplay: string;
-  src: string;
-  unicodeRange: string;
-};
+import { CustomFontFace } from "../types";
 
 export const getExcalidrawFontId = (fontFamily: string): number => {
   let hash = 0;
@@ -18,8 +10,8 @@ export const getExcalidrawFontId = (fontFamily: string): number => {
   return Math.abs(hash);
 };
 
-export const parseFontFaces = (content: string): FontFace[] => {
-  const fontFaces: Array<FontFace> = [];
+export const parseFontFaces = (content: string): CustomFontFace[] => {
+  const fontFaces: Array<CustomFontFace> = [];
 
   // Match each @font-face block including its comment
   const fontFaceRegex = /\/\*\s*([^*]*)\s*\*\/\s*@font-face\s*{([^}]*)}/g;
