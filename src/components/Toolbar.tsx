@@ -42,7 +42,7 @@ export const Toolbar: React.FC = () => {
           </div>
 
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <img src="/public/logo.png" alt="Logo" className="h-8" />
+            <img src="/logo.png" alt="Logo" className="h-8" />
           </div>
 
           <div className="flex gap-2">

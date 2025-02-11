@@ -59,7 +59,7 @@ export const exportToGif = async ({
     quality: 10,
     width: documentSize.width,
     height: documentSize.height,
-    workerScript: "/public/gif.worker.js",
+    workerScript: "/gif.worker.js",
   });
 
   try {
