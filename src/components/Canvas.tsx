@@ -14,6 +14,7 @@ import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
 import { getExcalidrawFontId } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
+import { copy } from "../utils/general";
 
 export const Canvas: React.FC = () => {
   const {
@@ -86,8 +87,8 @@ export const Canvas: React.FC = () => {
 
       // apply font to selected ids
       const selectedIds = Object.keys(previousSelectionIdsRef.current);
-      const selectedElements: Writeable<ExcalidrawElement>[] = JSON.parse(
-        JSON.stringify(excalidrawAPIRef.current?.getSceneElements())
+      const selectedElements: Writeable<ExcalidrawElement>[] = copy(
+        excalidrawAPIRef.current?.getSceneElements() as object
       );
       selectedElements?.forEach((e: Writeable<ExcalidrawElement>) => {
         if (e.type === "text" && selectedIds.includes(e.id)) {
@@ -109,7 +110,7 @@ export const Canvas: React.FC = () => {
     // handle document size change
     if (!excalidrawAPIRef.current) return;
 
-    const _slides = JSON.parse(JSON.stringify(slides));
+    const _slides = copy(slides);
     _slides.forEach((_slide: Slide, index: number) => {
       const frame: Writeable<ExcalidrawElement> | undefined =
         _slide.elements.find(

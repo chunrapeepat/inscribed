@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useDocumentStore } from "../store/document";
 import { SlidePreview } from "./SlidePreview";
 
@@ -12,13 +12,11 @@ export const SlideList: React.FC = () => {
     updateSlide,
     addSlide,
   } = useDocumentStore();
-
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 
-  // Add keyboard navigation handler
-  React.useEffect(() => {
+  // handle keyboard shortcuts for navigation when focused on the sidebar
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check if the sidebar contains the focused element
       if (!sidebarRef.current?.contains(document.activeElement)) {
         return;
       }
@@ -32,9 +30,7 @@ export const SlideList: React.FC = () => {
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         if (slides.length > 1) {
-          // Prevent deleting the last slide
           deleteSlide(currentSlideIndex);
-          // Move to previous slide if available, otherwise stay at current index
           setCurrentSlide(Math.min(currentSlideIndex, slides.length - 2));
         }
       } else if ((e.ctrlKey || e.metaKey) && e.key === "c") {
@@ -59,7 +55,6 @@ export const SlideList: React.FC = () => {
               if (parsedData.type !== "PRESENTATION_SLIDE") {
                 throw new Error("Invalid slide data format");
               }
-              // Add new slide and move it to the correct position
               addSlide();
               const insertIndex = currentSlideIndex + 1;
               updateSlide(insertIndex, parsedData.data.elements);
@@ -76,17 +71,9 @@ export const SlideList: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    currentSlideIndex,
-    slides.length,
-    setCurrentSlide,
-    deleteSlide,
-    slides,
-    reorderSlides,
-    addSlide,
-    updateSlide,
-  ]);
+  }, [currentSlideIndex, slides]);
 
+  // handle drag and drop for reordering slides
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
     index: number
@@ -94,20 +81,16 @@ export const SlideList: React.FC = () => {
     e.dataTransfer.setData("text/plain", index.toString());
     e.currentTarget.classList.add("opacity-50");
   };
-
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove("opacity-50");
   };
-
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.classList.add("border-t-2", "border-blue-500");
   };
-
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove("border-t-2", "border-blue-500");
   };
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, toIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove("border-t-2", "border-blue-500");
