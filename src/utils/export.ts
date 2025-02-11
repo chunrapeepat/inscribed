@@ -5,6 +5,41 @@ import { useFontsStore } from "../store/custom-fonts";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ExportData } from "../types";
 
+export const exportToImageUrls = async (): Promise<string[]> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  const urls: string[] = [];
+
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i];
+    const elements = slide.elements.filter(
+      (el: ExcalidrawElement) => el.id !== "frame"
+    );
+
+    const blob = await exportToBlob({
+      elements,
+      appState: {
+        exportWithDarkMode: false,
+        exportBackground: true,
+        viewBackgroundColor: backgroundColor,
+        width: documentSize.width,
+        height: documentSize.height,
+      },
+      files: state.files,
+      getDimensions: () => ({
+        width: documentSize.width,
+        height: documentSize.height,
+      }),
+    });
+
+    const url = URL.createObjectURL(blob);
+    urls.push(url);
+  }
+
+  return urls;
+};
+
 interface ExportGifOptions {
   fileName: string;
   frameDelay: number;
@@ -16,7 +51,7 @@ export const exportToGif = async ({
   onProgress,
 }: ExportGifOptions): Promise<void> => {
   const state = useDocumentStore.getState();
-  const { slides, backgroundColor, documentSize } = state;
+  const { documentSize } = state;
 
   const gif = new GIF({
     workers: 2,
@@ -26,66 +61,49 @@ export const exportToGif = async ({
     workerScript: "/public/gif.worker.js",
   });
 
-  // convert each slide to an image
-  for (let i = 0; i < slides.length; i++) {
-    const slide = slides[i];
+  try {
+    const imageUrls = await exportToImageUrls();
 
-    const elements = slide.elements.filter(
-      (el: ExcalidrawElement) => el.id !== "frame"
-    );
-
-    try {
-      const blob = await exportToBlob({
-        elements,
-        appState: {
-          exportWithDarkMode: false,
-          exportBackground: true,
-          viewBackgroundColor: backgroundColor,
-          width: documentSize.width,
-          height: documentSize.height,
-        },
-        files: state.files,
-        getDimensions: () => ({
-          width: documentSize.width,
-          height: documentSize.height,
-        }),
-      });
-
+    // Convert URLs to Images and add to GIF
+    for (let i = 0; i < imageUrls.length; i++) {
       const image = new Image();
       await new Promise((resolve, reject) => {
         image.onload = resolve;
         image.onerror = reject;
-        image.src = URL.createObjectURL(blob);
+        image.src = imageUrls[i];
       });
 
       gif.addFrame(image, { delay: frameDelay });
 
-      // update progress
       if (onProgress) {
-        onProgress(((i + 1) / slides.length) * 100);
+        onProgress(((i + 1) / imageUrls.length) * 100);
       }
-    } catch (error) {
-      console.error(`Error processing slide ${i}:`, error);
-      throw new Error(`Failed to process slide ${i}`);
     }
-  }
 
-  // render and download gif
-  return new Promise((resolve) => {
-    gif.on("finished", (blob: Blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName.endsWith(".gif") ? fileName : `${fileName}.gif`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      resolve();
+    imageUrls.forEach(URL.revokeObjectURL);
+
+    // render and download gif
+    return new Promise((resolve) => {
+      gif.on("finished", (blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName.endsWith(".gif")
+          ? fileName
+          : `${fileName}.gif`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        resolve();
+      });
+
+      gif.render();
     });
-
-    gif.render();
-  });
+  } catch (error) {
+    console.error("Error exporting to GIF:", error);
+    throw error;
+  }
 };
 
 export const validateGistUrl = async (url: string): Promise<boolean> => {

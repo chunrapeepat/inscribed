@@ -1,5 +1,5 @@
 import React from "react";
-import { ReadOnlyCanvas } from "../../components/ReadOnlyCanvas";
+import { ReadOnlyCanvas } from "../../components/embed/ReadOnlyCanvas";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 import { FONT_FAMILY } from "@excalidraw/excalidraw";

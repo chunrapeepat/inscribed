@@ -1,11 +1,11 @@
 import React from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { ReadOnlyCanvas } from "../../components/ReadOnlyCanvas";
+import { ReadOnlyCanvas } from "../../components/embed/ReadOnlyCanvas";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
 import { FONT_FAMILY } from "@excalidraw/excalidraw";
 import { getExcalidrawFontId } from "../../utils/fonts";
-import { SliderNavigation } from "../../components/SliderNavigation";
+import { SliderNavigation } from "../../components/embed/SliderNavigation";
 
 interface DocumentData {
   slides: Array<{

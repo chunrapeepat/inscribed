@@ -12,14 +12,15 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [slideImages, setSlideImages] = useState<string[]>([]);
+  const { slides, backgroundColor, documentSize, files } = useDocumentStore();
+
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState(
     "Initializing presentation..."
   );
-  const { slides, backgroundColor, documentSize, files } = useDocumentStore();
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   // generate slide images
   useEffect(() => {
