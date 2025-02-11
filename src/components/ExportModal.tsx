@@ -31,8 +31,7 @@ const exportOptions = [
   {
     id: "gif",
     title: "Export as GIF",
-    description:
-      "Create an animated GIF of your slides. Good for sharing or posting on social media.",
+    description: "Create an animated GIF. Good for sharing on social media.",
   },
   {
     id: "embed-presentation",
@@ -76,6 +75,35 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     onClose();
   };
 
+  const generateExportData = (fileName: string) => {
+    // prune unused files
+    const usedFileIds = documentStore.slides
+      .map((slide) => slide.elements)
+      .flat()
+      .filter((e) => e.type === "image")
+      .map((e) => e.fileId);
+    const unusedFileIds = Object.keys(documentStore.files).filter(
+      (fileId) => !usedFileIds.includes(fileId as FileId)
+    );
+    const files = { ...documentStore.files };
+    unusedFileIds.forEach((fileId) => {
+      delete files[fileId as FileId];
+    });
+
+    return {
+      name: fileName,
+      document: {
+        backgroundColor: documentStore.backgroundColor,
+        slides: documentStore.slides,
+        files,
+        documentSize: documentStore.documentSize,
+      },
+      fonts: {
+        customFonts: fontsStore.customFonts,
+      },
+    };
+  };
+
   const handleExport = async () => {
     if (!selectedOption) return;
     if (
@@ -102,33 +130,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         await handleImport(fileInput.files[0]);
         onClose();
       } else if (selectedOption === "export-data") {
-        // prune unused files
-        const usedFileIds = documentStore.slides
-          .map((slide) => slide.elements)
-          .flat()
-          .filter((e) => e.type === "image")
-          .map((e) => e.fileId);
-        const unusedFileIds = Object.keys(documentStore.files).filter(
-          (fileId) => !usedFileIds.includes(fileId as FileId)
-        );
-        const files = { ...documentStore.files };
-        unusedFileIds.forEach((fileId) => {
-          delete files[fileId as FileId];
-        });
-
-        const exportData = {
-          name: exportFileName,
-          document: {
-            backgroundColor: documentStore.backgroundColor,
-            slides: documentStore.slides,
-            files,
-            documentSize: documentStore.documentSize,
-          },
-          fonts: {
-            customFonts: fontsStore.customFonts,
-          },
-        };
-
+        const exportData = generateExportData(exportFileName);
         downloadInsFile(exportData, exportFileName);
         setExportFileName("");
         setSelectedOption(null);
@@ -313,12 +315,36 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template") && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <label
-                    htmlFor="gistId"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Gist URL
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label
+                      htmlFor="gistId"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Gist URL
+                    </label>
+                    <div className="space-x-1 text-sm">
+                      <button
+                        onClick={() => {
+                          const exportData =
+                            generateExportData("embedding-data");
+                          navigator.clipboard.writeText(
+                            JSON.stringify(exportData)
+                          );
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        (copy data)
+                      </button>
+                      <a
+                        href="https://gist.github.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        (new gist →)
+                      </a>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     id="gistId"
