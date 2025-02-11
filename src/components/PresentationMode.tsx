@@ -21,7 +21,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate slide images
+  // generate slide images
   useEffect(() => {
     const urls: string[] = [];
     let mounted = true;
@@ -62,10 +62,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 
           if (mounted) {
             setProgress(((i + 1) / slides.length) * 100);
-            setSlideImages([...tempImages]); // Update all slides at once
+            setSlideImages([...tempImages]);
           }
         } catch (error) {
           console.error(`Error generating slide ${i + 1}:`, error);
+          setError(`Error generating slide ${i + 1}. Please try again.`);
           if (mounted) {
             setLoadingText(
               `Error generating slide ${i + 1}. Please try again.`
@@ -86,7 +87,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
       mounted = false;
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [slides, backgroundColor, documentSize, files]);
+  }, []);
 
   const handleNavigation = useCallback(
     (direction: "prev" | "next") => {
