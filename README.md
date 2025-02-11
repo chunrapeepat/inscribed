@@ -1,6 +1,6 @@
 # inscribed.app
 
-A slide-based tool for sketching, visualizing, and animating ideas.
+A slide-based tool for fast sketching and animating ideas.
 
 ## Features
 

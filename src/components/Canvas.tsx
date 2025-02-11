@@ -194,12 +194,13 @@ export const Canvas: React.FC = () => {
             clearTimeout(updateTimeoutRef.current);
           }
 
-          updateTimeoutRef.current = setTimeout(() => {
-            updateSlide(
-              currentSlideIndex,
-              JSON.parse(JSON.stringify(elements))
-            );
-          }, 100);
+          // TODO: fix bugs; can't draw a line
+          // updateTimeoutRef.current = setTimeout(() => {
+          //   updateSlide(
+          //     currentSlideIndex,
+          //     JSON.parse(JSON.stringify(elements))
+          //   );
+          // }, 100);
 
           // handle file change
           if (
