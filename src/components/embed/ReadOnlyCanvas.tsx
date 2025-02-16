@@ -102,57 +102,62 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   }, [currentSlide]);
 
   return (
-    <div className="fixed inset-0 bg-white">
+    <div className="fixed inset-0 bg-white flex flex-col">
       <style>
         {`
           .Stack.Stack_vertical.zoom-actions {
             display: none !important;
           }
+          .App-bottom-bar {
+            display: none !important;
+          }
         `}
       </style>
-      <div className="fixed inset-0 z-10" />
+      {/* Main content wrapper with padding-bottom for nav bar */}
+      <div className="flex-1 relative">
+        <div className="absolute inset-0 z-10" />
+        <Excalidraw
+          excalidrawAPI={(api) => {
+            excalidrawAPIRef.current = api;
+          }}
+          initialData={{
+            files,
+            appState: {
+              viewBackgroundColor: backgroundColor,
+              width: documentSize.width,
+              height: documentSize.height,
+              isLoading: false,
+              errorMessage: null,
+              viewModeEnabled: true,
+              zenModeEnabled: true,
+              gridSize: null,
+              showHelpDialog: false,
+              disableScrollForElements: true,
+              scrollX: 0,
+              scrollY: 0,
+              zoom: { value: 1 as NormalizedZoomValue },
+            } as Partial<AppState>,
+          }}
+          viewModeEnabled
+          zenModeEnabled
+          gridModeEnabled={false}
+          UIOptions={{
+            canvasActions: {
+              toggleTheme: false,
+              export: false,
+              saveAsImage: false,
+              saveToActiveFile: false,
+              loadScene: false,
+              clearCanvas: false,
+              changeViewBackgroundColor: false,
+            },
+          }}
+        />
+      </div>
 
-      <Excalidraw
-        excalidrawAPI={(api) => {
-          excalidrawAPIRef.current = api;
-        }}
-        initialData={{
-          files,
-          appState: {
-            viewBackgroundColor: backgroundColor,
-            width: documentSize.width,
-            height: documentSize.height,
-            isLoading: false,
-            errorMessage: null,
-            viewModeEnabled: true,
-            zenModeEnabled: true,
-            gridSize: null,
-            showHelpDialog: false,
-            disableScrollForElements: true,
-            scrollX: 0,
-            scrollY: 0,
-            zoom: { value: 1 as NormalizedZoomValue },
-          } as Partial<AppState>,
-        }}
-        viewModeEnabled
-        zenModeEnabled
-        gridModeEnabled={false}
-        UIOptions={{
-          canvasActions: {
-            toggleTheme: false,
-            export: false,
-            saveAsImage: false,
-            saveToActiveFile: false,
-            loadScene: false,
-            clearCanvas: false,
-            changeViewBackgroundColor: false,
-          },
-        }}
-      />
-
-      {/* Navigation bar */}
+      {/* Navigation bar - now part of flex layout */}
       <div
-        className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-4 p-2 
+        className="flex items-center justify-center gap-4 p-2 
                       bg-gray-100 border-t border-gray-300 backdrop-blur z-20"
       >
         <button
