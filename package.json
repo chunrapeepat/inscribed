@@ -16,6 +16,7 @@
     "@excalidraw/excalidraw": "^0.17.6",
     "@mui/material": "^6.4.3",
     "gif.js": "^0.2.0",
+    "idb-keyval": "^6.2.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-colorful": "^5.6.1",

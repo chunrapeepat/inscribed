@@ -29,6 +29,7 @@ export const Canvas: React.FC = () => {
     setFiles,
     backgroundColor,
   } = useDocumentStore();
+  const hasInitialized = useDocumentStore((state) => state._initialized);
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];
@@ -192,11 +193,13 @@ export const Canvas: React.FC = () => {
         excalidrawAPIRef.current?.updateScene({
           elements: currentSlide.elements,
         });
-        scrollToFrame(
-          currentSlide.elements.find(
-            (element) => element.id === "frame"
-          ) as ExcalidrawElement
-        );
+        setTimeout(() => {
+          scrollToFrame(
+            currentSlide.elements.find(
+              (element) => element.id === "frame"
+            ) as ExcalidrawElement
+          );
+        }, 0);
         return;
       }
 
@@ -245,6 +248,8 @@ export const Canvas: React.FC = () => {
     },
     [currentSlide.elements, currentSlideIndex]
   );
+
+  if (!hasInitialized) return <div>Loading...</div>;
 
   return (
     <div
