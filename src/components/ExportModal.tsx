@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import {
   exportToGif,
@@ -64,6 +64,18 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   );
   const [showEmbedCode, setShowEmbedCode] = useState(false);
   const [embedCode, setEmbedCode] = useState("");
+
+  // ESC shortcut
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscKey);
+    return () => window.removeEventListener("keydown", handleEscKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

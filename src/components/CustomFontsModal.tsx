@@ -41,6 +41,18 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
     registerExcalidrawFonts(fonts);
   }, [customFonts]);
 
+  // ESC shortcut
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscKey);
+    return () => window.removeEventListener("keydown", handleEscKey);
+  }, [isOpen, onClose]);
+
   const handleEmbedFonts = async (e: React.FormEvent) => {
     e.preventDefault();
 

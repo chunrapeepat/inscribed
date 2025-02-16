@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import {
   DEFAULT_FRAME_HEIGHT,
@@ -22,6 +22,18 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
   const [height, setHeight] = useState(documentSize.height.toString());
   const [color, setColor] = useState(backgroundColor);
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  // ESC shortcut
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscKey);
+    return () => window.removeEventListener("keydown", handleEscKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
