@@ -29,6 +29,7 @@ export const Canvas: React.FC = () => {
     setFiles,
     backgroundColor,
   } = useDocumentStore();
+  const hasInitialized = useDocumentStore((state) => state._initialized);
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];
@@ -192,11 +193,13 @@ export const Canvas: React.FC = () => {
         excalidrawAPIRef.current?.updateScene({
           elements: currentSlide.elements,
         });
-        scrollToFrame(
-          currentSlide.elements.find(
-            (element) => element.id === "frame"
-          ) as ExcalidrawElement
-        );
+        setTimeout(() => {
+          scrollToFrame(
+            currentSlide.elements.find(
+              (element) => element.id === "frame"
+            ) as ExcalidrawElement
+          );
+        }, 0);
         return;
       }
 
@@ -246,6 +249,16 @@ export const Canvas: React.FC = () => {
     [currentSlide.elements, currentSlideIndex]
   );
 
+  if (!hasInitialized)
+    return (
+      <div
+        style={{ left: "17rem" }}
+        className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden flex items-center justify-center"
+      >
+        Loading...
+      </div>
+    );
+
   return (
     <div
       style={{ left: "17rem" }}
@@ -271,6 +284,32 @@ export const Canvas: React.FC = () => {
         gridModeEnabled={false}
         onLibraryChange={(items) => {
           setItems(items);
+        }}
+        onPaste={(data) => {
+          const pastedElements = (data as { elements: ExcalidrawElement[] })
+            .elements;
+
+          // if some pasted elements are already in the slide
+          // use the Excalidraw default paste behavior
+          if (
+            pastedElements.some((element) =>
+              slides[currentSlideIndex].elements.some(
+                (e) => e.id === element.id
+              )
+            )
+          ) {
+            return true;
+          }
+
+          const newElements = [
+            ...slides[currentSlideIndex].elements,
+            ...(data as { elements: ExcalidrawElement[] }).elements,
+          ];
+          excalidrawAPIRef.current?.updateScene({
+            elements: newElements,
+          });
+          updateSlide(currentSlideIndex, newElements);
+          return false;
         }}
         onChange={onChange}
       />

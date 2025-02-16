@@ -30,6 +30,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   } = initialData;
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const [inputValue, setInputValue] = useState((currentSlide + 1).toString());
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Function to center content
   const centerContent = useCallback(() => {
@@ -58,33 +59,43 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
   useEffect(() => {
     // wait for the canvas to load; refactor this later
-    setTimeout(() => {
-      if (!excalidrawAPIRef.current || slides.length === 0) return;
-      const frame = slides[currentSlide].elements.find(
-        (element) => element.id === "frame"
-      );
-      if (frame) {
-        excalidrawAPIRef.current?.updateScene({
-          elements: slides[currentSlide].elements.map((el: ExcalidrawElement) =>
-            el.id === "frame"
-              ? {
-                  ...el,
-                  strokeStyle: "solid",
-                  strokeWidth: 1,
-                  strokeColor: "transparent",
-                }
-              : el
-          ),
-        });
+    setTimeout(
+      () => {
+        if (!excalidrawAPIRef.current || slides.length === 0) return;
+        const frame = slides[currentSlide].elements.find(
+          (element) => element.id === "frame"
+        );
+        if (frame) {
+          excalidrawAPIRef.current?.updateScene({
+            elements: slides[currentSlide].elements.map(
+              (el: ExcalidrawElement) =>
+                el.id === "frame"
+                  ? {
+                      ...el,
+                      strokeStyle: "solid",
+                      strokeWidth: 1,
+                      strokeColor: "transparent",
+                    }
+                  : el
+            ),
+          });
 
-        centerContent();
-      }
-    }, 100);
-  }, [slides, currentSlide]);
+          setIsLoaded(true);
+          centerContent();
+        }
+      },
+      isLoaded ? 0 : 100
+    );
+  }, [slides, currentSlide, isLoaded]);
 
   // handle keyboard events
   useEffect(() => {
+    let isKeyPressed = false;
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isKeyPressed) return; // Prevent multiple triggers while key is held
+      isKeyPressed = true;
+
       if (e.key === "ArrowRight") {
         onNextSlide?.();
       } else if (e.key === "ArrowLeft") {
@@ -92,8 +103,17 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
       }
     };
 
+    const handleKeyUp = () => {
+      isKeyPressed = false;
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, [onNextSlide, onPrevSlide]);
 
   // update input value when currentSlide changes
@@ -102,57 +122,73 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   }, [currentSlide]);
 
   return (
-    <div className="fixed inset-0 bg-white">
+    <div className="fixed inset-0 bg-white flex flex-col">
       <style>
         {`
           .Stack.Stack_vertical.zoom-actions {
             display: none !important;
           }
+          .App-bottom-bar {
+            display: none !important;
+          }
         `}
       </style>
-      <div className="fixed inset-0 z-10" />
+      {/* Credit link in top right */}
+      <div className="absolute top-2 right-2 z-20">
+        <a
+          href="https://inscribed.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Made with inscribed.app
+        </a>
+      </div>
+      {/* Main content wrapper with padding-bottom for nav bar */}
+      <div className="flex-1 relative">
+        <div className="absolute inset-0 z-10" />
+        <Excalidraw
+          excalidrawAPI={(api) => {
+            excalidrawAPIRef.current = api;
+          }}
+          initialData={{
+            files,
+            appState: {
+              viewBackgroundColor: backgroundColor,
+              width: documentSize.width,
+              height: documentSize.height,
+              isLoading: false,
+              errorMessage: null,
+              viewModeEnabled: true,
+              zenModeEnabled: true,
+              gridSize: null,
+              showHelpDialog: false,
+              disableScrollForElements: true,
+              scrollX: 0,
+              scrollY: 0,
+              zoom: { value: 1 as NormalizedZoomValue },
+            } as Partial<AppState>,
+          }}
+          viewModeEnabled
+          zenModeEnabled
+          gridModeEnabled={false}
+          UIOptions={{
+            canvasActions: {
+              toggleTheme: false,
+              export: false,
+              saveAsImage: false,
+              saveToActiveFile: false,
+              loadScene: false,
+              clearCanvas: false,
+              changeViewBackgroundColor: false,
+            },
+          }}
+        />
+      </div>
 
-      <Excalidraw
-        excalidrawAPI={(api) => {
-          excalidrawAPIRef.current = api;
-        }}
-        initialData={{
-          files,
-          appState: {
-            viewBackgroundColor: backgroundColor,
-            width: documentSize.width,
-            height: documentSize.height,
-            isLoading: false,
-            errorMessage: null,
-            viewModeEnabled: true,
-            zenModeEnabled: true,
-            gridSize: null,
-            showHelpDialog: false,
-            disableScrollForElements: true,
-            scrollX: 0,
-            scrollY: 0,
-            zoom: { value: 1 as NormalizedZoomValue },
-          } as Partial<AppState>,
-        }}
-        viewModeEnabled
-        zenModeEnabled
-        gridModeEnabled={false}
-        UIOptions={{
-          canvasActions: {
-            toggleTheme: false,
-            export: false,
-            saveAsImage: false,
-            saveToActiveFile: false,
-            loadScene: false,
-            clearCanvas: false,
-            changeViewBackgroundColor: false,
-          },
-        }}
-      />
-
-      {/* Navigation bar */}
+      {/* Navigation bar - now part of flex layout */}
       <div
-        className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-4 p-2 
+        className="flex items-center justify-center gap-4 p-2 
                       bg-gray-100 border-t border-gray-300 backdrop-blur z-20"
       >
         <button
@@ -199,17 +235,6 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
         >
           →
         </button>
-
-        <div className="absolute right-4">
-          <a
-            href="https://inscribed.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            Made by inscribed.app
-          </a>
-        </div>
       </div>
     </div>
   );

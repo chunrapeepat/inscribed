@@ -106,17 +106,6 @@ export const SliderNavigation: React.FC<SliderNavigationProps> = ({
           />
         </div>
       </div>
-
-      <div className="absolute right-4">
-        <a
-          href="https://inscribed.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-        >
-          Made by inscribed.app
-        </a>
-      </div>
     </div>
   );
 };

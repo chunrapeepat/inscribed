@@ -2,18 +2,21 @@ import { create } from "zustand";
 import { ExportData, Slide } from "../types";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { BinaryFiles } from "@excalidraw/excalidraw/types/types";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { createJSONStorage, persist, StateStorage } from "zustand/middleware";
+import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
 
 interface DocumentSize {
   width: number;
   height: number;
 }
 interface DocumentState {
+  _initialized: boolean;
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
   currentSlideIndex: number;
   documentSize: DocumentSize;
+  setInitialized: () => void;
   addSlide: () => void;
   updateSlide: (index: number, elements: ExcalidrawElement[]) => void;
   setCurrentSlide: (index: number) => void;
@@ -68,9 +71,23 @@ const generateFrameId = () => {
   return Date.now().toString();
 };
 
+// Custom storage object
+const storage: StateStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    return (await idbGet(name)) || null;
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    await idbSet(name, value);
+  },
+  removeItem: async (name: string): Promise<void> => {
+    await idbDel(name);
+  },
+};
+
 export const useDocumentStore = create<DocumentState>()(
   persist(
     (set) => ({
+      _initialized: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -84,6 +101,7 @@ export const useDocumentStore = create<DocumentState>()(
         width: DEFAULT_FRAME_WIDTH,
         height: DEFAULT_FRAME_HEIGHT,
       },
+      setInitialized: () => set({ _initialized: true }),
       addSlide: () =>
         set((state) => ({
           slides: [
@@ -146,7 +164,8 @@ export const useDocumentStore = create<DocumentState>()(
     }),
     {
       name: "document-store",
-      storage: createJSONStorage(() => localStorage, {}),
+      storage: createJSONStorage(() => storage, {}),
+      onRehydrateStorage: (state) => () => state.setInitialized(),
     }
   )
 );

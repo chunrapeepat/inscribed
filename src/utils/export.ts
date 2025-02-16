@@ -165,6 +165,7 @@ export const generateEmbedCode = (
   gistUrl: string
 ): string => {
   return `<iframe
+  style="border: 1px solid #ccc; border-radius: 0.5rem;"
   src="${window.location.origin}/embed?type=${type}&gist_url=${gistUrl}"
   width="100%"
   height="500"
