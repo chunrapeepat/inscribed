@@ -273,6 +273,21 @@ export const Canvas: React.FC = () => {
           setItems(items);
         }}
         onPaste={(data) => {
+          const pastedElements = (data as { elements: ExcalidrawElement[] })
+            .elements;
+
+          // if some pasted elements are already in the slide
+          // use the Excalidraw default paste behavior
+          if (
+            pastedElements.some((element) =>
+              slides[currentSlideIndex].elements.some(
+                (e) => e.id === element.id
+              )
+            )
+          ) {
+            return true;
+          }
+
           const newElements = [
             ...slides[currentSlideIndex].elements,
             ...(data as { elements: ExcalidrawElement[] }).elements,
