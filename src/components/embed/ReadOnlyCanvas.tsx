@@ -30,6 +30,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   } = initialData;
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const [inputValue, setInputValue] = useState((currentSlide + 1).toString());
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Function to center content
   const centerContent = useCallback(() => {
@@ -58,29 +59,34 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
   useEffect(() => {
     // wait for the canvas to load; refactor this later
-    setTimeout(() => {
-      if (!excalidrawAPIRef.current || slides.length === 0) return;
-      const frame = slides[currentSlide].elements.find(
-        (element) => element.id === "frame"
-      );
-      if (frame) {
-        excalidrawAPIRef.current?.updateScene({
-          elements: slides[currentSlide].elements.map((el: ExcalidrawElement) =>
-            el.id === "frame"
-              ? {
-                  ...el,
-                  strokeStyle: "solid",
-                  strokeWidth: 1,
-                  strokeColor: "transparent",
-                }
-              : el
-          ),
-        });
+    setTimeout(
+      () => {
+        if (!excalidrawAPIRef.current || slides.length === 0) return;
+        const frame = slides[currentSlide].elements.find(
+          (element) => element.id === "frame"
+        );
+        if (frame) {
+          excalidrawAPIRef.current?.updateScene({
+            elements: slides[currentSlide].elements.map(
+              (el: ExcalidrawElement) =>
+                el.id === "frame"
+                  ? {
+                      ...el,
+                      strokeStyle: "solid",
+                      strokeWidth: 1,
+                      strokeColor: "transparent",
+                    }
+                  : el
+            ),
+          });
 
-        centerContent();
-      }
-    }, 100);
-  }, [slides, currentSlide]);
+          setIsLoaded(true);
+          centerContent();
+        }
+      },
+      isLoaded ? 0 : 100
+    );
+  }, [slides, currentSlide, isLoaded]);
 
   // handle keyboard events
   useEffect(() => {
