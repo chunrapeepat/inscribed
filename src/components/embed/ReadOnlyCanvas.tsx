@@ -113,6 +113,17 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           }
         `}
       </style>
+      {/* Credit link in top right */}
+      <div className="absolute top-2 right-2 z-20">
+        <a
+          href="https://inscribed.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          Made with inscribed.app
+        </a>
+      </div>
       {/* Main content wrapper with padding-bottom for nav bar */}
       <div className="flex-1 relative">
         <div className="absolute inset-0 z-10" />
@@ -204,17 +215,6 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
         >
           →
         </button>
-
-        <div className="absolute right-4">
-          <a
-            href="https://inscribed.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            Made by inscribed.app
-          </a>
-        </div>
       </div>
     </div>
   );
