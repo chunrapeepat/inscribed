@@ -31,9 +31,9 @@ A slide-based tool for fast sketching and animating ideas.
 
 ## Changelog
 
-- [16 feb 2025] [v1.0.1](https://github.com/chunrapeepat/inscribed/pull/1) - ux improvement and indexeddb migration
+- [16/2/2025] [v1.0.1](https://github.com/chunrapeepat/inscribed/pull/1) - ux improvement and indexeddb migration
 
-- [11 feb 2025] [v1.0.0](https://www.youtube.com/watch?v=wEXE8-6yEzw) - launch an MVP
+- [11/2/2025] [v1.0.0](https://www.youtube.com/watch?v=wEXE8-6yEzw) - launch an MVP
   - shortcuts: copy/paste, up/down/delete
   - integrated google fonts
   - export: gif, iframe embed
