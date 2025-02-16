@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import {
   exportToGif,
@@ -184,6 +184,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleExport();
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md">
@@ -252,7 +257,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               )}
 
               {selectedOption === "export-data" && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
                   <label
                     htmlFor="fileName"
                     className="block text-sm font-medium text-gray-700"
@@ -268,11 +276,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     placeholder="Enter file name"
                     required
                   />
-                </div>
+                </form>
               )}
 
               {selectedOption === "gif" && (
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
                   <div>
                     <label
                       htmlFor="gifFileName"
@@ -321,12 +332,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       </p>
                     </div>
                   )}
-                </div>
+                </form>
               )}
 
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template") && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
                   <div className="flex justify-between items-center">
                     <label
                       htmlFor="gistId"
@@ -366,7 +380,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     placeholder="Enter GitHub Gist URL"
                     required
                   />
-                </div>
+                </form>
               )}
             </>
           ) : (
