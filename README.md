@@ -29,6 +29,16 @@ A slide-based tool for fast sketching and animating ideas.
 4. Install dependencies: `pnpm install`
 5. Start the development server: `pnpm dev`
 
+## Changelog
+
+- [16 feb 2025] [v1.0.1](https://github.com/chunrapeepat/inscribed/pull/1) - ux improvement and indexeddb migration
+
+- [11 feb 2025] v1.0.0 - launch an MVP
+  - shortcuts: copy/paste, up/down/delete
+  - integrated google fonts
+  - export: gif, iframe embed
+  - full-screen presentation mode
+
 ---
 
 Crafted with 🧡 by [@chunrapeepat](https://chunrapeepat.com)
