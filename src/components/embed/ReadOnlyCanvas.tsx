@@ -90,7 +90,12 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
   // handle keyboard events
   useEffect(() => {
+    let isKeyPressed = false;
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isKeyPressed) return; // Prevent multiple triggers while key is held
+      isKeyPressed = true;
+
       if (e.key === "ArrowRight") {
         onNextSlide?.();
       } else if (e.key === "ArrowLeft") {
@@ -98,8 +103,17 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
       }
     };
 
+    const handleKeyUp = () => {
+      isKeyPressed = false;
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, [onNextSlide, onPrevSlide]);
 
   // update input value when currentSlide changes
