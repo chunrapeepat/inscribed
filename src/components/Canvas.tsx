@@ -249,7 +249,15 @@ export const Canvas: React.FC = () => {
     [currentSlide.elements, currentSlideIndex]
   );
 
-  if (!hasInitialized) return <div>Loading...</div>;
+  if (!hasInitialized)
+    return (
+      <div
+        style={{ left: "17rem" }}
+        className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden flex items-center justify-center"
+      >
+        Loading...
+      </div>
+    );
 
   return (
     <div
