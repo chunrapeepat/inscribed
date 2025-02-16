@@ -272,6 +272,17 @@ export const Canvas: React.FC = () => {
         onLibraryChange={(items) => {
           setItems(items);
         }}
+        onPaste={(data) => {
+          const newElements = [
+            ...slides[currentSlideIndex].elements,
+            ...(data as { elements: ExcalidrawElement[] }).elements,
+          ];
+          excalidrawAPIRef.current?.updateScene({
+            elements: newElements,
+          });
+          updateSlide(currentSlideIndex, newElements);
+          return false;
+        }}
         onChange={onChange}
       />
     </div>
