@@ -13,6 +13,7 @@ export const SlideList: React.FC = () => {
     addSlide,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const [showShortcuts, setShowShortcuts] = React.useState(false);
 
   // handle keyboard shortcuts for navigation when focused on the sidebar
   useEffect(() => {
@@ -102,37 +103,79 @@ export const SlideList: React.FC = () => {
   };
 
   return (
-    <div
-      ref={sidebarRef}
-      className="fixed left-4 top-24 bottom-4 w-60 bg-white rounded-lg shadow-lg overflow-y-auto focus:outline-none"
-      tabIndex={0}
-    >
-      <div className="p-4">
-        <div className="space-y-4">
-          {slides.map((slide, index) => (
-            <div
-              key={slide.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
-              onClick={() => setCurrentSlide(index)}
-              className={`p-2 rounded-lg cursor-move transition-colors ${
-                currentSlideIndex === index
-                  ? "bg-blue-100 border-2 border-blue-500"
-                  : "hover:bg-gray-100 border-2 border-transparent"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <div className="text-gray-500 text-xs font-medium">
-                  Slide {index + 1}
+    <div className="fixed z-[9999] left-4 top-24 bottom-4 flex">
+      <div
+        ref={sidebarRef}
+        className="w-60 bg-white rounded-lg shadow-lg focus:outline-none"
+        tabIndex={0}
+      >
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-gray-700 font-medium">Slides</div>
+            <div className="relative">
+              <button
+                className="p-1 rounded-full hover:bg-gray-100"
+                onMouseEnter={() => setShowShortcuts(true)}
+                onMouseLeave={() => setShowShortcuts(false)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {showShortcuts && (
+                <div className="absolute z-[9999] top-10 ml-2 w-64 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+                  <h3 className="text-sm font-medium mb-2">
+                    Keyboard Shortcuts
+                  </h3>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>↑ - Previous slide</li>
+                    <li>↓ - Next slide</li>
+                    <li>Delete/Backspace - Delete current slide</li>
+                    <li>Ctrl/⌘ + C - Copy slide</li>
+                    <li>Ctrl/⌘ + V - Paste slide</li>
+                  </ul>
                 </div>
-              </div>
-              <SlidePreview elements={slide.elements} />
+              )}
             </div>
-          ))}
+          </div>
+          <div
+            className="space-y-4 overflow-y-auto"
+            style={{ maxHeight: "calc(100vh - 160px)" }}
+          >
+            {slides.map((slide, index) => (
+              <div
+                key={slide.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onClick={() => setCurrentSlide(index)}
+                className={`p-2 rounded-lg cursor-move transition-colors ${
+                  currentSlideIndex === index
+                    ? "bg-blue-100 border-2 border-blue-500"
+                    : "hover:bg-gray-100 border-2 border-transparent"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="text-gray-500 text-xs font-medium">
+                    Slide {index + 1}
+                  </div>
+                </div>
+                <SlidePreview elements={slide.elements} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
