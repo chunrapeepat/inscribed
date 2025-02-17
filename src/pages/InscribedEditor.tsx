@@ -5,6 +5,7 @@ import { Canvas } from "../components/Canvas";
 
 export const InscribedEditor: React.FC = () => {
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
+  const [showAboutOverlay, setShowAboutOverlay] = useState(true);
 
   useEffect(() => {
     // Check if the device is mobile using window width
@@ -43,6 +44,72 @@ export const InscribedEditor: React.FC = () => {
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
             >
               I understand
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* About overlay */}
+      {showAboutOverlay && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[999999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-xl text-center">
+            <h2 className="text-xl font-semibold mb-4">About Inscribed</h2>
+            <p className="mb-6">
+              A slide-based tool for fast sketching and animating ideas.
+            </p>
+            <div className="mb-6">
+              <iframe
+                width="100%"
+                height="250"
+                src="https://www.youtube.com/embed/wEXE8-6yEzw?si=qFtVy1aUEWHGsOk2"
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                className="rounded-lg"
+              ></iframe>
+            </div>
+            <div className="mb-6 flex items-center justify-center gap-4">
+              <iframe
+                src="https://ghbtns.com/github-btn.html?user=chunrapeepat&repo=inscribed&type=star&count=true&size=small"
+                frameBorder="0"
+                scrolling="0"
+                width="150"
+                height="20"
+                title="GitHub"
+              ></iframe>
+              <a
+                href="https://github.com/chunrapeepat/inscribed"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                See the project on GitHub
+              </a>
+            </div>
+            <div className="mb-6 text-left">
+              <p className="text-gray-700 text-sm">
+                I've been writing tech content lately and needed a way to
+                animate ideas for my blog. I'm a big fan of{" "}
+                <a
+                  href="https://excalidraw.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  Excalidraw
+                </a>{" "}
+                and Keynote, so this is an attempt to combine their UX together
+                for creating slides and stop motion animations. Export as GIF or
+                iframe and embed anywhere you want. Enjoy!
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAboutOverlay(false)}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Close
             </button>
           </div>
         </div>
