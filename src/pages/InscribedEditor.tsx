@@ -13,10 +13,19 @@ export const InscribedEditor: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 relative">
       <Toolbar />
       <SlideList />
       <Canvas />
+
+      <a
+        href="https://github.com/chunrapeepat/inscribed/issues/new"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed right-[-40px] top-1/2 transform -translate-y-1/2 -rotate-90 bg-white shadow-md hover:shadow-lg rounded-lg px-4 py-2 hover:bg-gray-50 transition-all duration-200 border border-gray-200"
+      >
+        Feedback
+      </a>
 
       {/* Mobile overlay */}
       {showMobileOverlay && (
