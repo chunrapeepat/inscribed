@@ -98,7 +98,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white gap-4 z-[9999]">
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white gap-4 z-[999999]">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           <div>{loadingText}</div>
@@ -109,7 +109,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black flex items-center justify-center cursor-none z-[9999]"
+      className="fixed inset-0 bg-black flex items-center justify-center cursor-none z-[999999]"
       onClick={handleInteraction}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
