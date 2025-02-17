@@ -5,13 +5,22 @@ import { Canvas } from "../components/Canvas";
 
 export const InscribedEditor: React.FC = () => {
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
-  const [showAboutOverlay, setShowAboutOverlay] = useState(true);
+  const [showAboutOverlay, setShowAboutOverlay] = useState(() => {
+    // Check if user has visited before
+    return localStorage.getItem("hasVisitedBefore") !== "true";
+  });
 
   useEffect(() => {
     // Check if the device is mobile using window width
     const isMobile = window.innerWidth <= 768;
     setShowMobileOverlay(isMobile);
   }, []);
+
+  const handleCloseAbout = () => {
+    setShowAboutOverlay(false);
+    // Set flag in localStorage
+    localStorage.setItem("hasVisitedBefore", "true");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
@@ -106,7 +115,7 @@ export const InscribedEditor: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={() => setShowAboutOverlay(false)}
+              onClick={handleCloseAbout}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
             >
               Close
