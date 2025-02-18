@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { LibraryItems } from "@excalidraw/excalidraw/types/types";
 
+import algorithmDefaultLibrary from "./default-library/algorithms-and-data-structures-arrays-matrices-trees.json";
+
 // handle excalidraw library items
 interface LibraryState {
   libraryItems: LibraryItems;
@@ -11,7 +13,8 @@ interface LibraryState {
 export const useLibraryStore = create<LibraryState>()(
   persist(
     (set) => ({
-      libraryItems: [],
+      libraryItems:
+        algorithmDefaultLibrary.libraryItems as unknown as LibraryItems,
       setItems: (items: LibraryItems) =>
         set({
           libraryItems: items,
