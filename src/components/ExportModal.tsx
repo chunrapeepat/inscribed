@@ -205,7 +205,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <p className="mb-2 text-sm text-gray-500">
             Need help?{" "}
             <a
-              href="https://github.com/chunrapeepat/inscribed/blob/master/docs/export.md"
+              href="https://github.com/chunrapeepat/inscribed/blob/master/docs/export-options.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800"
