@@ -69,8 +69,8 @@ export const InscribedEditor: React.FC = () => {
             <div className="mb-6">
               <iframe
                 width="100%"
-                height="250"
-                src="https://www.youtube.com/embed/wEXE8-6yEzw?si=qFtVy1aUEWHGsOk2"
+                height="300"
+                src="https://www.youtube.com/embed/CLJvvGVErMY?si=aB4FI9V3ABQCcWtE"
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
