@@ -9,7 +9,7 @@ A slide-based tool for fast sketching and animating ideas.
 ## Tutorials
 
 - [How to use Google fonts?](./docs/custom-fonts.md)
-- [How each export options work?](./docs/export.md)
+- [How each export options work?](./docs/export-options.md)
 
 ## Features
 
