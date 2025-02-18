@@ -6,6 +6,11 @@ A slide-based tool for fast sketching and animating ideas.
 
 🎥 [Watch Demo on YouTube](https://www.youtube.com/watch?v=wEXE8-6yEzw) | 🚀 [Try Inscribed](https://inscribed.app) | [Feedback](https://github.com/chunrapeepat/inscribed/issues)
 
+## Tutorials
+
+- [How to use Google fonts?](./docs/custom-fonts.md)
+- [How each export options work?](./docs/export.md)
+
 ## Features
 
 - 🎨 Interactive drawing canvas powered by Excalidraw
