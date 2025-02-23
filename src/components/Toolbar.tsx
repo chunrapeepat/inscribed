@@ -5,6 +5,7 @@ import {
   Presentation as Present,
   Cloudy,
   FileCog,
+  Copy,
 } from "lucide-react";
 import { useDocumentStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
@@ -14,11 +15,25 @@ import { useModalStore } from "../store/modal";
 import { PresentationMode } from "./PresentationMode";
 
 export const Toolbar: React.FC = () => {
-  const { addSlide, deleteSlide, currentSlideIndex } = useDocumentStore();
+  const {
+    addSlide,
+    addSlideAfterIndex,
+    deleteSlide,
+    currentSlideIndex,
+    slides,
+    updateSlide,
+  } = useDocumentStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
   const { openCustomFontsModal, closeModal } = useModalStore();
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+
+  const handleDuplicateSlide = () => {
+    const slideToStore = slides[currentSlideIndex];
+    addSlideAfterIndex(currentSlideIndex);
+    const insertIndex = currentSlideIndex + 1;
+    updateSlide(insertIndex, slideToStore.elements);
+  };
 
   return (
     <>
@@ -31,6 +46,13 @@ export const Toolbar: React.FC = () => {
             >
               <Plus size={16} />
               <span className="text-xs">New Slide</span>
+            </button>
+            <button
+              onClick={handleDuplicateSlide}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+            >
+              <Copy size={16} />
+              <span className="text-xs">Duplicate</span>
             </button>
             <button
               onClick={() => deleteSlide(currentSlideIndex)}
