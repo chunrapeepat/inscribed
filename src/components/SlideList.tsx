@@ -11,6 +11,7 @@ export const SlideList: React.FC = () => {
     deleteSlide,
     updateSlide,
     addSlide,
+    addSlideAfterIndex,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
@@ -34,6 +35,13 @@ export const SlideList: React.FC = () => {
           deleteSlide(currentSlideIndex);
           setCurrentSlide(Math.min(currentSlideIndex, slides.length - 2));
         }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        const slideToStore = slides[currentSlideIndex];
+        addSlideAfterIndex(currentSlideIndex);
+        const insertIndex = currentSlideIndex + 1;
+        updateSlide(insertIndex, slideToStore.elements);
+        setCurrentSlide(insertIndex);
       } else if ((e.ctrlKey || e.metaKey) && e.key === "c") {
         e.preventDefault();
         const slideToStore = slides[currentSlideIndex];
@@ -142,6 +150,7 @@ export const SlideList: React.FC = () => {
                     <li>Delete/Backspace - Delete current slide</li>
                     <li>Ctrl/⌘ + C - Copy slide</li>
                     <li>Ctrl/⌘ + V - Paste slide</li>
+                    <li>Ctrl/⌘ + D - Duplicate slide</li>
                   </ul>
                 </div>
               )}

@@ -18,6 +18,7 @@ interface DocumentState {
   documentSize: DocumentSize;
   setInitialized: () => void;
   addSlide: () => void;
+  addSlideAfterIndex: (index: number) => void;
   updateSlide: (index: number, elements: ExcalidrawElement[]) => void;
   setCurrentSlide: (index: number) => void;
   deleteSlide: (index: number) => void;
@@ -112,6 +113,18 @@ export const useDocumentStore = create<DocumentState>()(
             },
           ],
           currentSlideIndex: state.slides.length,
+        })),
+      addSlideAfterIndex: (index: number) =>
+        set((state) => ({
+          slides: [
+            ...state.slides.slice(0, index + 1),
+            {
+              id: generateFrameId(),
+              elements: [createDefaultFrame(state.documentSize)],
+            },
+            ...state.slides.slice(index + 1),
+          ],
+          currentSlideIndex: index + 1,
         })),
       updateSlide: (index, elements) =>
         set((state) => {
