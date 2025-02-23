@@ -6,6 +6,7 @@ import {
   Cloudy,
   FileCog,
   Copy,
+  PanelLeftClose,
 } from "lucide-react";
 import { useDocumentStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
@@ -22,11 +23,15 @@ export const Toolbar: React.FC = () => {
     currentSlideIndex,
     slides,
     updateSlide,
+    getSidebarCollapsed,
+    toggleSidebar,
   } = useDocumentStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
   const { openCustomFontsModal, closeModal } = useModalStore();
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+
+  const isSidebarCollapsed = getSidebarCollapsed();
 
   const handleDuplicateSlide = () => {
     const slideToStore = slides[currentSlideIndex];
@@ -40,6 +45,21 @@ export const Toolbar: React.FC = () => {
       <div className="fixed top-4 left-0 right-0 mx-4 bg-white rounded-lg shadow-lg px-2 py-2">
         <div className="relative flex justify-between">
           <div className="flex gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+              title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+            >
+              <PanelLeftClose
+                size={16}
+                className={`transform transition-transform ${
+                  isSidebarCollapsed ? "rotate-180" : ""
+                }`}
+              />
+              <span className="text-xs">
+                {isSidebarCollapsed ? "Show Slides" : "Hide Slides"}
+              </span>
+            </button>
             <button
               onClick={addSlide}
               className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"

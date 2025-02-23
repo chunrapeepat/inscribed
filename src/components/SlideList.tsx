@@ -11,10 +11,13 @@ export const SlideList: React.FC = () => {
     deleteSlide,
     updateSlide,
     addSlideAfterIndex,
+    getSidebarCollapsed,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [isSidebarFocused, setIsSidebarFocused] = React.useState(false);
+
+  const isSidebarCollapsed = getSidebarCollapsed();
 
   // handle keyboard shortcuts for navigation when focused on the sidebar
   useEffect(() => {
@@ -131,7 +134,11 @@ export const SlideList: React.FC = () => {
         )}
       </div>
 
-      <div className="fixed z-[9999] left-4 top-24 bottom-4 flex overflow-hidden">
+      <div
+        className={`fixed z-[9999] left-4 top-24 bottom-4 flex overflow-hidden transition-all duration-300 ${
+          isSidebarCollapsed ? "translate-x-[-280px]" : ""
+        }`}
+      >
         <div
           ref={sidebarRef}
           className="w-60 bg-white rounded-lg shadow-lg focus:outline-none"

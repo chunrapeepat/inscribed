@@ -11,6 +11,7 @@ interface DocumentSize {
 }
 interface DocumentState {
   _initialized: boolean;
+  _isSidebarCollapsed: boolean;
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
@@ -27,6 +28,8 @@ interface DocumentState {
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
   resetStore: (data: ExportData["document"]) => void;
+  toggleSidebar: () => void;
+  getSidebarCollapsed: () => boolean;
 }
 
 export const DEFAULT_FRAME_WIDTH = 1080;
@@ -87,8 +90,9 @@ const storage: StateStorage = {
 
 export const useDocumentStore = create<DocumentState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       _initialized: false,
+      _isSidebarCollapsed: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -174,6 +178,9 @@ export const useDocumentStore = create<DocumentState>()(
           documentSize: data.documentSize,
           currentSlideIndex: 0,
         }),
+      toggleSidebar: () =>
+        set((state) => ({ _isSidebarCollapsed: !state._isSidebarCollapsed })),
+      getSidebarCollapsed: () => get()._isSidebarCollapsed,
     }),
     {
       name: "document-store",
