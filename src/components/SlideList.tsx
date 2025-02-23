@@ -64,7 +64,7 @@ export const SlideList: React.FC = () => {
               if (parsedData.type !== "PRESENTATION_SLIDE") {
                 throw new Error("Invalid slide data format");
               }
-              addSlide();
+              addSlideAfterIndex(currentSlideIndex);
               const insertIndex = currentSlideIndex + 1;
               updateSlide(insertIndex, parsedData.data.elements);
               setCurrentSlide(insertIndex);
