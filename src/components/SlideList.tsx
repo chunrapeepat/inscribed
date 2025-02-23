@@ -10,7 +10,6 @@ export const SlideList: React.FC = () => {
     reorderSlides,
     deleteSlide,
     updateSlide,
-    addSlide,
     addSlideAfterIndex,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
