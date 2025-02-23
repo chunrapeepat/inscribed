@@ -14,6 +14,7 @@ export const SlideList: React.FC = () => {
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
+  const [isSidebarFocused, setIsSidebarFocused] = React.useState(false);
 
   // handle keyboard shortcuts for navigation when focused on the sidebar
   useEffect(() => {
@@ -135,6 +136,8 @@ export const SlideList: React.FC = () => {
           ref={sidebarRef}
           className="w-60 bg-white rounded-lg shadow-lg focus:outline-none"
           tabIndex={0}
+          onFocus={() => setIsSidebarFocused(true)}
+          onBlur={() => setIsSidebarFocused(false)}
         >
           <div className="p-4">
             <div className="flex justify-between items-center mb-4">
@@ -176,7 +179,9 @@ export const SlideList: React.FC = () => {
                   onClick={() => setCurrentSlide(index)}
                   className={`p-2 rounded-lg cursor-move transition-colors ${
                     currentSlideIndex === index
-                      ? "bg-blue-100 border-2 border-blue-500"
+                      ? isSidebarFocused
+                        ? "bg-blue-100 border-2 border-blue-500"
+                        : "bg-gray-100 border-2 border-gray-300"
                       : "hover:bg-gray-100 border-2 border-transparent"
                   }`}
                 >
