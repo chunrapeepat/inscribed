@@ -36,6 +36,8 @@ A slide-based tool for fast sketching and animating ideas.
 
 ## Changelog
 
+- [23/2/2025] [v1.0.2](https://github.com/chunrapeepat/inscribed/pull/5) - slide bar ux improvement
+
 - [16/2/2025] [v1.0.1](https://github.com/chunrapeepat/inscribed/pull/1) - ux improvement and indexeddb migration
 
 - [11/2/2025] [v1.0.0](https://www.youtube.com/watch?v=wEXE8-6yEzw) - launch an MVP
