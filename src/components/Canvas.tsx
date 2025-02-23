@@ -28,6 +28,7 @@ export const Canvas: React.FC = () => {
     files,
     setFiles,
     backgroundColor,
+    getSidebarCollapsed,
   } = useDocumentStore();
   const hasInitialized = useDocumentStore((state) => state._initialized);
   const { openModal } = useModalStore();
@@ -40,6 +41,8 @@ export const Canvas: React.FC = () => {
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const previousPointerRef = useRef<PointerEvent | null>(null);
+
+  const isSidebarCollapsed = getSidebarCollapsed();
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -262,7 +265,10 @@ export const Canvas: React.FC = () => {
 
   return (
     <div
-      style={{ left: "17rem" }}
+      style={{
+        left: isSidebarCollapsed ? "1rem" : "17rem",
+        transition: "left 0.3s ease", // Match the sidebar transition duration
+      }}
       className="fixed top-24 right-4 bottom-4 bg-white rounded-lg shadow-lg overflow-hidden"
     >
       <Excalidraw

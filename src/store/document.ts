@@ -11,6 +11,7 @@ interface DocumentSize {
 }
 interface DocumentState {
   _initialized: boolean;
+  _isSidebarCollapsed: boolean;
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
@@ -18,6 +19,7 @@ interface DocumentState {
   documentSize: DocumentSize;
   setInitialized: () => void;
   addSlide: () => void;
+  addSlideAfterIndex: (index: number) => void;
   updateSlide: (index: number, elements: ExcalidrawElement[]) => void;
   setCurrentSlide: (index: number) => void;
   deleteSlide: (index: number) => void;
@@ -26,6 +28,8 @@ interface DocumentState {
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
   resetStore: (data: ExportData["document"]) => void;
+  toggleSidebar: () => void;
+  getSidebarCollapsed: () => boolean;
 }
 
 export const DEFAULT_FRAME_WIDTH = 1080;
@@ -86,8 +90,9 @@ const storage: StateStorage = {
 
 export const useDocumentStore = create<DocumentState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       _initialized: false,
+      _isSidebarCollapsed: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -112,6 +117,18 @@ export const useDocumentStore = create<DocumentState>()(
             },
           ],
           currentSlideIndex: state.slides.length,
+        })),
+      addSlideAfterIndex: (index: number) =>
+        set((state) => ({
+          slides: [
+            ...state.slides.slice(0, index + 1),
+            {
+              id: generateFrameId(),
+              elements: [createDefaultFrame(state.documentSize)],
+            },
+            ...state.slides.slice(index + 1),
+          ],
+          currentSlideIndex: index + 1,
         })),
       updateSlide: (index, elements) =>
         set((state) => {
@@ -161,6 +178,9 @@ export const useDocumentStore = create<DocumentState>()(
           documentSize: data.documentSize,
           currentSlideIndex: 0,
         }),
+      toggleSidebar: () =>
+        set((state) => ({ _isSidebarCollapsed: !state._isSidebarCollapsed })),
+      getSidebarCollapsed: () => get()._isSidebarCollapsed,
     }),
     {
       name: "document-store",

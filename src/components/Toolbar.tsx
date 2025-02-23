@@ -5,6 +5,8 @@ import {
   Presentation as Present,
   Cloudy,
   FileCog,
+  Copy,
+  PanelLeftClose,
 } from "lucide-react";
 import { useDocumentStore } from "../store/document";
 import { ExportModal } from "./ExportModal";
@@ -14,11 +16,29 @@ import { useModalStore } from "../store/modal";
 import { PresentationMode } from "./PresentationMode";
 
 export const Toolbar: React.FC = () => {
-  const { addSlide, deleteSlide, currentSlideIndex } = useDocumentStore();
+  const {
+    addSlide,
+    addSlideAfterIndex,
+    deleteSlide,
+    currentSlideIndex,
+    slides,
+    updateSlide,
+    getSidebarCollapsed,
+    toggleSidebar,
+  } = useDocumentStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isDocumentSizeModalOpen, setIsDocumentSizeModalOpen] = useState(false);
   const { openCustomFontsModal, closeModal } = useModalStore();
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+
+  const isSidebarCollapsed = getSidebarCollapsed();
+
+  const handleDuplicateSlide = () => {
+    const slideToStore = slides[currentSlideIndex];
+    addSlideAfterIndex(currentSlideIndex);
+    const insertIndex = currentSlideIndex + 1;
+    updateSlide(insertIndex, slideToStore.elements);
+  };
 
   return (
     <>
@@ -26,11 +46,33 @@ export const Toolbar: React.FC = () => {
         <div className="relative flex justify-between">
           <div className="flex gap-2">
             <button
+              onClick={toggleSidebar}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+              title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+            >
+              <PanelLeftClose
+                size={16}
+                className={`transform transition-transform ${
+                  isSidebarCollapsed ? "rotate-180" : ""
+                }`}
+              />
+              <span className="text-xs">
+                {isSidebarCollapsed ? "Show Slides" : "Hide Slides"}
+              </span>
+            </button>
+            <button
               onClick={addSlide}
               className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
             >
               <Plus size={16} />
               <span className="text-xs">New Slide</span>
+            </button>
+            <button
+              onClick={handleDuplicateSlide}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-md hover:bg-gray-100"
+            >
+              <Copy size={16} />
+              <span className="text-xs">Duplicate</span>
             </button>
             <button
               onClick={() => deleteSlide(currentSlideIndex)}
