@@ -233,22 +233,29 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </p>
           {!showEmbedCode ? (
             <>
-              {exportOptions.map((option) => (
-                <div
-                  key={option.id}
-                  className={`p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                    selectedOption === option.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-blue-500"
-                  }`}
-                  onClick={() => setSelectedOption(option.id)}
+              <div className="mb-4">
+                <label htmlFor="export-option" className="block text-sm font-medium text-gray-700 mb-1">
+                  Export Option
+                </label>
+                <select
+                  id="export-option"
+                  value={selectedOption || ""}
+                  onChange={(e) => setSelectedOption(e.target.value || null)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <h3 className="font-medium">{option.title}</h3>
-                  <p className="text-gray-600 text-sm mt-1">
-                    {option.description}
+                  <option value="">Select an option</option>
+                  {exportOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.title}
+                    </option>
+                  ))}
+                </select>
+                {selectedOption && (
+                  <p className="text-gray-600 text-sm mt-2">
+                    {exportOptions.find(option => option.id === selectedOption)?.description}
                   </p>
-                </div>
-              ))}
+                )}
+              </div>
 
               {selectedOption === "import" && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
