@@ -8,16 +8,45 @@ export const SlideList: React.FC = () => {
     currentSlideIndex,
     setCurrentSlide,
     reorderSlides,
+    reorderConsecutiveSlides,
     deleteSlide,
     updateSlide,
     addSlideAfterIndex,
     getSidebarCollapsed,
+    setIsSlideListFocused,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [isSidebarFocused, setIsSidebarFocused] = React.useState(false);
 
+  // Multi-select state
+  const [selectionStart, setSelectionStart] = React.useState<number | null>(
+    null
+  );
+  const [selectionEnd, setSelectionEnd] = React.useState<number | null>(null);
+
   const isSidebarCollapsed = getSidebarCollapsed();
+
+  // Function to determine if there's an active multi-selection
+  const hasSelection = () => selectionStart !== null && selectionEnd !== null;
+
+  // Function to clear the current selection
+  const clearSelection = () => {
+    setSelectionStart(null);
+    setSelectionEnd(null);
+  };
+
+  // Get the selected slides indices in a range (inclusive)
+  const getSelectedIndices = () => {
+    if (selectionStart === null || selectionEnd === null) {
+      return [currentSlideIndex];
+    }
+
+    const start = Math.min(selectionStart, selectionEnd);
+    const end = Math.max(selectionStart, selectionEnd);
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
 
   // handle keyboard shortcuts for navigation when focused on the sidebar
   useEffect(() => {
@@ -28,15 +57,60 @@ export const SlideList: React.FC = () => {
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setCurrentSlide(Math.max(0, currentSlideIndex - 1));
+
+        if (e.shiftKey) {
+          // Start selection if none exists yet
+          if (selectionStart === null) {
+            setSelectionStart(currentSlideIndex);
+            setSelectionEnd((end) => {
+              return Math.max(0, (end !== null ? end : currentSlideIndex) - 1);
+            });
+          } else {
+            // Update the end of selection
+            setSelectionEnd((end) => {
+              return Math.max(0, (end !== null ? end : currentSlideIndex) - 1);
+            });
+          }
+        } else {
+          // Clear any existing selection on normal navigation
+          clearSelection();
+          setCurrentSlide(Math.max(0, currentSlideIndex - 1));
+        }
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        setCurrentSlide(Math.min(slides.length - 1, currentSlideIndex + 1));
+
+        if (e.shiftKey) {
+          // Start selection if none exists yet
+          if (selectionStart === null) {
+            setSelectionStart(currentSlideIndex);
+            setSelectionEnd((end) =>
+              Math.min(
+                slides.length - 1,
+                (end !== null ? end : currentSlideIndex) + 1
+              )
+            );
+          } else {
+            // Update the end of selection
+            setSelectionEnd((end) =>
+              Math.min(
+                slides.length - 1,
+                (end !== null ? end : currentSlideIndex) + 1
+              )
+            );
+          }
+        } else {
+          // Clear any existing selection on normal navigation
+          clearSelection();
+          setCurrentSlide(Math.min(slides.length - 1, currentSlideIndex + 1));
+        }
       } else if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         if (slides.length > 1) {
+          // Don't support multi-select delete for now since it's complex
+          // We would need to handle the case where all selected slides are deleted
           deleteSlide(currentSlideIndex);
           setCurrentSlide(Math.min(currentSlideIndex, slides.length - 2));
+          clearSelection();
         }
       } else if ((e.ctrlKey || e.metaKey) && e.key === "d") {
         e.preventDefault();
@@ -85,32 +159,104 @@ export const SlideList: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentSlideIndex, slides]);
 
+  // Handle click with selection
+  const handleSlideClick = (index: number, e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      // If holding shift, create or extend selection
+      if (selectionStart === null) {
+        setSelectionStart(currentSlideIndex);
+        setSelectionEnd(index);
+      } else {
+        setSelectionEnd(index);
+      }
+      // We still want to update the current slide
+      setCurrentSlide(index);
+    } else {
+      // Normal click, just set current and clear selection
+      setCurrentSlide(index);
+      clearSelection();
+    }
+  };
+
   // handle drag and drop for reordering slides
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
     index: number
   ) => {
-    e.dataTransfer.setData("text/plain", index.toString());
-    e.currentTarget.classList.add("opacity-50");
+    // If we have a selection and the dragged item is within the selection,
+    // we'll drag the entire selection
+    if (hasSelection() && getSelectedIndices().includes(index)) {
+      // Store the selection range to use in drop handler
+      const selectedIndices = getSelectedIndices();
+      const startIdx = Math.min(...selectedIndices);
+      const endIdx = Math.max(...selectedIndices);
+
+      // Store both the main index and the selection range
+      e.dataTransfer.setData("text/plain", index.toString());
+      e.dataTransfer.setData(
+        "application/json",
+        JSON.stringify({
+          selectionStart: startIdx,
+          selectionEnd: endIdx,
+        })
+      );
+
+      // Add opacity to all selected items
+      document.querySelectorAll(".selected-slide").forEach((el) => {
+        el.classList.add("opacity-50");
+      });
+    } else {
+      // Single item drag
+      e.dataTransfer.setData("text/plain", index.toString());
+      e.currentTarget.classList.add("opacity-50");
+
+      // Clear selection when dragging a non-selected item
+      clearSelection();
+    }
   };
+
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    // Remove opacity from all potentially dragged items
     e.currentTarget.classList.remove("opacity-50");
+    document.querySelectorAll(".selected-slide").forEach((el) => {
+      el.classList.remove("opacity-50");
+    });
   };
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.classList.add("border-t-2", "border-blue-500");
   };
+
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove("border-t-2", "border-blue-500");
   };
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, toIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove("border-t-2", "border-blue-500");
 
+    // Check if this is a multi-selection drag
+    try {
+      const selectionData = e.dataTransfer.getData("application/json");
+      if (selectionData) {
+        const { selectionStart, selectionEnd } = JSON.parse(selectionData);
+        reorderConsecutiveSlides(selectionStart, selectionEnd, toIndex);
+        clearSelection();
+        return;
+      }
+    } catch (error) {
+      console.error("Error parsing selection data:", error);
+    }
+
+    // Fall back to single-item reordering
     const fromIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
     if (fromIndex !== toIndex) {
       reorderSlides(fromIndex, toIndex);
     }
+
+    // Clear any selection after drop
+    clearSelection();
   };
 
   return (
@@ -125,6 +271,8 @@ export const SlideList: React.FC = () => {
             <ul className="space-y-2 text-sm text-gray-600">
               <li>↑ - Previous slide</li>
               <li>↓ - Next slide</li>
+              <li>Shift + ↑/↓ - Select multiple slides</li>
+              <li>Shift + Click - Select range of slides</li>
               <li>Delete/Backspace - Delete current slide</li>
               <li>Ctrl/⌘ + C - Copy slide</li>
               <li>Ctrl/⌘ + V - Paste slide</li>
@@ -143,8 +291,14 @@ export const SlideList: React.FC = () => {
           ref={sidebarRef}
           className="w-60 bg-white rounded-lg shadow-lg focus:outline-none"
           tabIndex={0}
-          onFocus={() => setIsSidebarFocused(true)}
-          onBlur={() => setIsSidebarFocused(false)}
+          onFocus={() => {
+            setIsSidebarFocused(true);
+            setIsSlideListFocused(true);
+          }}
+          onBlur={() => {
+            setIsSidebarFocused(false);
+            setIsSlideListFocused(false);
+          }}
         >
           <div className="p-4">
             <div className="flex justify-between items-center mb-4">
@@ -183,9 +337,11 @@ export const SlideList: React.FC = () => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
-                  onClick={() => setCurrentSlide(index)}
+                  onClick={(e) => handleSlideClick(index, e)}
                   className={`p-2 rounded-lg cursor-move transition-colors ${
-                    currentSlideIndex === index
+                    hasSelection() && getSelectedIndices().includes(index)
+                      ? "selected-slide bg-blue-50 border-2 border-blue-300"
+                      : currentSlideIndex === index
                       ? isSidebarFocused
                         ? "bg-blue-100 border-2 border-blue-500"
                         : "bg-gray-100 border-2 border-gray-300"

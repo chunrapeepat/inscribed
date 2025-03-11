@@ -12,6 +12,8 @@ interface DocumentSize {
 interface DocumentState {
   _initialized: boolean;
   _isSidebarCollapsed: boolean;
+  _isSlideListFocused: boolean;
+
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
@@ -24,6 +26,12 @@ interface DocumentState {
   setCurrentSlide: (index: number) => void;
   deleteSlide: (index: number) => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
+  reorderConsecutiveSlides: (
+    startIndex: number,
+    endIndex: number,
+    targetIndex: number
+  ) => void;
+  setIsSlideListFocused: (isFocused: boolean) => void;
   setDocumentSize: (size: DocumentSize) => void;
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
@@ -93,6 +101,7 @@ export const useDocumentStore = create<DocumentState>()(
     (set, get) => ({
       _initialized: false,
       _isSidebarCollapsed: false,
+      _isSlideListFocused: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -165,6 +174,68 @@ export const useDocumentStore = create<DocumentState>()(
               state.currentSlideIndex === fromIndex
                 ? toIndex
                 : state.currentSlideIndex,
+          };
+        }),
+      setIsSlideListFocused: (isFocused) =>
+        set({ _isSlideListFocused: isFocused }),
+      reorderConsecutiveSlides: (startIndex, endIndex, targetIndex) =>
+        set((state) => {
+          // Swap if start is greater than end
+          if (startIndex > endIndex) {
+            [startIndex, endIndex] = [endIndex, startIndex];
+          }
+
+          // Calculate range size
+          const count = endIndex - startIndex + 1;
+
+          // Create a copy of the slides
+          const newSlides = [...state.slides];
+
+          // Extract the consecutive slides to be moved
+          const movedSlides = newSlides.slice(startIndex, endIndex + 1);
+
+          // Remove the slides from their original positions
+          newSlides.splice(startIndex, count);
+
+          // Adjust target index if it was after the removed range
+          let adjustedTargetIndex = targetIndex;
+          if (targetIndex > endIndex) {
+            adjustedTargetIndex -= count;
+          } else if (targetIndex > startIndex) {
+            // If target is within the range, place at the start of where the range was
+            adjustedTargetIndex = startIndex;
+          }
+
+          // Insert the moved slides at the adjusted target index
+          newSlides.splice(adjustedTargetIndex, 0, ...movedSlides);
+
+          // Calculate the new current slide index
+          let newCurrentIndex = state.currentSlideIndex;
+
+          if (
+            state.currentSlideIndex >= startIndex &&
+            state.currentSlideIndex <= endIndex
+          ) {
+            // If current slide is in the moved range, adjust it
+            const offsetWithinRange = state.currentSlideIndex - startIndex;
+            newCurrentIndex = adjustedTargetIndex + offsetWithinRange;
+          } else if (
+            state.currentSlideIndex > endIndex &&
+            state.currentSlideIndex < adjustedTargetIndex + count
+          ) {
+            // If current slide is after the original range but before the new position
+            newCurrentIndex -= count;
+          } else if (
+            state.currentSlideIndex >= adjustedTargetIndex &&
+            state.currentSlideIndex < startIndex
+          ) {
+            // If current slide is after the new position but before the original range
+            newCurrentIndex += count;
+          }
+
+          return {
+            slides: newSlides,
+            currentSlideIndex: newCurrentIndex,
           };
         }),
       setDocumentSize: (size) => set({ documentSize: size }),

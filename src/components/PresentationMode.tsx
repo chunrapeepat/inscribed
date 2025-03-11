@@ -17,7 +17,8 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
   const [loadingText, setLoadingText] = useState(
     "Initializing presentation..."
   );
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   // generate slide images
   useEffect(() => {
@@ -81,19 +82,34 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
 
   // add touch swipe support
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
   };
+  
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
+    if (touchStartX === null || touchStartY === null) return;
 
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-
-    if (Math.abs(diff) > 50) {
-      // minimum swipe distance
-      handleNavigation(diff > 0 ? "next" : "prev");
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY - touchEndY;
+    
+    // Determine if swipe is more horizontal or vertical
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      // Horizontal swipe
+      if (Math.abs(diffX) > 50) {  // minimum swipe distance
+        handleNavigation(diffX > 0 ? "next" : "prev");
+      }
+    } else {
+      // Vertical swipe - if swiping down
+      if (diffY < -100) {  // negative value means swiped down, higher threshold for exit
+        onClose();
+      }
     }
-    setTouchStart(null);
+    
+    setTouchStartX(null);
+    setTouchStartY(null);
   };
 
   if (loading) {
@@ -125,8 +141,9 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({
       <div className="fixed bottom-4 right-4 text-white text-sm opacity-50">
         {currentSlideIndex + 1} / {slides.length}
       </div>
-      <div className="fixed bottom-4 left-4 text-white text-sm opacity-50">
-        Press ← → to navigate • ESC to exit
+      <div className="fixed bottom-4 left-4 text-white text-sm opacity-50 max-w-[70%]">
+        <span className="hidden md:inline">Press ← → to navigate • ESC to exit</span>
+        <span className="md:hidden">Swipe left/right to navigate • Swipe down to exit</span>
       </div>
     </div>
   );
