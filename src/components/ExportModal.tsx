@@ -283,12 +283,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {!showEmbedCode ? (
             <>
               <div className="mb-4">
-                <label
-                  htmlFor="export-option"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Export Option
-                </label>
                 <select
                   id="export-option"
                   value={selectedOption || ""}
