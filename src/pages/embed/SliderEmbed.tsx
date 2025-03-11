@@ -8,9 +8,13 @@ import { fetchDataFromGist } from "../../utils/export";
 
 interface SliderEmbedProps {
   gistUrl: string;
+  filename?: string;
 }
 
-export const SliderEmbed: React.FC<SliderEmbedProps> = ({ gistUrl }) => {
+export const SliderEmbed: React.FC<SliderEmbedProps> = ({
+  gistUrl,
+  filename,
+}) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<ExportData | null>(null);
@@ -21,7 +25,18 @@ export const SliderEmbed: React.FC<SliderEmbedProps> = ({ gistUrl }) => {
     const loadData = async () => {
       try {
         const gistData = await fetchDataFromGist(gistUrl);
-        setData(gistData);
+        if (Array.isArray(gistData)) {
+          if (filename) {
+            const file = gistData.find((file) => file.filename === filename);
+            if (file) {
+              setData(file.content);
+            }
+          } else {
+            setData(gistData[0].content);
+          }
+        } else {
+          setData(gistData);
+        }
         setLoading(false);
       } catch (e: unknown) {
         console.error("Failed to load template:", e);

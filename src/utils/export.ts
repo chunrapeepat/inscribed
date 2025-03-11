@@ -115,31 +115,135 @@ export const exportToGif = async ({
   }
 };
 
-export const fetchDataFromGist = async (url: string): Promise<ExportData> => {
+interface GistFile {
+  filename: string;
+  raw_url: string;
+  content: string;
+}
+
+interface GistResponse {
+  files: Record<string, GistFile>;
+}
+
+export interface GistFileData {
+  filename: string;
+  content: ExportData;
+}
+
+// Function to check if content is valid inscribed data
+const isValidInscribedData = (data: any): boolean => {
+  return Boolean(data?.document?.slides);
+};
+
+// Extract gist ID from URL
+const extractGistId = (url: string): string => {
+  // Match either a gist URL or a direct link to a file in a gist
+  const match = url.match(/gist\.github\.com\/[^/]+\/([a-zA-Z0-9]+)/);
+  if (!match || !match[1]) {
+    throw new Error("Please enter a valid GitHub Gist URL");
+  }
+  return match[1];
+};
+
+// Extract targeted filename from URL query parameter if present
+const extractTargetedFilename = (url: string): string | null => {
+  try {
+    const urlObj = new URL(url);
+    const filenameParam = urlObj.searchParams.get('filename');
+    if (filenameParam) {
+      return filenameParam;
+    }
+    
+    // Fallback to fragment identifier for backward compatibility
+    const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
+    return fileMatch ? fileMatch[1].replace(/-/g, '.') : null;
+  } catch (e) {
+    // If URL parsing fails, try fragment as fallback
+    const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
+    return fileMatch ? fileMatch[1].replace(/-/g, '.') : null;
+  }
+};
+
+export const fetchDataFromGist = async (url: string): Promise<ExportData | GistFileData[]> => {
   if (!url.startsWith("https://gist.github.com/")) {
     throw new Error("Please enter a valid GitHub Gist URL");
   }
 
-  const rawUrl =
-    url.replace("gist.github.com", "gist.githubusercontent.com") + "/raw";
-
-  const response = await fetch(rawUrl, {
+  // Extract gist ID and targeted filename
+  const gistId = extractGistId(url);
+  const targetedFilename = extractTargetedFilename(url);
+  
+  // Use GitHub API to fetch the gist and all its files
+  const apiUrl = `https://api.github.com/gists/${gistId}`;
+  
+  const response = await fetch(apiUrl, {
     headers: {
       Accept: "application/json",
     },
   });
+  
   if (!response.ok) {
     throw new Error(
       "Failed to fetch Gist. Please check the URL and try again."
     );
   }
 
-  const gistData = await response.json();
-  if (!gistData?.document?.slides) {
-    throw new Error("Invalid presentation data format");
+  const gistResponse: GistResponse = await response.json();
+  
+  // If specific file is targeted in the URL
+  if (targetedFilename) {
+    // Find the targeted file
+    const fileEntry = Object.entries(gistResponse.files).find(
+      ([key]) => key.toLowerCase() === targetedFilename.toLowerCase()
+    );
+    
+    if (!fileEntry) {
+      throw new Error(`File "${targetedFilename}" not found in this Gist`);
+    }
+    
+    const [filename, fileData] = fileEntry;
+    
+    try {
+      const content = JSON.parse(fileData.content);
+      if (isValidInscribedData(content)) {
+        return content;
+      } else {
+        throw new Error(`File "${filename}" does not contain valid Inscribed data`);
+      }
+    } catch (e) {
+      throw new Error(`Error parsing JSON from file "${filename}"`);
+    }
   }
-
-  return gistData;
+  
+  // Check for multiple valid files
+  const validFiles: GistFileData[] = [];
+  
+  for (const [filename, fileData] of Object.entries(gistResponse.files)) {
+    try {
+      const content = JSON.parse(fileData.content);
+      if (isValidInscribedData(content)) {
+        validFiles.push({
+          filename,
+          content,
+        });
+      }
+    } catch (e) {
+      // Skip invalid files
+      continue;
+    }
+  }
+  
+  if (validFiles.length === 0) {
+    throw new Error("No valid Inscribed data files found in this Gist");
+  }
+  
+  if (validFiles.length === 1) {
+    // If only one valid file, return it directly
+    return validFiles[0].content;
+  }
+  
+  // Return all valid files to let user choose
+  return validFiles;
 };
 
 // download a file with the .ins extension
@@ -164,9 +268,30 @@ export const generateEmbedCode = (
   type: "presentation" | "slider-template",
   gistUrl: string
 ): string => {
+  // Extract any filename parameter if present
+  let urlToUse = gistUrl;
+  let filenameParam = "";
+  
+  try {
+    if (gistUrl.includes("filename=")) {
+      // We'll properly format the URL to separate the base URL and parameters
+      const baseGistUrl = gistUrl.split("?")[0]; // Get the base URL without params
+      const params = new URLSearchParams(gistUrl.split("?")[1] || "");
+      const filename = params.get("filename");
+      
+      if (filename) {
+        urlToUse = baseGistUrl;
+        filenameParam = `&filename=${encodeURIComponent(filename)}`;
+      }
+    }
+  } catch (e) {
+    console.error("Error parsing gist URL:", e);
+    // Continue with the original URL if there's an error
+  }
+  
   return `<iframe
   style="border: 1px solid #ccc; border-radius: 0.5rem;"
-  src="${window.location.origin}/embed?type=${type}&gist_url=${gistUrl}"
+  src="${window.location.origin}/embed?type=${type}&gist_url=${urlToUse}${filenameParam}"
   width="100%"
   height="500"
   frameborder="0"

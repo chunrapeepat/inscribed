@@ -29,3 +29,20 @@ Create an iframe embed code in **“slider template format”** to embed everywh
 ### Get Shareable Link
 
 Generate a direct shareable link from your Gist URL for easy sharing. This option provides a simple URL that can be shared via email, chat, or social media without embedding. The link can be opened directly in a browser to view the presentation.
+
+## Working with GitHub Gists
+
+For the embed and shareable link options, you need to save your presentation data to a GitHub Gist. Here are some helpful tips:
+
+### Using Multiple Files in a Single Gist
+
+If your Gist contains multiple valid Inscribed files, the system will automatically detect them and display a dropdown menu for you to select which file to use.
+
+### Direct File Links
+
+You can link directly to a specific file in a Gist using the filename parameter in the URL. For example:
+```
+https://gist.github.com/username/gistid?filename=presentation.ins
+```
+
+When a Gist contains multiple files with valid Inscribed data, the system automatically adds this parameter to specify which file to use. This allows you to share a direct link to a specific presentation within a multi-file Gist.

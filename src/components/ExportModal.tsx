@@ -1,11 +1,12 @@
 import React, { FormEvent, useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import {
   exportToGif,
   fetchDataFromGist,
   downloadInsFile,
   generateEmbedCode,
   handleImport,
+  GistFileData,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -70,6 +71,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   );
   const [showEmbedCode, setShowEmbedCode] = useState(false);
   const [embedCode, setEmbedCode] = useState("");
+  const [gistFiles, setGistFiles] = useState<GistFileData[]>([]);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [isLoadingGist, setIsLoadingGist] = useState(false);
 
   // ESC shortcut
   useEffect(() => {
@@ -90,6 +94,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setEmbedCode("");
     setGistId("");
     setSelectedOption(null);
+    setGistFiles([]);
+    setSelectedFile(null);
+    setIsLoadingGist(false);
     onClose();
   };
 
@@ -169,23 +176,65 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         selectedOption === "embed-slider-template" ||
         selectedOption === "get-shareable-link"
       ) {
-        await fetchDataFromGist(gistId);
-        
-        if (selectedOption === "get-shareable-link") {
-          // Generate shareable link instead of iframe code
-          const embedType = "presentation"; // Default to presentation view
-          const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}`;
-          setEmbedCode(shareableLink);
-          setShowEmbedCode(true);
-        } else {
-          // Generate iframe code for other embed options
-          const embedType =
-            selectedOption === "embed-presentation"
-              ? "presentation"
-              : "slider-template";
-          const iframeCode = generateEmbedCode(embedType, gistId);
-          setEmbedCode(iframeCode);
-          setShowEmbedCode(true);
+        // If we already have gist files and a selected file, proceed with that
+        if (gistFiles.length > 0 && selectedFile) {
+          // Use a query parameter for filename instead of fragment identifier
+          const fileParam = `&filename=${encodeURIComponent(selectedFile)}`;
+
+          if (selectedOption === "get-shareable-link") {
+            // Generate shareable link instead of iframe code
+            const embedType = "presentation"; // Default to presentation view
+            const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}${fileParam}`;
+            setEmbedCode(shareableLink);
+            setShowEmbedCode(true);
+          } else {
+            // Generate iframe code for other embed options
+            const embedType =
+              selectedOption === "embed-presentation"
+                ? "presentation"
+                : "slider-template";
+            const iframeCode = generateEmbedCode(
+              embedType,
+              `${gistId}${fileParam}`
+            );
+            setEmbedCode(iframeCode);
+            setShowEmbedCode(true);
+          }
+          return;
+        }
+
+        // Otherwise fetch from the gist
+        setIsLoadingGist(true);
+        try {
+          const result = await fetchDataFromGist(gistId);
+
+          // If result is an array, we have multiple files to choose from
+          if (Array.isArray(result)) {
+            setGistFiles(result);
+            setSelectedFile(result[0].filename); // Select first file by default
+            setIsLoadingGist(false);
+            return; // Wait for user to select a file
+          }
+
+          // Single file result, proceed with generating link/embed
+          if (selectedOption === "get-shareable-link") {
+            // Generate shareable link instead of iframe code
+            const embedType = "presentation"; // Default to presentation view
+            const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}`;
+            setEmbedCode(shareableLink);
+            setShowEmbedCode(true);
+          } else {
+            // Generate iframe code for other embed options
+            const embedType =
+              selectedOption === "embed-presentation"
+                ? "presentation"
+                : "slider-template";
+            const iframeCode = generateEmbedCode(embedType, gistId);
+            setEmbedCode(iframeCode);
+            setShowEmbedCode(true);
+          }
+        } finally {
+          setIsLoadingGist(false);
         }
         return;
       }
@@ -234,7 +283,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {!showEmbedCode ? (
             <>
               <div className="mb-4">
-                <label htmlFor="export-option" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="export-option"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Export Option
                 </label>
                 <select
@@ -252,7 +304,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </select>
                 {selectedOption && (
                   <p className="text-gray-600 text-sm mt-2">
-                    {exportOptions.find(option => option.id === selectedOption)?.description}
+                    {
+                      exportOptions.find(
+                        (option) => option.id === selectedOption
+                      )?.description
+                    }
                   </p>
                 )}
               </div>
@@ -401,11 +457,52 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     type="text"
                     id="gistId"
                     value={gistId}
-                    onChange={(e) => setGistId(e.target.value)}
+                    onChange={(e) => {
+                      setGistId(e.target.value);
+                      // Clear gist files when URL changes
+                      if (gistFiles.length > 0) {
+                        setGistFiles([]);
+                        setSelectedFile(null);
+                      }
+                    }}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter GitHub Gist URL"
                     required
                   />
+
+                  {isLoadingGist && (
+                    <div className="mt-2 text-sm text-gray-600 flex items-center">
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full"></div>
+                      Loading Gist files...
+                    </div>
+                  )}
+
+                  {gistFiles.length > 0 && (
+                    <div className="mt-3">
+                      <label
+                        htmlFor="gistFile"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Select File
+                      </label>
+                      <select
+                        id="gistFile"
+                        value={selectedFile || ""}
+                        onChange={(e) => setSelectedFile(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        {gistFiles.map((file) => (
+                          <option key={file.filename} value={file.filename}>
+                            {file.filename}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Found {gistFiles.length} valid Inscribed data files in
+                        this Gist
+                      </p>
+                    </div>
+                  )}
                 </form>
               )}
             </>
@@ -434,7 +531,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  {selectedOption === "get-shareable-link" ? "Copy Link" : "Copy Code"}
+                  {selectedOption === "get-shareable-link"
+                    ? "Copy Link"
+                    : "Copy Code"}
                 </button>
                 <button
                   onClick={handleClose}
@@ -461,7 +560,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link") &&
-                  !gistId.trim())
+                  (!gistId.trim() || (gistFiles.length > 0 && !selectedFile)))
               }
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
                 selectedOption &&
@@ -476,7 +575,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (selectedOption === "embed-presentation" ||
                     selectedOption === "embed-slider-template" ||
                     selectedOption === "get-shareable-link") &&
-                  !gistId.trim()
+                  (!gistId.trim() || (gistFiles.length > 0 && !selectedFile))
                 )
                   ? "bg-blue-600 hover:bg-blue-700 text-white"
                   : "bg-gray-300 cursor-not-allowed text-gray-500"
