@@ -36,7 +36,7 @@ A slide-based tool for fast sketching and animating ideas.
 
 ## Changelog
 
-- [11/3/2025] v1.0.2-hotfix - gist multiple files support
+- [11/3/2025] v1.0.2-hotfix - support gist with multiple files
 
 - [23/2/2025] [v1.0.2](https://github.com/chunrapeepat/inscribed/pull/5) - slide bar ux improvement
 
