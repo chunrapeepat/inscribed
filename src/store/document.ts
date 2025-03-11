@@ -44,7 +44,7 @@ export const DEFAULT_FRAME_WIDTH = 1080;
 export const DEFAULT_FRAME_HEIGHT = 1080;
 const DEFAULT_BACKGROUND_COLOR = "#ffffff";
 
-const createDefaultFrame = (
+export const createDefaultFrame = (
   { width, height }: DocumentSize = {
     width: DEFAULT_FRAME_WIDTH,
     height: DEFAULT_FRAME_HEIGHT,

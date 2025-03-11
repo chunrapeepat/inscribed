@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { useDocumentStore } from "../store/document";
+import { createDefaultFrame, useDocumentStore } from "../store/document";
 import {
   ExcalidrawElement,
   ExcalidrawImageElement,
@@ -194,15 +194,24 @@ export const Canvas: React.FC = () => {
       files: BinaryFiles
     ) => {
       if (elements.length === 0) {
-        excalidrawAPIRef.current?.updateScene({
-          elements: currentSlide.elements,
-        });
+        let frame = currentSlide.elements.find(
+          (element) => element.id === "frame"
+        ) as ExcalidrawElement;
+
+        // if somehow frame is not found, create a new one
+        if (!frame) {
+          frame = createDefaultFrame();
+          excalidrawAPIRef.current?.updateScene({
+            elements: [...currentSlide.elements, frame],
+          });
+        } else {
+          excalidrawAPIRef.current?.updateScene({
+            elements: currentSlide.elements,
+          });
+        }
+
         setTimeout(() => {
-          scrollToFrame(
-            currentSlide.elements.find(
-              (element) => element.id === "frame"
-            ) as ExcalidrawElement
-          );
+          scrollToFrame(frame);
         }, 0);
         return;
       }

@@ -10,6 +10,7 @@ interface SlidePreviewProps {
 
 export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
   const previewRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef<boolean>(false);
   const { backgroundColor, files, _isSlideListFocused } = useDocumentStore();
 
   useEffect(() => {
@@ -46,8 +47,9 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
       }
     };
 
-    if (!_isSlideListFocused) {
+    if (!_isSlideListFocused || !initializedRef.current) {
       generatePreview();
+      initializedRef.current = true;
     }
   }, [_isSlideListFocused, elements, backgroundColor]);
 
