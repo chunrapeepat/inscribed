@@ -45,6 +45,12 @@ const exportOptions = [
     description:
       "Create an iframe embed with slider template. Good for visualizing a step by step process e.g. algorithm",
   },
+  {
+    id: "get-shareable-link",
+    title: "Get Shareable Link",
+    description:
+      "Generate a direct shareable link from your Gist URL for easy sharing",
+  },
 ];
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -125,7 +131,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       return;
     if (
       (selectedOption === "embed-presentation" ||
-        selectedOption === "slider") &&
+        selectedOption === "embed-slider-template" ||
+        selectedOption === "get-shareable-link") &&
       !gistId.trim()
     )
       return;
@@ -159,16 +166,27 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setFrameDelay("100");
       } else if (
         selectedOption === "embed-presentation" ||
-        selectedOption === "embed-slider-template"
+        selectedOption === "embed-slider-template" ||
+        selectedOption === "get-shareable-link"
       ) {
         await fetchDataFromGist(gistId);
-        const embedType =
-          selectedOption === "embed-presentation"
-            ? "presentation"
-            : "slider-template";
-        const iframeCode = generateEmbedCode(embedType, gistId);
-        setEmbedCode(iframeCode);
-        setShowEmbedCode(true);
+        
+        if (selectedOption === "get-shareable-link") {
+          // Generate shareable link instead of iframe code
+          const embedType = "presentation"; // Default to presentation view
+          const shareableLink = `${window.location.origin}/embed?type=${embedType}&gist_url=${gistId}`;
+          setEmbedCode(shareableLink);
+          setShowEmbedCode(true);
+        } else {
+          // Generate iframe code for other embed options
+          const embedType =
+            selectedOption === "embed-presentation"
+              ? "presentation"
+              : "slider-template";
+          const iframeCode = generateEmbedCode(embedType, gistId);
+          setEmbedCode(iframeCode);
+          setShowEmbedCode(true);
+        }
         return;
       }
 
@@ -336,7 +354,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               )}
 
               {(selectedOption === "embed-presentation" ||
-                selectedOption === "embed-slider-template") && (
+                selectedOption === "embed-slider-template" ||
+                selectedOption === "get-shareable-link") && (
                 <form
                   onSubmit={handleSubmit}
                   className="mt-4 pt-4 border-t border-gray-200"
@@ -388,13 +407,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <h3 className="font-medium text-lg">
                 {selectedOption === "embed-presentation"
                   ? "Embed Presentation"
-                  : "Embed Slider Template"}
+                  : selectedOption === "embed-slider-template"
+                  ? "Embed Slider Template"
+                  : "Shareable Link"}
               </h3>
               <textarea
                 value={embedCode}
                 readOnly
                 onClick={(e) => e.currentTarget.select()}
-                className="w-full h-32 p-3 border rounded-md font-mono text-sm"
+                className={`w-full p-3 border rounded-md font-mono text-sm ${
+                  selectedOption === "get-shareable-link" ? "h-12" : "h-32"
+                }`}
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -404,7 +427,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Copy Code
+                  {selectedOption === "get-shareable-link" ? "Copy Link" : "Copy Code"}
                 </button>
                 <button
                   onClick={handleClose}
@@ -429,7 +452,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
                 ((selectedOption === "embed-presentation" ||
-                  selectedOption === "embed-slider-template") &&
+                  selectedOption === "embed-slider-template" ||
+                  selectedOption === "get-shareable-link") &&
                   !gistId.trim())
               }
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
@@ -443,7 +467,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ) &&
                 !(
                   (selectedOption === "embed-presentation" ||
-                    selectedOption === "embed-slider-template") &&
+                    selectedOption === "embed-slider-template" ||
+                    selectedOption === "get-shareable-link") &&
                   !gistId.trim()
                 )
                   ? "bg-blue-600 hover:bg-blue-700 text-white"

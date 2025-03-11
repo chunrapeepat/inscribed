@@ -25,3 +25,7 @@ Create an iframe embed code in **“presentation format”** to embed everywhere
 Create an iframe embed code in **“slider template format”** to embed everywhere. Recommended for visualizing some ideas or process e.g. algorithm.
 
    <img src="./imgs/example-slider-template-embed.gif" width="60%" alt="Example Slider Template Embed">
+
+### Get Shareable Link
+
+Generate a direct shareable link from your Gist URL for easy sharing. This option provides a simple URL that can be shared via email, chat, or social media without embedding.
