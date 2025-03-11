@@ -12,6 +12,8 @@ interface DocumentSize {
 interface DocumentState {
   _initialized: boolean;
   _isSidebarCollapsed: boolean;
+  _isSlideListFocused: boolean;
+
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
@@ -29,6 +31,7 @@ interface DocumentState {
     endIndex: number,
     targetIndex: number
   ) => void;
+  setIsSlideListFocused: (isFocused: boolean) => void;
   setDocumentSize: (size: DocumentSize) => void;
   setFiles: (files: BinaryFiles) => void;
   setBackgroundColor: (color: string) => void;
@@ -98,6 +101,7 @@ export const useDocumentStore = create<DocumentState>()(
     (set, get) => ({
       _initialized: false,
       _isSidebarCollapsed: false,
+      _isSlideListFocused: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -172,7 +176,8 @@ export const useDocumentStore = create<DocumentState>()(
                 : state.currentSlideIndex,
           };
         }),
-
+      setIsSlideListFocused: (isFocused) =>
+        set({ _isSlideListFocused: isFocused }),
       reorderConsecutiveSlides: (startIndex, endIndex, targetIndex) =>
         set((state) => {
           // Swap if start is greater than end

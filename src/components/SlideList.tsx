@@ -13,6 +13,7 @@ export const SlideList: React.FC = () => {
     updateSlide,
     addSlideAfterIndex,
     getSidebarCollapsed,
+    setIsSlideListFocused,
   } = useDocumentStore();
   const sidebarRef = React.useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
@@ -290,8 +291,14 @@ export const SlideList: React.FC = () => {
           ref={sidebarRef}
           className="w-60 bg-white rounded-lg shadow-lg focus:outline-none"
           tabIndex={0}
-          onFocus={() => setIsSidebarFocused(true)}
-          onBlur={() => setIsSidebarFocused(false)}
+          onFocus={() => {
+            setIsSidebarFocused(true);
+            setIsSlideListFocused(true);
+          }}
+          onBlur={() => {
+            setIsSidebarFocused(false);
+            setIsSlideListFocused(false);
+          }}
         >
           <div className="p-4">
             <div className="flex justify-between items-center mb-4">
