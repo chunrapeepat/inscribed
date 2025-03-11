@@ -53,7 +53,7 @@ export const exportToGif = async ({
   fileName,
   frameDelay,
   onProgress,
-}: ExportGifOptions): Promise<void> => {
+}: ExportGifOptions): Promise<string | void> => {
   const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize } = state;
 
@@ -91,10 +91,18 @@ export const exportToGif = async ({
 
     imageUrls.forEach(URL.revokeObjectURL);
 
-    // render and download gif
+    // render and return promise
     return new Promise((resolve) => {
       gif.on("finished", (blob: Blob) => {
         const url = URL.createObjectURL(blob);
+        
+        // If fileName is 'preview', just return the URL
+        if (fileName === 'preview') {
+          resolve(url);
+          return;
+        }
+        
+        // Otherwise download the file
         const link = document.createElement("a");
         link.href = url;
         link.download = fileName.endsWith(".gif")

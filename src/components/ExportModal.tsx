@@ -1,5 +1,5 @@
-import React, { FormEvent, useEffect, useState } from "react";
-import { X, ChevronDown } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import {
   exportToGif,
   fetchDataFromGist,
@@ -75,6 +75,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [isLoadingGist, setIsLoadingGist] = useState(false);
 
+  // GIF preview states
+  const [previewGifUrl, setPreviewGifUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [previewProgress, setPreviewProgress] = useState<number | null>(null);
+
   // ESC shortcut
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -97,6 +102,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setGistFiles([]);
     setSelectedFile(null);
     setIsLoadingGist(false);
+
+    // Clean up any GIF preview
+    if (previewGifUrl) {
+      URL.revokeObjectURL(previewGifUrl);
+      setPreviewGifUrl(null);
+    }
+    setPreviewProgress(null);
+    setIsGeneratingPreview(false);
+
     onClose();
   };
 
@@ -256,6 +270,35 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     handleExport();
   };
 
+  // Function to generate a preview GIF
+  const handlePreviewGif = async () => {
+    // Clear any existing preview
+    if (previewGifUrl) {
+      URL.revokeObjectURL(previewGifUrl);
+      setPreviewGifUrl(null);
+    }
+
+    setIsGeneratingPreview(true);
+    setPreviewProgress(0);
+
+    try {
+      // Use the existing exportToGif function with 'preview' as the filename
+      // to indicate we want to get the URL rather than download
+      const url = (await exportToGif({
+        fileName: "preview",
+        frameDelay: parseInt(frameDelay) || 100,
+        onProgress: (progress) => setPreviewProgress(progress),
+      })) as string;
+
+      setPreviewGifUrl(url);
+    } catch (error) {
+      console.error("Error generating preview GIF:", error);
+    } finally {
+      setIsGeneratingPreview(false);
+      setPreviewProgress(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999999]">
       <div className="bg-white rounded-lg w-full max-w-md">
@@ -377,12 +420,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="frameDelay"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Frame Delay (ms)
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label
+                        htmlFor="frameDelay"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Frame Delay (ms)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePreviewGif}
+                        disabled={isGeneratingPreview}
+                        className="text-blue-600 hover:text-blue-800 space-x-1 text-sm"
+                      >
+                        <span>(preview GIF)</span>
+                      </button>
+                    </div>
                     <input
                       type="number"
                       id="frameDelay"
@@ -394,6 +447,37 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       required
                     />
                   </div>
+
+                  {/* Preview GIF Progress */}
+                  {isGeneratingPreview && previewProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${previewProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating preview: {Math.round(previewProgress)}%
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Preview GIF Display */}
+                  {previewGifUrl && (
+                    <div className="mt-2 border rounded-lg p-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="flex justify-center">
+                        <img
+                          src={previewGifUrl}
+                          alt="GIF Preview"
+                          className="max-h-64 max-w-full object-contain rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Export Progress */}
                   {exportProgress !== null && (
                     <div className="mt-2">
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
