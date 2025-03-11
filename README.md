@@ -36,6 +36,8 @@ A slide-based tool for fast sketching and animating ideas.
 
 ## Changelog
 
+- [12/3/2025] [v1.0.3](https://github.com/chunrapeepat/inscribed/pull/8) - swipe down to exit presentation, multi-select preview items, improve pref
+
 - [11/3/2025] v1.0.2-hotfix - support gist with multiple files, shareable url
 
 - [23/2/2025] [v1.0.2](https://github.com/chunrapeepat/inscribed/pull/5) - slide bar ux improvement
