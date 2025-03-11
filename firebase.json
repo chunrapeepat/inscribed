@@ -8,6 +8,16 @@
     ],
     "frameworksBackend": {
       "region": "asia-east1"
-    }
+    },
+    "rewrites": [
+      {
+        "source": "/share/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/embed/**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

@@ -28,4 +28,4 @@ Create an iframe embed code in **“slider template format”** to embed everywh
 
 ### Get Shareable Link
 
-Generate a direct shareable link from your Gist URL for easy sharing. This option provides a simple URL that can be shared via email, chat, or social media without embedding.
+Generate a direct shareable link from your Gist URL for easy sharing. This option provides a simple URL that can be shared via email, chat, or social media without embedding. The link can be opened directly in a browser to view the presentation.

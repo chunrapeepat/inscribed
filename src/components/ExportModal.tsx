@@ -174,7 +174,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         if (selectedOption === "get-shareable-link") {
           // Generate shareable link instead of iframe code
           const embedType = "presentation"; // Default to presentation view
-          const shareableLink = `${window.location.origin}/embed?type=${embedType}&gist_url=${gistId}`;
+          const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}`;
           setEmbedCode(shareableLink);
           setShowEmbedCode(true);
         } else {

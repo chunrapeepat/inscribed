@@ -7,12 +7,18 @@ const App: React.FC = () => {
   const params = new URLSearchParams(window.location.search);
   const type = params.get("type");
   const gistUrl = params.get("gist_url");
+  const pathname = window.location.pathname;
 
-  // Render embed view or main app
-  if (type === "presentation" && gistUrl) {
+  // Check if we're on the /share path
+  const isSharePath = pathname.startsWith("/share");
+  // Check if we're on the /embed path
+  const isEmbedPath = pathname.startsWith("/embed");
+
+  // Render share or embed view or main app
+  if ((isSharePath || isEmbedPath) && type === "presentation" && gistUrl) {
     return <PresentationEmbed gistUrl={gistUrl} />;
   }
-  if (type === "slider-template" && gistUrl) {
+  if ((isSharePath || isEmbedPath) && type === "slider-template" && gistUrl) {
     return <SliderEmbed gistUrl={gistUrl} />;
   }
 
