@@ -25,6 +25,12 @@ const exportOptions = [
       "Import inscribed data (.ins file) This option will overwrite your data, backup your current data before importing",
   },
   {
+    id: "import-gist",
+    title: "Import from Gist",
+    description:
+      "Import inscribed data from a GitHub Gist URL. This option will overwrite your data.",
+  },
+  {
     id: "export-data",
     title: "Export Data",
     description: "Export your current data for later editing",
@@ -153,7 +159,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     if (
       (selectedOption === "embed-presentation" ||
         selectedOption === "embed-slider-template" ||
-        selectedOption === "get-shareable-link") &&
+        selectedOption === "get-shareable-link" ||
+        selectedOption === "import-gist") &&
       !gistId.trim()
     )
       return;
@@ -169,6 +176,67 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
         await handleImport(fileInput.files[0]);
         onClose();
+      } else if (selectedOption === "import-gist") {
+        // If we already have gist files and a selected file, proceed with import
+        if (gistFiles.length > 0 && selectedFile) {
+          // Find the selected file in gistFiles
+          const selectedGistFile = gistFiles.find(file => file.filename === selectedFile);
+          if (selectedGistFile) {
+            // Import the data directly from the selected file
+            const documentStore = useDocumentStore.getState();
+            const fontsStore = useFontsStore.getState();
+            
+            // Reset the store with import data
+            documentStore.resetStore(selectedGistFile.content.document);
+            
+            // Add fonts if not already present
+            if (selectedGistFile.content.fonts?.customFonts) {
+              Object.keys(selectedGistFile.content.fonts.customFonts).forEach((fontFamily) => {
+                if (!fontsStore.customFonts[fontFamily]) {
+                  fontsStore.addFonts(selectedGistFile.content.fonts.customFonts[fontFamily]);
+                }
+              });
+            }
+            
+            onClose();
+            return;
+          }
+        }
+
+        // Otherwise fetch from the gist
+        setIsLoadingGist(true);
+        try {
+          const result = await fetchDataFromGist(gistId);
+
+          // If result is an array, we have multiple files to choose from
+          if (Array.isArray(result)) {
+            setGistFiles(result);
+            setSelectedFile(result[0].filename); // Select first file by default
+            setIsLoadingGist(false);
+            return; // Wait for user to select a file
+          }
+
+          // Single file result, import directly
+          const documentStore = useDocumentStore.getState();
+          const fontsStore = useFontsStore.getState();
+          
+          // Reset the store with import data
+          documentStore.resetStore(result.document);
+          
+          // Add fonts if not already present
+          if (result.fonts?.customFonts) {
+            Object.keys(result.fonts.customFonts).forEach((fontFamily) => {
+              if (!fontsStore.customFonts[fontFamily]) {
+                fontsStore.addFonts(result.fonts.customFonts[fontFamily]);
+              }
+            });
+          }
+          
+          onClose();
+        } finally {
+          setIsLoadingGist(false);
+        }
+        return;
       } else if (selectedOption === "export-data") {
         const exportData = generateExportData(exportFileName);
         downloadInsFile(exportData, exportFileName);
@@ -372,6 +440,70 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     required
                   />
                 </div>
+              )}
+              
+              {selectedOption === "import-gist" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
+                  <label
+                    htmlFor="importGistUrl"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Gist URL
+                  </label>
+                  <input
+                    type="text"
+                    id="importGistUrl"
+                    value={gistId}
+                    onChange={(e) => {
+                      setGistId(e.target.value);
+                      // Clear gist files when URL changes
+                      if (gistFiles.length > 0) {
+                        setGistFiles([]);
+                        setSelectedFile(null);
+                      }
+                    }}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter GitHub Gist URL"
+                    required
+                  />
+
+                  {isLoadingGist && (
+                    <div className="mt-2 text-sm text-gray-600 flex items-center">
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full"></div>
+                      Loading Gist files...
+                    </div>
+                  )}
+
+                  {gistFiles.length > 0 && (
+                    <div className="mt-3">
+                      <label
+                        htmlFor="importGistFile"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Select File
+                      </label>
+                      <select
+                        id="importGistFile"
+                        value={selectedFile || ""}
+                        onChange={(e) => setSelectedFile(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        {gistFiles.map((file) => (
+                          <option key={file.filename} value={file.filename}>
+                            {file.filename}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Found {gistFiles.length} valid Inscribed data files in
+                        this Gist
+                      </p>
+                    </div>
+                  )}
+                </form>
               )}
 
               {selectedOption === "export-data" && (
@@ -637,7 +769,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     parseInt(frameDelay) < 1)) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
-                  selectedOption === "get-shareable-link") &&
+                  selectedOption === "get-shareable-link" ||
+                  selectedOption === "import-gist") &&
                   (!gistId.trim() || (gistFiles.length > 0 && !selectedFile)))
               }
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
@@ -652,7 +785,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 !(
                   (selectedOption === "embed-presentation" ||
                     selectedOption === "embed-slider-template" ||
-                    selectedOption === "get-shareable-link") &&
+                    selectedOption === "get-shareable-link" ||
+                    selectedOption === "import-gist") &&
                   (!gistId.trim() || (gistFiles.length > 0 && !selectedFile))
                 )
                   ? "bg-blue-600 hover:bg-blue-700 text-white"
@@ -661,6 +795,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             >
               {selectedOption === "import"
                 ? "Upload File"
+                : selectedOption === "import-gist"
+                ? "Import"
                 : selectedOption
                 ? "Export"
                 : "Select an option"}
