@@ -80,6 +80,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [gistFiles, setGistFiles] = useState<GistFileData[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [isLoadingGist, setIsLoadingGist] = useState(false);
+  const [importedGistUrl, setImportedGistUrl] = useState<string | null>(null);
 
   // GIF preview states
   const [previewGifUrl, setPreviewGifUrl] = useState<string | null>(null);
@@ -97,6 +98,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     window.addEventListener("keydown", handleEscKey);
     return () => window.removeEventListener("keydown", handleEscKey);
   }, [isOpen, onClose]);
+
+  // Reset importedGistUrl on first modal load or when refreshing the page
+  useEffect(() => {
+    // This effect will run on component mount
+    // We reset the importedGistUrl to ensure it starts fresh on page load
+    if (!isOpen) {
+      setImportedGistUrl(null);
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
   if (!isOpen) return null;
 
@@ -116,6 +126,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     }
     setPreviewProgress(null);
     setIsGeneratingPreview(false);
+
+    // Don't reset importedGistUrl here, as we want to persist it between modal openings
 
     onClose();
   };
@@ -174,30 +186,42 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         ) as HTMLInputElement;
         if (!fileInput.files?.length) return;
 
+        // Reset imported Gist URL when importing a file
+        setImportedGistUrl(null);
+
         await handleImport(fileInput.files[0]);
         onClose();
       } else if (selectedOption === "import-gist") {
         // If we already have gist files and a selected file, proceed with import
         if (gistFiles.length > 0 && selectedFile) {
           // Find the selected file in gistFiles
-          const selectedGistFile = gistFiles.find(file => file.filename === selectedFile);
+          const selectedGistFile = gistFiles.find(
+            (file) => file.filename === selectedFile
+          );
           if (selectedGistFile) {
             // Import the data directly from the selected file
             const documentStore = useDocumentStore.getState();
             const fontsStore = useFontsStore.getState();
-            
+
             // Reset the store with import data
             documentStore.resetStore(selectedGistFile.content.document);
-            
+
             // Add fonts if not already present
             if (selectedGistFile.content.fonts?.customFonts) {
-              Object.keys(selectedGistFile.content.fonts.customFonts).forEach((fontFamily) => {
-                if (!fontsStore.customFonts[fontFamily]) {
-                  fontsStore.addFonts(selectedGistFile.content.fonts.customFonts[fontFamily]);
+              Object.keys(selectedGistFile.content.fonts.customFonts).forEach(
+                (fontFamily) => {
+                  if (!fontsStore.customFonts[fontFamily]) {
+                    fontsStore.addFonts(
+                      selectedGistFile.content.fonts.customFonts[fontFamily]
+                    );
+                  }
                 }
-              });
+              );
             }
-            
+
+            // Save the imported Gist URL
+            setImportedGistUrl(gistId);
+
             onClose();
             return;
           }
@@ -219,10 +243,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           // Single file result, import directly
           const documentStore = useDocumentStore.getState();
           const fontsStore = useFontsStore.getState();
-          
+
           // Reset the store with import data
           documentStore.resetStore(result.document);
-          
+
           // Add fonts if not already present
           if (result.fonts?.customFonts) {
             Object.keys(result.fonts.customFonts).forEach((fontFamily) => {
@@ -231,7 +255,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               }
             });
           }
-          
+
+          // Save the imported Gist URL
+          setImportedGistUrl(gistId);
+
           onClose();
         } finally {
           setIsLoadingGist(false);
@@ -441,7 +468,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   />
                 </div>
               )}
-              
+
               {selectedOption === "import-gist" && (
                 <form
                   onSubmit={handleSubmit}
@@ -653,6 +680,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       >
                         (copy data)
                       </button>
+                      {importedGistUrl && (
+                        <a
+                          href={importedGistUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          (existing gist →)
+                        </a>
+                      )}
                       <a
                         href="https://gist.github.com/"
                         target="_blank"
