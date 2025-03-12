@@ -293,7 +293,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
             const embedType = "presentation"; // Default to presentation view
-            const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}${fileParam}`;
+            
+            // Extract username/gistId from the full Gist URL
+            const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
+            const gistShortId = gistMatch ? gistMatch[1] : gistId;
+            
+            // Use new shorter URL format for shareable links
+            const shareableLink = `${window.location.origin}/share?gist=${gistShortId}${fileParam}`;
+            
             setEmbedCode(shareableLink);
             setShowEmbedCode(true);
           } else {
@@ -329,7 +336,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
             const embedType = "presentation"; // Default to presentation view
-            const shareableLink = `${window.location.origin}/share?type=${embedType}&gist_url=${gistId}`;
+            
+            // Extract username/gistId from the full Gist URL
+            const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
+            const gistShortId = gistMatch ? gistMatch[1] : gistId;
+            
+            // Use new shorter URL format for shareable links
+            const shareableLink = `${window.location.origin}/share?gist=${gistShortId}`;
+            
             setEmbedCode(shareableLink);
             setShowEmbedCode(true);
           } else {
