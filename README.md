@@ -15,7 +15,7 @@ A slide-based tool for fast sketching and animating ideas.
 
 - 🎨 Interactive drawing canvas powered by Excalidraw
 - ⌨️ Keyboard shortcuts support
-  - Copy/Paste functionality
+  - Copy/Paste/Duplicate functionality
   - Navigation with Up/Down arrows
   - Delete items
 - 📏 Customizable document size
