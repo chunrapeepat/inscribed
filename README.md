@@ -4,7 +4,7 @@ A slide-based tool for fast sketching and animating ideas.
 
 ![Inscribed App Interface](./docs/imgs/screenshot.png)
 
-🚀 [Try Inscribed](https://inscribed.app) | [Feedback](https://github.com/chunrapeepat/inscribed/issues)
+🎥 [Watch Demo](https://youtu.be/CLJvvGVErMY) | 🚀 [Try Inscribed](https://inscribed.app) | [Feedback](https://github.com/chunrapeepat/inscribed/issues)
 
 ## Tutorials
 
