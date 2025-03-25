@@ -54,12 +54,16 @@ export const SliderEmbed: React.FC<SliderEmbedProps> = ({
       return;
     }
 
-    const customFonts = [];
-    for (const fontFamily in data.fonts.customFonts) {
-      customFonts.push(...data.fonts.customFonts[fontFamily]);
-    }
-    registerExcalidrawFonts(customFonts);
-    setFontsLoaded(true);
+    const loadFonts = async () => {
+      const customFonts = [];
+      for (const fontFamily in data.fonts.customFonts) {
+        customFonts.push(...data.fonts.customFonts[fontFamily]);
+      }
+      await registerExcalidrawFonts(customFonts);
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
   }, [data]);
 
   const handleJumpToSlide = (index: number) => {
