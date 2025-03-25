@@ -383,6 +383,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">Export Presentation</h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
@@ -652,6 +653,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     </label>
                     <div className="space-x-1 text-sm">
                       <button
+                        type="button"
                         onClick={() => {
                           const exportData =
                             generateExportData("embedding-data");
@@ -755,6 +757,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               />
               <div className="flex justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(embedCode);
                     alert("Copied to clipboard!");
@@ -766,6 +769,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     : "Copy Code"}
                 </button>
                 <button
+                  type="button"
                   onClick={handleClose}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
@@ -779,6 +783,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {!showEmbedCode && (
           <div className="p-4 border-t bg-gray-50 rounded-b-lg">
             <button
+              type="submit"
               onClick={handleExport}
               disabled={
                 !selectedOption ||
