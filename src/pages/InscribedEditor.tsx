@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Toolbar } from "../components/Toolbar";
 import { SlideList } from "../components/SlideList";
 import { Canvas } from "../components/Canvas";
+import { generateExportData, downloadInsFile } from "../utils/export";
 
 export const InscribedEditor: React.FC = () => {
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
@@ -10,15 +11,69 @@ export const InscribedEditor: React.FC = () => {
     return localStorage.getItem("hasVisitedBefore") !== "true";
   });
 
+  const save = async () => {
+    const defaultFileName = `inscribed-${Date.now()}.ins`;
+    if ("showSaveFilePicker" in window) {
+      try {
+        const options: SaveFilePickerOptions = {
+          suggestedName: defaultFileName,
+          types: [
+            {
+              description: "Inscribed File",
+              accept: { "text/plain": [".ins"] },
+            },
+          ],
+        };
+
+        const fileHandle = await window.showSaveFilePicker(options);
+        const exportData = generateExportData(fileHandle.name);
+        const blob = new Blob([JSON.stringify(exportData)], {
+          type: "text/plain",
+        });
+        const writableStream = await fileHandle.createWritable();
+        await writableStream.write(blob);
+        await writableStream.close();
+      } catch (err) {
+        console.error("Save cancelled or error:", err);
+      }
+    } else {
+      let fileName = window.prompt(
+        "Enter file name (the default extension .ins will be appended if missing)",
+        defaultFileName
+      );
+
+      if (!fileName) return;
+      if (!fileName.toLowerCase().endsWith(".ins")) {
+        fileName += ".ins";
+      }
+      const exportData = generateExportData(fileName);
+      downloadInsFile(exportData, fileName);
+    }
+  };
+
+  // Custom save shortcut: ctrl/cmd + s triggers the save function.
   useEffect(() => {
-    // Check if the device is mobile using window width
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        event.stopPropagation();
+        save();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, []);
+
+  useEffect(() => {
     const isMobile = window.innerWidth <= 768;
     setShowMobileOverlay(isMobile);
   }, []);
 
   const handleCloseAbout = () => {
     setShowAboutOverlay(false);
-    // Set flag in localStorage
     localStorage.setItem("hasVisitedBefore", "true");
   };
 
