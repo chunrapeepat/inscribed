@@ -450,6 +450,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       file:cursor-pointer cursor-pointer"
                     required
                   />
+
+                  <p className="text-xs text-gray-500 mt-4">
+                    <b>Pro tip:</b> drag and drop your .ins file on Inscribed
+                    editor for fast import.
+                  </p>
                 </div>
               )}
 

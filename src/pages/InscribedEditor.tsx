@@ -141,14 +141,15 @@ export const InscribedEditor: React.FC = () => {
 
   // Set up global drag and drop handlers
   useEffect(() => {
-    window.addEventListener("dragover", handleDragOver);
-    window.addEventListener("dragleave", handleDragLeave);
-    window.addEventListener("drop", handleDrop);
+    // Use the capture phase to intercept events before they reach the canvas
+    window.addEventListener("dragover", handleDragOver, true);
+    window.addEventListener("dragleave", handleDragLeave, true);
+    window.addEventListener("drop", handleDrop, true);
 
     return () => {
-      window.removeEventListener("dragover", handleDragOver);
-      window.removeEventListener("dragleave", handleDragLeave);
-      window.removeEventListener("drop", handleDrop);
+      window.removeEventListener("dragover", handleDragOver, true);
+      window.removeEventListener("dragleave", handleDragLeave, true);
+      window.removeEventListener("drop", handleDrop, true);
     };
   }, [handleDragOver, handleDragLeave, handleDrop]);
 
