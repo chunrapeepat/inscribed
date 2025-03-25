@@ -153,6 +153,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           }}
           initialData={{
             files,
+            elements: slides[currentSlide].elements,
             appState: {
               viewBackgroundColor: backgroundColor,
               width: documentSize.width,
