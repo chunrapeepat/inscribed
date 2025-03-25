@@ -106,7 +106,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           centerContent();
         }
       },
-      isLoaded ? 0 : 100
+      isLoaded ? 0 : 300
     );
   }, [slides, currentSlideIndex, isLoaded]);
 
@@ -169,6 +169,14 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           }}
           initialData={{
             files,
+            elements: slides[currentSlideIndex].elements.map(
+              (el: ExcalidrawElement) => ({
+                ...el,
+                strokeStyle: "solid",
+                strokeWidth: 1,
+                strokeColor: "transparent",
+              })
+            ),
             appState: {
               viewBackgroundColor: backgroundColor,
               width: documentSize.width,
