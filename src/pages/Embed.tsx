@@ -1,22 +1,20 @@
 import React, { useEffect } from "react";
-import { ReadOnlyCanvas } from "../../components/embed/ReadOnlyCanvas";
-import { registerExcalidrawFonts } from "../../utils/fonts";
-import { ExportData } from "../../types";
-import { fetchDataFromGist } from "../../utils/export";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ReadOnlyCanvas } from "../components/embed/ReadOnlyCanvas";
+import { registerExcalidrawFonts } from "../utils/fonts";
+import { ExportData } from "../types";
+import { fetchDataFromGist } from "../utils/export";
 
-interface PresentationEmbedProps {
+interface EmbedProps {
   gistUrl: string;
   filename?: string;
+  type: "presentation" | "slider-template";
 }
 
-export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
-  gistUrl,
-  filename,
-}) => {
+export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<ExportData | null>(null);
-  const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
   useEffect(() => {
@@ -43,8 +41,20 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
       }
     };
 
-    loadData();
-  }, [gistUrl]);
+    const loadDebugData = async () => {
+      // fetch default data from public folder
+      const fetchData = await fetch("/dev-debug-data.ins");
+      const data = await fetchData.json();
+      setData(data);
+      setLoading(false);
+    };
+
+    if (import.meta.env.DEV) {
+      loadDebugData();
+    } else {
+      loadData();
+    }
+  }, [gistUrl, filename]);
 
   // register fonts when data is loaded
   useEffect(() => {
@@ -52,28 +62,17 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
       return;
     }
 
-    const customFonts = [];
-    for (const fontFamily in data.fonts.customFonts) {
-      customFonts.push(...data.fonts.customFonts[fontFamily]);
-    }
-    registerExcalidrawFonts(customFonts);
-    setFontsLoaded(true);
+    const loadFonts = async () => {
+      const customFonts = [];
+      for (const fontFamily in data.fonts.customFonts) {
+        customFonts.push(...data.fonts.customFonts[fontFamily]);
+      }
+      await registerExcalidrawFonts(customFonts);
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
   }, [data]);
-
-  const handleNextSlide = () => {
-    if (data && currentSlideIndex < data.document.slides.length - 1) {
-      setCurrentSlideIndex((prev) => prev + 1);
-    }
-  };
-  const handlePrevSlide = () => {
-    if (data && currentSlideIndex > 0) {
-      setCurrentSlideIndex((prev) => prev - 1);
-    }
-  };
-
-  const handleJumpToSlide = (index: number) => {
-    setCurrentSlideIndex(index);
-  };
 
   if (loading || !fontsLoaded) {
     return (
@@ -99,14 +98,18 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
     );
   }
 
-  return (
+  const Component = () => (
     <ReadOnlyCanvas
       initialData={data}
-      onNextSlide={handleNextSlide}
-      onPrevSlide={handlePrevSlide}
-      currentSlide={currentSlideIndex}
-      totalSlides={data.document.slides.length}
-      onJumpToSlide={handleJumpToSlide}
+      navigationType={type === "slider-template" ? "slider" : "default"}
     />
+  );
+
+  return type === "slider-template" ? (
+    <ThemeProvider theme={createTheme()}>
+      <Component />
+    </ThemeProvider>
+  ) : (
+    <Component />
   );
 };

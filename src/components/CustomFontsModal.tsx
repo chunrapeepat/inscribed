@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { useFontsStore } from "../store/custom-fonts";
-import { parseFontFaces, registerExcalidrawFonts } from "../utils/fonts";
-import { CustomFontFace } from "../types";
+import { parseFontFaces } from "../utils/fonts";
 
 interface CustomFontsModalProps {
   isOpen: boolean;
@@ -30,16 +29,6 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
       setHasInitiallyFocused(false);
     }
   }, [isOpen, hasInitiallyFocused]);
-
-  // register fonts to Excalidraw when custom fonts are updated
-  useEffect(() => {
-    const fonts: CustomFontFace[] = [];
-    Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
-      console.log("registering font", fontFamily);
-      fonts.push(...fontFaces);
-    });
-    registerExcalidrawFonts(fonts);
-  }, [customFonts]);
 
   // ESC shortcut
   useEffect(() => {

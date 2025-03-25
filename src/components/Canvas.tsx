@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { createDefaultFrame, useDocumentStore } from "../store/document";
 import {
@@ -12,9 +12,10 @@ import {
   ExcalidrawImperativeAPI,
   Gesture,
 } from "@excalidraw/excalidraw/types/types";
-import { Slide, Writeable } from "../types";
+import { useFontsStore } from "../store/custom-fonts";
+import { CustomFontFace, Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
-import { getExcalidrawFontId } from "../utils/fonts";
+import { getExcalidrawFontId, registerExcalidrawFonts } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
 import { copy } from "../utils/general";
 import { getImageDimensions } from "../utils/excalidraw";
@@ -30,6 +31,7 @@ export const Canvas: React.FC = () => {
     backgroundColor,
     getSidebarCollapsed,
   } = useDocumentStore();
+  const { customFonts } = useFontsStore();
   const hasInitialized = useDocumentStore((state) => state._initialized);
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
@@ -41,7 +43,7 @@ export const Canvas: React.FC = () => {
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const previousPointerRef = useRef<PointerEvent | null>(null);
-
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   const isSidebarCollapsed = getSidebarCollapsed();
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
@@ -63,12 +65,21 @@ export const Canvas: React.FC = () => {
       const elements = excalidrawAPIRef.current
         ?.getSceneElements()
         .filter((e) => ids.includes(e.id));
-      const isAllText = elements?.every((e) => e.type === "text");
-      if (!isAllText) return;
+      const isSomeText = elements?.some((e) => e.type === "text");
+      if (!isSomeText) return;
 
-      const fontFamilyPopup = document.querySelector(
-        "div.Stack.Stack_vertical.App-menu_top__left fieldset:nth-child(3) > div"
+      let fontFamilyFieldset: HTMLFieldSetElement | null = null;
+      const fieldsets = document.querySelectorAll(
+        "div.Stack.Stack_vertical.App-menu_top__left fieldset"
       );
+      for (const fieldset of fieldsets) {
+        if (fieldset.innerHTML.includes("Font family")) {
+          fontFamilyFieldset = fieldset as HTMLFieldSetElement;
+        }
+      }
+      if (fontFamilyFieldset == null) return;
+
+      const fontFamilyPopup = fontFamilyFieldset.querySelector("div");
       if (!fontFamilyPopup) return;
 
       const label = document.createElement("label");
@@ -90,6 +101,21 @@ export const Canvas: React.FC = () => {
 
     addCustomFontsLabel();
   };
+
+  // register fonts to Excalidraw when custom fonts are updated
+  useEffect(() => {
+    const loadFonts = async () => {
+      const fonts: CustomFontFace[] = [];
+      Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
+        console.info("registering font", fontFamily);
+        fonts.push(...fontFaces);
+      });
+      await registerExcalidrawFonts(fonts);
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
+  }, [customFonts]);
 
   // apply font to selected items after user selects a font
   useEffect(() => {
@@ -262,7 +288,7 @@ export const Canvas: React.FC = () => {
     [currentSlide.elements, currentSlideIndex]
   );
 
-  if (!hasInitialized)
+  if (!hasInitialized || !fontsLoaded)
     return (
       <div
         style={{ left: "17rem" }}

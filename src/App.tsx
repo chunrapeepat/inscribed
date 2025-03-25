@@ -1,6 +1,5 @@
 import React from "react";
-import { PresentationEmbed } from "./pages/embed/PresentationEmbed";
-import { SliderEmbed } from "./pages/embed/SliderEmbed";
+import { Embed } from "./pages/Embed";
 import { InscribedEditor } from "./pages/InscribedEditor";
 
 const App: React.FC = () => {
@@ -11,11 +10,11 @@ const App: React.FC = () => {
   const isSharePath = pathname.startsWith("/share");
   // Check if we're on the /embed path
   const isEmbedPath = pathname.startsWith("/embed");
-  
+
   let type: string | null;
   let gistUrl: string | null;
   let filename: string | undefined;
-  
+
   // New format for /share path
   if (isSharePath) {
     const gistParam = params.get("gist");
@@ -39,12 +38,19 @@ const App: React.FC = () => {
     filename = params.get("filename") || undefined;
   }
 
-  // Render share or embed view or main app
-  if ((isSharePath || isEmbedPath) && type === "presentation" && gistUrl) {
-    return <PresentationEmbed gistUrl={gistUrl} filename={filename} />;
-  }
-  if ((isSharePath || isEmbedPath) && type === "slider-template" && gistUrl) {
-    return <SliderEmbed gistUrl={gistUrl} filename={filename} />;
+  // Render embed view or main app
+  if (
+    (isSharePath || isEmbedPath) &&
+    (type === "presentation" || type === "slider-template") &&
+    gistUrl
+  ) {
+    return (
+      <Embed
+        gistUrl={gistUrl}
+        filename={filename}
+        type={type as "presentation" | "slider-template"}
+      />
+    );
   }
 
   return <InscribedEditor />;

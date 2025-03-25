@@ -1,42 +1,64 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
-import {
+import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import type {
+  BinaryFiles,
+  ExcalidrawImperativeAPI,
+} from "@excalidraw/excalidraw/types/types";
+import type {
   AppState,
   NormalizedZoomValue,
 } from "@excalidraw/excalidraw/types/types";
-import { ExportData } from "../../types";
+import { DefaultNavigation } from "./DefaultNavigation";
+import { SliderNavigation } from "./SliderNavigation";
+
+type ExportData = {
+  name: string;
+  document: {
+    backgroundColor: string;
+    slides: {
+      id: string;
+      elements: ExcalidrawElement[];
+    }[];
+    files: BinaryFiles;
+    documentSize: { width: number; height: number };
+  };
+  fonts: {
+    customFonts: {
+      [fontFamily: string]: {
+        subset: string;
+        fontFamily: string;
+        fontStyle: string;
+        fontWeight: number;
+        fontDisplay: string;
+        src: string;
+        unicodeRange: string;
+      }[];
+    };
+  };
+};
 
 interface ReadOnlyCanvasProps {
   initialData: ExportData;
-  onNextSlide?: () => void;
-  onPrevSlide?: () => void;
-  currentSlide: number;
-  totalSlides: number;
-  onJumpToSlide?: (slide: number) => void;
+  navigationType?: "default" | "slider";
 }
-
 export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   initialData,
-  onNextSlide,
-  onPrevSlide,
-  currentSlide,
-  totalSlides,
-  onJumpToSlide,
+  navigationType = "default",
 }) => {
   const {
     document: { slides, files, backgroundColor, documentSize },
   } = initialData;
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
-  const [inputValue, setInputValue] = useState((currentSlide + 1).toString());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const totalSlides = slides.length;
 
   // Function to center content
   const centerContent = useCallback(() => {
     if (!excalidrawAPIRef.current || slides.length === 0) return;
 
-    const frame = slides[currentSlide].elements.find(
+    const frame = slides[currentSlideIndex].elements.find(
       (element) => element.id === "frame"
     );
     if (frame) {
@@ -45,7 +67,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
         viewportZoomFactor: 1,
       });
     }
-  }, [slides, currentSlide]);
+  }, [slides, currentSlideIndex]);
 
   // Handle window resize
   useEffect(() => {
@@ -55,19 +77,19 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [slides, currentSlide]);
+  }, [slides, currentSlideIndex]);
 
   useEffect(() => {
     // wait for the canvas to load; refactor this later
     setTimeout(
       () => {
         if (!excalidrawAPIRef.current || slides.length === 0) return;
-        const frame = slides[currentSlide].elements.find(
+        const frame = slides[currentSlideIndex].elements.find(
           (element) => element.id === "frame"
         );
         if (frame) {
           excalidrawAPIRef.current?.updateScene({
-            elements: slides[currentSlide].elements.map(
+            elements: slides[currentSlideIndex].elements.map(
               (el: ExcalidrawElement) =>
                 el.id === "frame"
                   ? {
@@ -84,9 +106,9 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           centerContent();
         }
       },
-      isLoaded ? 0 : 100
+      isLoaded ? 0 : 300
     );
-  }, [slides, currentSlide, isLoaded]);
+  }, [slides, currentSlideIndex, isLoaded]);
 
   // handle keyboard events
   useEffect(() => {
@@ -97,12 +119,11 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
       isKeyPressed = true;
 
       if (e.key === "ArrowRight") {
-        onNextSlide?.();
+        setCurrentSlideIndex((prev) => Math.min(prev + 1, totalSlides - 1));
       } else if (e.key === "ArrowLeft") {
-        onPrevSlide?.();
+        setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
       }
     };
-
     const handleKeyUp = () => {
       isKeyPressed = false;
     };
@@ -114,12 +135,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [onNextSlide, onPrevSlide]);
-
-  // update input value when currentSlide changes
-  useEffect(() => {
-    setInputValue((currentSlide + 1).toString());
-  }, [currentSlide]);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col">
@@ -153,6 +169,12 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
           }}
           initialData={{
             files,
+            elements: slides[currentSlideIndex].elements.map(
+              (el: ExcalidrawElement) => ({
+                ...el,
+                opacity: 0,
+              })
+            ),
             appState: {
               viewBackgroundColor: backgroundColor,
               width: documentSize.width,
@@ -186,56 +208,26 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
         />
       </div>
 
-      {/* Navigation bar - now part of flex layout */}
-      <div
-        className="flex items-center justify-center gap-4 p-2 
-                      bg-gray-100 border-t border-gray-300 backdrop-blur z-20"
-      >
-        <button
-          onClick={onPrevSlide}
-          className="p-2 rounded-lg hover:bg-white/80 disabled:opacity-50 transition-colors"
-          disabled={currentSlide === 0}
-        >
-          ←
-        </button>
-
-        <div className="flex items-center gap-2 px-2 border-l border-r border-gray-200">
-          <input
-            type="number"
-            min={1}
-            max={totalSlides}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const page = parseInt(inputValue) - 1;
-                if (!isNaN(page) && page >= 0 && page < totalSlides) {
-                  onJumpToSlide?.(page);
-                } else {
-                  // Reset to current slide if invalid
-                  setInputValue((currentSlide + 1).toString());
-                }
-              }
-            }}
-            onBlur={() => {
-              // Reset to current slide on blur
-              setInputValue((currentSlide + 1).toString());
-            }}
-            className="w-16 px-2 py-1 text-center border rounded bg-white"
-          />
-          <span className="text-sm text-gray-600">/ {totalSlides}</span>
-        </div>
-
-        <button
-          onClick={onNextSlide}
-          className="p-2 rounded-lg hover:bg-white/80 disabled:opacity-50 transition-colors"
-          disabled={currentSlide === totalSlides - 1}
-        >
-          →
-        </button>
-      </div>
+      {/* Navigation */}
+      {navigationType === "default" ? (
+        <DefaultNavigation
+          currentSlide={currentSlideIndex}
+          totalSlides={totalSlides}
+          onNextSlide={() =>
+            setCurrentSlideIndex((prev) => Math.min(prev + 1, totalSlides - 1))
+          }
+          onPrevSlide={() =>
+            setCurrentSlideIndex((prev) => Math.max(prev - 1, 0))
+          }
+          onJumpToSlide={(value) => setCurrentSlideIndex(value)}
+        />
+      ) : (
+        <SliderNavigation
+          currentSlide={currentSlideIndex}
+          totalSlides={totalSlides}
+          onSlideChange={(value) => setCurrentSlideIndex(value)}
+        />
+      )}
     </div>
   );
 };

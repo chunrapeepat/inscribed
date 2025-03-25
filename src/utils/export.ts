@@ -2,9 +2,13 @@ import GIF from "gif.js";
 import { exportToBlob } from "@excalidraw/excalidraw";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { ExportData } from "../types";
+import {
+  ExcalidrawElement,
+  FileId,
+} from "@excalidraw/excalidraw/types/element/types";
+import { CustomFontFace, ExportData } from "../types";
 import { copy } from "./general";
+import { getExcalidrawFontId } from "./fonts";
 
 export const exportToImageUrls = async (
   data: ExportData["document"]
@@ -95,13 +99,13 @@ export const exportToGif = async ({
     return new Promise((resolve) => {
       gif.on("finished", (blob: Blob) => {
         const url = URL.createObjectURL(blob);
-        
+
         // If fileName is 'preview', just return the URL
-        if (fileName === 'preview') {
+        if (fileName === "preview") {
           resolve(url);
           return;
         }
-        
+
         // Otherwise download the file
         const link = document.createElement("a");
         link.href = url;
@@ -157,22 +161,24 @@ const extractGistId = (url: string): string => {
 const extractTargetedFilename = (url: string): string | null => {
   try {
     const urlObj = new URL(url);
-    const filenameParam = urlObj.searchParams.get('filename');
+    const filenameParam = urlObj.searchParams.get("filename");
     if (filenameParam) {
       return filenameParam;
     }
-    
+
     // Fallback to fragment identifier for backward compatibility
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
-    return fileMatch ? fileMatch[1].replace(/-/g, '.') : null;
+    return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
   } catch (e) {
     // If URL parsing fails, try fragment as fallback
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
-    return fileMatch ? fileMatch[1].replace(/-/g, '.') : null;
+    return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
   }
 };
 
-export const fetchDataFromGist = async (url: string): Promise<ExportData | GistFileData[]> => {
+export const fetchDataFromGist = async (
+  url: string
+): Promise<ExportData | GistFileData[]> => {
   if (!url.startsWith("https://gist.github.com/")) {
     throw new Error("Please enter a valid GitHub Gist URL");
   }
@@ -180,16 +186,16 @@ export const fetchDataFromGist = async (url: string): Promise<ExportData | GistF
   // Extract gist ID and targeted filename
   const gistId = extractGistId(url);
   const targetedFilename = extractTargetedFilename(url);
-  
+
   // Use GitHub API to fetch the gist and all its files
   const apiUrl = `https://api.github.com/gists/${gistId}`;
-  
+
   const response = await fetch(apiUrl, {
     headers: {
       Accept: "application/json",
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(
       "Failed to fetch Gist. Please check the URL and try again."
@@ -197,35 +203,37 @@ export const fetchDataFromGist = async (url: string): Promise<ExportData | GistF
   }
 
   const gistResponse: GistResponse = await response.json();
-  
+
   // If specific file is targeted in the URL
   if (targetedFilename) {
     // Find the targeted file
     const fileEntry = Object.entries(gistResponse.files).find(
       ([key]) => key.toLowerCase() === targetedFilename.toLowerCase()
     );
-    
+
     if (!fileEntry) {
       throw new Error(`File "${targetedFilename}" not found in this Gist`);
     }
-    
+
     const [filename, fileData] = fileEntry;
-    
+
     try {
       const content = JSON.parse(fileData.content);
       if (isValidInscribedData(content)) {
         return content;
       } else {
-        throw new Error(`File "${filename}" does not contain valid Inscribed data`);
+        throw new Error(
+          `File "${filename}" does not contain valid Inscribed data`
+        );
       }
     } catch (e) {
       throw new Error(`Error parsing JSON from file "${filename}"`);
     }
   }
-  
+
   // Check for multiple valid files
   const validFiles: GistFileData[] = [];
-  
+
   for (const [filename, fileData] of Object.entries(gistResponse.files)) {
     try {
       const content = JSON.parse(fileData.content);
@@ -240,16 +248,16 @@ export const fetchDataFromGist = async (url: string): Promise<ExportData | GistF
       continue;
     }
   }
-  
+
   if (validFiles.length === 0) {
     throw new Error("No valid Inscribed data files found in this Gist");
   }
-  
+
   if (validFiles.length === 1) {
     // If only one valid file, return it directly
     return validFiles[0].content;
   }
-  
+
   // Return all valid files to let user choose
   return validFiles;
 };
@@ -279,14 +287,14 @@ export const generateEmbedCode = (
   // Extract any filename parameter if present
   let urlToUse = gistUrl;
   let filenameParam = "";
-  
+
   try {
     if (gistUrl.includes("filename=")) {
       // We'll properly format the URL to separate the base URL and parameters
       const baseGistUrl = gistUrl.split("?")[0]; // Get the base URL without params
       const params = new URLSearchParams(gistUrl.split("?")[1] || "");
       const filename = params.get("filename");
-      
+
       if (filename) {
         urlToUse = baseGistUrl;
         filenameParam = `&filename=${encodeURIComponent(filename)}`;
@@ -296,7 +304,7 @@ export const generateEmbedCode = (
     console.error("Error parsing gist URL:", e);
     // Continue with the original URL if there's an error
   }
-  
+
   return `<iframe
   style="border: 1px solid #ccc; border-radius: 0.5rem;"
   src="${window.location.origin}/embed?type=${type}&gist_url=${urlToUse}${filenameParam}"
@@ -329,4 +337,49 @@ export const handleImport = async (file: File) => {
       }
     });
   }
+};
+
+export const generateExportData = (fileName: string) => {
+  const documentStore = useDocumentStore.getState();
+  const fontsStore = useFontsStore.getState();
+
+  // prune unused files
+  const usedFileIds = documentStore.slides
+    .map((slide) => slide.elements)
+    .flat()
+    .filter((e) => e.type === "image")
+    .map((e) => e.fileId);
+  const unusedFileIds = Object.keys(documentStore.files).filter(
+    (fileId) => !usedFileIds.includes(fileId as FileId)
+  );
+  const files = { ...documentStore.files };
+  unusedFileIds.forEach((fileId) => {
+    delete files[fileId as FileId];
+  });
+
+  // prune unused fonts
+  const elements = documentStore.slides.map((slide) => slide.elements).flat();
+  const usedFontIds = elements
+    .filter((e) => e.type === "text")
+    .map((e) => e.fontFamily);
+
+  const customFonts: { [key: string]: CustomFontFace[] } = {};
+  Object.keys(fontsStore.customFonts).forEach((fontFamily) => {
+    if (usedFontIds.includes(getExcalidrawFontId(fontFamily))) {
+      customFonts[fontFamily] = fontsStore.customFonts[fontFamily];
+    }
+  });
+
+  return {
+    name: fileName,
+    document: {
+      backgroundColor: documentStore.backgroundColor,
+      slides: documentStore.slides,
+      files,
+      documentSize: documentStore.documentSize,
+    },
+    fonts: {
+      customFonts,
+    },
+  };
 };

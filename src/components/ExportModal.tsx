@@ -7,10 +7,10 @@ import {
   generateEmbedCode,
   handleImport,
   GistFileData,
+  generateExportData,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
-import { FileId } from "@excalidraw/excalidraw/types/element/types";
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -64,8 +64,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const documentStore = useDocumentStore();
-  const fontsStore = useFontsStore();
   const [selectedOption, setSelectedOption] = React.useState<string | null>(
     null
   );
@@ -130,35 +128,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Don't reset importedGistUrl here, as we want to persist it between modal openings
 
     onClose();
-  };
-
-  const generateExportData = (fileName: string) => {
-    // prune unused files
-    const usedFileIds = documentStore.slides
-      .map((slide) => slide.elements)
-      .flat()
-      .filter((e) => e.type === "image")
-      .map((e) => e.fileId);
-    const unusedFileIds = Object.keys(documentStore.files).filter(
-      (fileId) => !usedFileIds.includes(fileId as FileId)
-    );
-    const files = { ...documentStore.files };
-    unusedFileIds.forEach((fileId) => {
-      delete files[fileId as FileId];
-    });
-
-    return {
-      name: fileName,
-      document: {
-        backgroundColor: documentStore.backgroundColor,
-        slides: documentStore.slides,
-        files,
-        documentSize: documentStore.documentSize,
-      },
-      fonts: {
-        customFonts: fontsStore.customFonts,
-      },
-    };
   };
 
   const handleExport = async () => {
@@ -293,14 +262,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
             const embedType = "presentation"; // Default to presentation view
-            
+
             // Extract username/gistId from the full Gist URL
             const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
             const gistShortId = gistMatch ? gistMatch[1] : gistId;
-            
+
             // Use new shorter URL format for shareable links
             const shareableLink = `${window.location.origin}/share?gist=${gistShortId}${fileParam}`;
-            
+
             setEmbedCode(shareableLink);
             setShowEmbedCode(true);
           } else {
@@ -336,14 +305,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
             const embedType = "presentation"; // Default to presentation view
-            
+
             // Extract username/gistId from the full Gist URL
             const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
             const gistShortId = gistMatch ? gistMatch[1] : gistId;
-            
+
             // Use new shorter URL format for shareable links
             const shareableLink = `${window.location.origin}/share?gist=${gistShortId}`;
-            
+
             setEmbedCode(shareableLink);
             setShowEmbedCode(true);
           } else {
@@ -414,6 +383,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">Export Presentation</h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
@@ -683,6 +653,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     </label>
                     <div className="space-x-1 text-sm">
                       <button
+                        type="button"
                         onClick={() => {
                           const exportData =
                             generateExportData("embedding-data");
@@ -786,6 +757,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               />
               <div className="flex justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(embedCode);
                     alert("Copied to clipboard!");
@@ -797,6 +769,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     : "Copy Code"}
                 </button>
                 <button
+                  type="button"
                   onClick={handleClose}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
@@ -810,6 +783,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         {!showEmbedCode && (
           <div className="p-4 border-t bg-gray-50 rounded-b-lg">
             <button
+              type="submit"
               onClick={handleExport}
               disabled={
                 !selectedOption ||
