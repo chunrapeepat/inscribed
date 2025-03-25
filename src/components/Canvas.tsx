@@ -63,12 +63,21 @@ export const Canvas: React.FC = () => {
       const elements = excalidrawAPIRef.current
         ?.getSceneElements()
         .filter((e) => ids.includes(e.id));
-      const isAllText = elements?.every((e) => e.type === "text");
-      if (!isAllText) return;
+      const isSomeText = elements?.some((e) => e.type === "text");
+      if (!isSomeText) return;
 
-      const fontFamilyPopup = document.querySelector(
-        "div.Stack.Stack_vertical.App-menu_top__left fieldset:nth-child(3) > div"
+      let fontFamilyFieldset: HTMLFieldSetElement | null = null;
+      const fieldsets = document.querySelectorAll(
+        "div.Stack.Stack_vertical.App-menu_top__left fieldset"
       );
+      for (const fieldset of fieldsets) {
+        if (fieldset.innerHTML.includes("Font family")) {
+          fontFamilyFieldset = fieldset as HTMLFieldSetElement;
+        }
+      }
+      if (fontFamilyFieldset == null) return;
+
+      const fontFamilyPopup = fontFamilyFieldset.querySelector("div");
       if (!fontFamilyPopup) return;
 
       const label = document.createElement("label");
