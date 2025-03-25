@@ -4,8 +4,9 @@
   "version": "1.0.4",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --mode production",
+    "copy-excalidraw-assets": "rm -rf public/excalidraw && mkdir -p public/excalidraw && cp -r node_modules/@excalidraw/excalidraw/dist public/excalidraw/dist",
+    "dev": "pnpm run copy-excalidraw-assets && vite",
+    "build": "pnpm run copy-excalidraw-assets && vite build --mode production",
     "deploy": "firebase deploy",
     "lint": "eslint .",
     "preview": "vite preview"
