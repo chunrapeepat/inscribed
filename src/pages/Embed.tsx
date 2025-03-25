@@ -1,18 +1,17 @@
 import React, { useEffect } from "react";
-import { ReadOnlyCanvas } from "../../components/embed/ReadOnlyCanvas";
-import { registerExcalidrawFonts } from "../../utils/fonts";
-import { ExportData } from "../../types";
-import { fetchDataFromGist } from "../../utils/export";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ReadOnlyCanvas } from "../components/embed/ReadOnlyCanvas";
+import { registerExcalidrawFonts } from "../utils/fonts";
+import { ExportData } from "../types";
+import { fetchDataFromGist } from "../utils/export";
 
-interface PresentationEmbedProps {
+interface EmbedProps {
   gistUrl: string;
   filename?: string;
+  type: "presentation" | "slider-template";
 }
 
-export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
-  gistUrl,
-  filename,
-}) => {
+export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<ExportData | null>(null);
@@ -44,7 +43,7 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
     };
 
     loadData();
-  }, [gistUrl]);
+  }, [gistUrl, filename]);
 
   // register fonts when data is loaded
   useEffect(() => {
@@ -69,6 +68,7 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
       setCurrentSlideIndex((prev) => prev + 1);
     }
   };
+
   const handlePrevSlide = () => {
     if (data && currentSlideIndex > 0) {
       setCurrentSlideIndex((prev) => prev - 1);
@@ -103,7 +103,7 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
     );
   }
 
-  return (
+  const Component = () => (
     <ReadOnlyCanvas
       initialData={data}
       onNextSlide={handleNextSlide}
@@ -111,6 +111,15 @@ export const PresentationEmbed: React.FC<PresentationEmbedProps> = ({
       currentSlide={currentSlideIndex}
       totalSlides={data.document.slides.length}
       onJumpToSlide={handleJumpToSlide}
+      navigationType={type === "slider-template" ? "slider" : "default"}
     />
+  );
+
+  return type === "slider-template" ? (
+    <ThemeProvider theme={createTheme()}>
+      <Component />
+    </ThemeProvider>
+  ) : (
+    <Component />
   );
 };
