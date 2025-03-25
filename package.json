@@ -1,7 +1,7 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "copy-excalidraw-assets": "rm -rf public/excalidraw && mkdir -p public/excalidraw && cp -r node_modules/@excalidraw/excalidraw/dist public/excalidraw/dist",
