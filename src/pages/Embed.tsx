@@ -42,7 +42,19 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
       }
     };
 
-    loadData();
+    const loadDebugData = async () => {
+      // fetch default data from public folder
+      const fetchData = await fetch("/dev-debug-data.ins");
+      const data = await fetchData.json();
+      setData(data);
+      setLoading(false);
+    };
+
+    if (import.meta.env.DEV) {
+      loadDebugData();
+    } else {
+      loadData();
+    }
   }, [gistUrl, filename]);
 
   // register fonts when data is loaded

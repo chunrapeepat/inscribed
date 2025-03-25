@@ -6,7 +6,7 @@
   "scripts": {
     "copy-excalidraw-assets": "rm -rf public/excalidraw && mkdir -p public/excalidraw && cp -r node_modules/@excalidraw/excalidraw/dist public/excalidraw/dist",
     "dev": "pnpm run copy-excalidraw-assets && vite",
-    "build": "pnpm run copy-excalidraw-assets && vite build --mode production",
+    "build": "pnpm run copy-excalidraw-assets && vite build --mode production && rm -f dist/dev-debug-data.ins",
     "deploy": "firebase deploy",
     "lint": "eslint .",
     "preview": "vite preview"
