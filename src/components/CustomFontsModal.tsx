@@ -35,7 +35,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
   useEffect(() => {
     const fonts: CustomFontFace[] = [];
     Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
-      console.log("registering font", fontFamily);
+      console.info("registering font", fontFamily);
       fonts.push(...fontFaces);
     });
     registerExcalidrawFonts(fonts);
