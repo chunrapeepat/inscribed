@@ -15,7 +15,6 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<ExportData | null>(null);
-  const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
   useEffect(() => {
@@ -75,22 +74,6 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
     loadFonts();
   }, [data]);
 
-  const handleNextSlide = () => {
-    if (data && currentSlideIndex < data.document.slides.length - 1) {
-      setCurrentSlideIndex((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevSlide = () => {
-    if (data && currentSlideIndex > 0) {
-      setCurrentSlideIndex((prev) => prev - 1);
-    }
-  };
-
-  const handleJumpToSlide = (index: number) => {
-    setCurrentSlideIndex(index);
-  };
-
   if (loading || !fontsLoaded) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -118,11 +101,6 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
   const Component = () => (
     <ReadOnlyCanvas
       initialData={data}
-      onNextSlide={handleNextSlide}
-      onPrevSlide={handlePrevSlide}
-      currentSlide={currentSlideIndex}
-      totalSlides={data.document.slides.length}
-      onJumpToSlide={handleJumpToSlide}
       navigationType={type === "slider-template" ? "slider" : "default"}
     />
   );
