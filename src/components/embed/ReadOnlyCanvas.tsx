@@ -1,20 +1,47 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import {
+  BinaryFiles,
+  ExcalidrawImperativeAPI,
+} from "@excalidraw/excalidraw/types/types";
 import {
   AppState,
   NormalizedZoomValue,
 } from "@excalidraw/excalidraw/types/types";
-import { ExportData } from "../../types";
 import { DefaultNavigation } from "./DefaultNavigation";
 import { SliderNavigation } from "./SliderNavigation";
+
+type ExportData = {
+  name: string;
+  document: {
+    backgroundColor: string;
+    slides: {
+      id: string;
+      elements: ExcalidrawElement[];
+    }[];
+    files: BinaryFiles;
+    documentSize: { width: number; height: number };
+  };
+  fonts: {
+    customFonts: {
+      [fontFamily: string]: {
+        subset: string;
+        fontFamily: string;
+        fontStyle: string;
+        fontWeight: number;
+        fontDisplay: string;
+        src: string;
+        unicodeRange: string;
+      }[];
+    };
+  };
+};
 
 interface ReadOnlyCanvasProps {
   initialData: ExportData;
   navigationType?: "default" | "slider";
 }
-
 export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
   initialData,
   navigationType = "default",
