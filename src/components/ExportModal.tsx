@@ -538,7 +538,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     required
                   />
                   <p className="text-xs text-gray-500 mt-2">
-                    Pro Tip: use <b>cmd/ctrl + s</b> shortcut to export file
+                    <b>Pro tip:</b> use <b>cmd/ctrl + s</b> shortcut to export
+                    file
                   </p>
                 </form>
               )}
