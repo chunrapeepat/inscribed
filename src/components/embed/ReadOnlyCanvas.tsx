@@ -172,9 +172,7 @@ export const ReadOnlyCanvas: React.FC<ReadOnlyCanvasProps> = ({
             elements: slides[currentSlideIndex].elements.map(
               (el: ExcalidrawElement) => ({
                 ...el,
-                strokeStyle: "solid",
-                strokeWidth: 1,
-                strokeColor: "transparent",
+                opacity: 0,
               })
             ),
             appState: {
