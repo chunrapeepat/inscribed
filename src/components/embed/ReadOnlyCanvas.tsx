@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import {
+import type { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import type {
   BinaryFiles,
   ExcalidrawImperativeAPI,
 } from "@excalidraw/excalidraw/types/types";
-import {
+import type {
   AppState,
   NormalizedZoomValue,
 } from "@excalidraw/excalidraw/types/types";
