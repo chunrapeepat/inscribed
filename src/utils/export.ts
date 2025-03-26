@@ -147,6 +147,41 @@ const isValidInscribedData = (data: any): boolean => {
   return Boolean(data?.document?.slides);
 };
 
+// Function to fetch data from raw Gist URL
+export const fetchDataFromRawGist = async (
+  url: string
+): Promise<ExportData> => {
+  if (!url.startsWith("https://gist.githubusercontent.com/")) {
+    throw new Error("Please enter a valid raw GitHub Gist URL");
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Failed to fetch Gist. Please check the URL and try again."
+      );
+    }
+
+    const data = await response.json();
+    if (!isValidInscribedData(data)) {
+      throw new Error("The file does not contain valid Inscribed data");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to fetch or parse the Gist data");
+  }
+};
+
 // Extract gist ID from URL
 const extractGistId = (url: string): string => {
   // Match either a gist URL or a direct link to a file in a gist

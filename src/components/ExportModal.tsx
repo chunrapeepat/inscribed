@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import {
   exportToGif,
   fetchDataFromGist,
+  fetchDataFromRawGist,
   downloadInsFile,
   generateEmbedCode,
   handleImport,
@@ -206,6 +207,33 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         // Otherwise fetch from the gist
         setIsLoadingGist(true);
         try {
+          // Check if it's a raw gist URL
+          if (gistId.includes("raw")) {
+            const result = await fetchDataFromRawGist(gistId);
+
+            // Import directly since raw URLs only contain one file
+            const documentStore = useDocumentStore.getState();
+            const fontsStore = useFontsStore.getState();
+
+            // Reset the store with import data
+            documentStore.resetStore(result.document);
+
+            // Add fonts if not already present
+            if (result.fonts?.customFonts) {
+              Object.keys(result.fonts.customFonts).forEach((fontFamily) => {
+                if (!fontsStore.customFonts[fontFamily]) {
+                  fontsStore.addFonts(result.fonts.customFonts[fontFamily]);
+                }
+              });
+            }
+
+            // Save the imported Gist URL
+            setImportedGistUrl(gistId);
+
+            onClose();
+            return;
+          }
+
           const result = await fetchDataFromGist(gistId);
 
           // If result is an array, we have multiple files to choose from
@@ -268,16 +296,30 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
-            const embedType = "presentation"; // Default to presentation view
-
-            // Extract username/gistId from the full Gist URL
-            const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
-            const gistShortId = gistMatch ? gistMatch[1] : gistId;
-
-            // Use new shorter URL format for shareable links
-            const shareableLink = `${window.location.origin}/share?gist=${gistShortId}${fileParam}`;
-
-            setEmbedCode(shareableLink);
+            if (gistId.includes("raw")) {
+              // For raw URLs, use the entire URL encoded
+              const shareableLink = `${
+                window.location.origin
+              }/share?gist=${encodeURIComponent(gistId)}${fileParam}`;
+              setEmbedCode(shareableLink);
+            } else {
+              // For regular gist URLs
+              const gistMatch = gistId.match(
+                /gist\.github\.com\/([^/]+\/[^/]+)/
+              );
+              if (gistMatch) {
+                // If it's a full gist URL, use it directly
+                const shareableLink = `${
+                  window.location.origin
+                }/share?gist=${encodeURIComponent(gistId)}${fileParam}`;
+                setEmbedCode(shareableLink);
+              } else {
+                // If it's just a gist ID or username/gistid format
+                const gistShortId = gistId;
+                const shareableLink = `${window.location.origin}/share?gist=${gistShortId}${fileParam}`;
+                setEmbedCode(shareableLink);
+              }
+            }
             setShowEmbedCode(true);
           } else {
             // Generate iframe code for other embed options
@@ -298,6 +340,33 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         // Otherwise fetch from the gist
         setIsLoadingGist(true);
         try {
+          // Check if it's a raw gist URL
+          if (gistId.includes("raw")) {
+            // For raw URLs, we can use them directly without fetching
+            if (selectedOption === "get-shareable-link") {
+              // For shareable links with raw URLs, encode the entire URL
+              const shareableLink = `${
+                window.location.origin
+              }/share?gist=${encodeURIComponent(gistId)}`;
+              setEmbedCode(shareableLink);
+            } else {
+              // For embed options with raw URLs
+              const embedType =
+                selectedOption === "embed-presentation"
+                  ? "presentation"
+                  : "slider-template";
+              // Pass the raw URL directly to the embed code generator
+              const iframeCode = generateEmbedCode(
+                embedType,
+                encodeURIComponent(gistId)
+              );
+              setEmbedCode(iframeCode);
+            }
+            setShowEmbedCode(true);
+            setIsLoadingGist(false);
+            return;
+          }
+
           const result = await fetchDataFromGist(gistId);
 
           // If result is an array, we have multiple files to choose from
@@ -311,16 +380,30 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           // Single file result, proceed with generating link/embed
           if (selectedOption === "get-shareable-link") {
             // Generate shareable link instead of iframe code
-            const embedType = "presentation"; // Default to presentation view
-
-            // Extract username/gistId from the full Gist URL
-            const gistMatch = gistId.match(/gist\.github\.com\/([^/]+\/[^/]+)/);
-            const gistShortId = gistMatch ? gistMatch[1] : gistId;
-
-            // Use new shorter URL format for shareable links
-            const shareableLink = `${window.location.origin}/share?gist=${gistShortId}`;
-
-            setEmbedCode(shareableLink);
+            if (gistId.includes("raw")) {
+              // For raw URLs, use the entire URL encoded
+              const shareableLink = `${
+                window.location.origin
+              }/share?gist=${encodeURIComponent(gistId)}`;
+              setEmbedCode(shareableLink);
+            } else {
+              // For regular gist URLs
+              const gistMatch = gistId.match(
+                /gist\.github\.com\/([^/]+\/[^/]+)/
+              );
+              if (gistMatch) {
+                // If it's a full gist URL, use it directly
+                const shareableLink = `${
+                  window.location.origin
+                }/share?gist=${encodeURIComponent(gistId)}`;
+                setEmbedCode(shareableLink);
+              } else {
+                // If it's just a gist ID or username/gistid format
+                const gistShortId = gistId;
+                const shareableLink = `${window.location.origin}/share?gist=${gistShortId}`;
+                setEmbedCode(shareableLink);
+              }
+            }
             setShowEmbedCode(true);
           } else {
             // Generate iframe code for other embed options

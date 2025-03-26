@@ -21,8 +21,17 @@ const App: React.FC = () => {
     if (gistParam) {
       // For share URLs, default to presentation type if not specified
       type = params.get("type") || "presentation";
-      // Convert username/gistid to full gist URL
-      gistUrl = `https://gist.github.com/${gistParam}`;
+
+      // Check if the gist parameter is a full raw URL
+      if (gistParam.includes("raw")) {
+        gistUrl = gistParam; // Use the raw URL directly
+      } else if (gistParam.startsWith("https://gist.github.com/")) {
+        gistUrl = gistParam; // Use the full gist URL directly
+      } else {
+        // Convert username/gistid to full gist URL
+        gistUrl = `https://gist.github.com/${gistParam}`;
+      }
+
       // Get filename from params
       filename = params.get("filename") || undefined;
     } else {
