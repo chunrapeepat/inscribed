@@ -4,6 +4,7 @@ import { CustomFontFace } from "../types";
 
 // handle excalidraw custom fonts
 interface CustomFontsState {
+  _initialized: boolean;
   customFonts: {
     [fontFamily: string]: CustomFontFace[];
   };
@@ -14,6 +15,7 @@ interface CustomFontsState {
 export const useFontsStore = create<CustomFontsState>()(
   persist(
     (set) => ({
+      _initialized: false,
       customFonts: {},
       addFonts: (fontFaces: CustomFontFace[]) =>
         set((state) => {

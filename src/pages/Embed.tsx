@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ReadOnlyCanvas } from "../components/embed/ReadOnlyCanvas";
 import { registerExcalidrawFonts } from "../utils/fonts";
 import { ExportData } from "../types";
-import { fetchDataFromGist } from "../utils/export";
+import { fetchDataFromGist, fetchDataFromRawGist } from "../utils/export";
 
 interface EmbedProps {
   gistUrl: string;
@@ -20,23 +20,31 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const gistData = await fetchDataFromGist(gistUrl);
-        if (Array.isArray(gistData)) {
-          if (filename) {
-            const file = gistData.find((file) => file.filename === filename);
-            if (file) {
-              setData(file.content);
+        // Check if it's a raw gist URL
+        if (gistUrl.includes("raw")) {
+          const rawData = await fetchDataFromRawGist(gistUrl);
+          setData(rawData);
+        } else {
+          const gistData = await fetchDataFromGist(gistUrl);
+          if (Array.isArray(gistData)) {
+            if (filename) {
+              const file = gistData.find((file) => file.filename === filename);
+              if (file) {
+                setData(file.content);
+              }
+            } else {
+              setData(gistData[0].content);
             }
           } else {
-            setData(gistData[0].content);
+            setData(gistData);
           }
-        } else {
-          setData(gistData);
         }
         setLoading(false);
-      } catch (e: unknown) {
-        console.error("Failed to load template:", e);
-        setError("Failed to load template");
+      } catch (error) {
+        console.error("Failed to load template:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to load template"
+        );
         setLoading(false);
       }
     };
@@ -62,7 +70,7 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
       return;
     }
 
-    const loadFonts = async () => {
+    const loadAllFonts = async () => {
       const customFonts = [];
       for (const fontFamily in data.fonts.customFonts) {
         customFonts.push(...data.fonts.customFonts[fontFamily]);
@@ -71,7 +79,7 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
       setFontsLoaded(true);
     };
 
-    loadFonts();
+    loadAllFonts();
   }, [data]);
 
   if (loading || !fontsLoaded) {

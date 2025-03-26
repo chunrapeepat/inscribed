@@ -277,6 +277,7 @@ export const SlideList: React.FC = () => {
               <li>Ctrl/⌘ + C - Copy slide</li>
               <li>Ctrl/⌘ + V - Paste slide</li>
               <li>Ctrl/⌘ + D - Duplicate slide</li>
+              <li>Ctrl/⌘ + S - Save/Export Data (filename.ins)</li>
             </ul>
           </div>
         )}

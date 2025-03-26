@@ -1,7 +1,7 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "inscribed",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "scripts": {
     "copy-excalidraw-assets": "rm -rf public/excalidraw && mkdir -p public/excalidraw && cp -r node_modules/@excalidraw/excalidraw/dist public/excalidraw/dist",
@@ -29,6 +29,7 @@
     "@types/gif.js": "^0.2.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@types/wicg-file-system-access": "^2023.10.5",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
     "eslint": "^9.9.1",

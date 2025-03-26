@@ -13,9 +13,9 @@ import {
   Gesture,
 } from "@excalidraw/excalidraw/types/types";
 import { useFontsStore } from "../store/custom-fonts";
-import { CustomFontFace, Slide, Writeable } from "../types";
+import { Slide, Writeable } from "../types";
 import { useModalStore } from "../store/modal";
-import { getExcalidrawFontId, registerExcalidrawFonts } from "../utils/fonts";
+import { getExcalidrawFontId, loadExcalidrawFonts } from "../utils/fonts";
 import { useLibraryStore } from "../store/library";
 import { copy } from "../utils/general";
 import { getImageDimensions } from "../utils/excalidraw";
@@ -102,26 +102,35 @@ export const Canvas: React.FC = () => {
     addCustomFontsLabel();
   };
 
-  // register fonts to Excalidraw when custom fonts are updated
+  // register fonts to Excalidraw
   useEffect(() => {
-    const loadFonts = async () => {
-      const fonts: CustomFontFace[] = [];
-      Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
-        console.info("registering font", fontFamily);
-        fonts.push(...fontFaces);
-      });
-      await registerExcalidrawFonts(fonts);
-      setFontsLoaded(true);
-    };
+    if (fontsLoaded) return;
+    if (!hasInitialized) return;
+    if (Object.keys(customFonts).length === 0) return;
 
-    loadFonts();
-  }, [customFonts]);
+    const excalidrawFontIds = [];
+    for (const slide of slides) {
+      for (const element of slide.elements) {
+        if (element.type === "text") {
+          excalidrawFontIds.push(element.fontFamily);
+        }
+      }
+    }
+
+    loadExcalidrawFonts([...new Set(excalidrawFontIds)]).then(() => {
+      setFontsLoaded(true);
+      useFontsStore.setState({ _initialized: true });
+    });
+  }, [customFonts, slides, hasInitialized, fontsLoaded]);
 
   // apply font to selected items after user selects a font
   useEffect(() => {
-    const handleFontSelected = (e: Event) => {
+    const handleFontSelected = async (e: Event) => {
       const customEvent = e as CustomEvent;
       const { fontFamily } = customEvent.detail;
+
+      // load excalidraw fonts
+      await loadExcalidrawFonts([getExcalidrawFontId(fontFamily)]);
 
       const selectedIds = Object.keys(previousSelectionIdsRef.current);
       const selectedElements: Writeable<ExcalidrawElement>[] = copy(

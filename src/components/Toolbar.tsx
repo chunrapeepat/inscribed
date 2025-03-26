@@ -83,8 +83,16 @@ export const Toolbar: React.FC = () => {
             </button>
           </div>
 
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
             <img src="/logo.png" alt="Logo" className="h-8" />
+            <a
+              href="https://github.com/chunrapeepat/inscribed?tab=readme-ov-file#changelog"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 text-xs text-gray-500"
+            >
+              v{APP_VERSION}
+            </a>
           </div>
 
           <div className="flex gap-2">
