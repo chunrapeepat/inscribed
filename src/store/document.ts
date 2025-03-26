@@ -14,11 +14,13 @@ interface DocumentState {
   _isSidebarCollapsed: boolean;
   _isSlideListFocused: boolean;
 
+  filename?: string;
   backgroundColor: string;
   files: BinaryFiles;
   slides: Slide[];
   currentSlideIndex: number;
   documentSize: DocumentSize;
+  setFilename: (filename: string) => void;
   setInitialized: () => void;
   addSlide: () => void;
   addSlideAfterIndex: (index: number) => void;
@@ -116,6 +118,7 @@ export const useDocumentStore = create<DocumentState>()(
         height: DEFAULT_FRAME_HEIGHT,
       },
       setInitialized: () => set({ _initialized: true }),
+      setFilename: (filename) => set({ filename }),
       addSlide: () =>
         set((state) => ({
           slides: [

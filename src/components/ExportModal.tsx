@@ -85,6 +85,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewProgress, setPreviewProgress] = useState<number | null>(null);
 
+  const { filename } = useDocumentStore();
+
+  // update default export filename
+  useEffect(() => {
+    setExportFileName(filename || "");
+  }, [filename]);
+
   // ESC shortcut
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {

@@ -329,6 +329,9 @@ export const handleImport = async (file: File) => {
   // reset the store with import data
   documentStore.resetStore(importData.document);
 
+  // set filename
+  documentStore.setFilename(file.name.replace(".ins", ""));
+
   // add fonts if not already present
   if (importData.fonts?.customFonts) {
     Object.keys(importData.fonts.customFonts).forEach((fontFamily) => {
@@ -369,6 +372,9 @@ export const generateExportData = (fileName: string) => {
       customFonts[fontFamily] = fontsStore.customFonts[fontFamily];
     }
   });
+
+  // set the filename to store
+  documentStore.setFilename(fileName);
 
   return {
     name: fileName,

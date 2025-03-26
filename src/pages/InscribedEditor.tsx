@@ -7,8 +7,10 @@ import {
   downloadInsFile,
   handleImport,
 } from "../utils/export";
+import { useDocumentStore } from "../store/document";
 
 export const InscribedEditor: React.FC = () => {
+  const { filename } = useDocumentStore();
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
   const [showAboutOverlay, setShowAboutOverlay] = useState(() => {
     // Check if user has visited before
@@ -19,7 +21,7 @@ export const InscribedEditor: React.FC = () => {
   const [fileToImport, setFileToImport] = useState<File | null>(null);
 
   const save = async () => {
-    const defaultFileName = `inscribed-${Date.now()}.ins`;
+    const defaultFileName = filename || `inscribed-${Date.now()}.ins`;
     if ("showSaveFilePicker" in window) {
       try {
         const options: SaveFilePickerOptions = {
@@ -33,7 +35,9 @@ export const InscribedEditor: React.FC = () => {
         };
 
         const fileHandle = await window.showSaveFilePicker(options);
-        const exportData = generateExportData(fileHandle.name);
+        const exportData = generateExportData(
+          fileHandle.name.replace(".ins", "")
+        );
         const blob = new Blob([JSON.stringify(exportData)], {
           type: "text/plain",
         });
@@ -72,7 +76,7 @@ export const InscribedEditor: React.FC = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, []);
+  }, [filename]);
 
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
