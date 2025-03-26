@@ -36,7 +36,7 @@ A slide-based tool for fast sketching and animating ideas.
 
 ## Changelog
 
-- [26/3/2025] [v1.0.5](https://github.com/chunrapeepat/inscribed/pull/12) - raw gist url supported, drag and drop to import, cmd/ctrl + s shortcut for export, minor ux improvements.
+- [26/3/2025] [v1.0.6](https://github.com/chunrapeepat/inscribed/pull/12) - raw gist url supported, drag and drop to import, cmd/ctrl + s shortcut for export, minor ux improvements.
 
 - [25/3/2025] [v1.0.5](https://github.com/chunrapeepat/inscribed/pull/10) - fix bugs, minor improvements
 
