@@ -3,6 +3,7 @@ import { exportToSvg } from "@excalidraw/excalidraw";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { useDocumentStore } from "../store/document";
 import { copy } from "../utils/general";
+import { useFontsStore } from "../store/custom-fonts";
 
 interface SlidePreviewProps {
   elements: ExcalidrawElement[];
@@ -12,6 +13,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
   const previewRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef<boolean>(false);
   const { backgroundColor, files, _isSlideListFocused } = useDocumentStore();
+  const fontStore = useFontsStore.getState();
 
   useEffect(() => {
     const generatePreview = async () => {
@@ -47,11 +49,15 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ elements }) => {
       }
     };
 
+    if (fontStore._initialized) {
+      generatePreview();
+    }
+
     if (!_isSlideListFocused || !initializedRef.current) {
       generatePreview();
       initializedRef.current = true;
     }
-  }, [_isSlideListFocused, elements, backgroundColor]);
+  }, [_isSlideListFocused, elements, backgroundColor, fontStore._initialized]);
 
   return (
     <div

@@ -119,6 +119,7 @@ export const Canvas: React.FC = () => {
 
     loadExcalidrawFonts([...new Set(excalidrawFontIds)]).then(() => {
       setFontsLoaded(true);
+      useFontsStore.setState({ _initialized: true });
     });
   }, [customFonts, slides, hasInitialized, fontsLoaded]);
 
