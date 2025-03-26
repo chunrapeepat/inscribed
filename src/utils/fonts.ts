@@ -1,5 +1,6 @@
 import { FONT_FAMILY } from "@excalidraw/excalidraw";
 import { CustomFontFace } from "../types";
+import { useFontsStore } from "../store/custom-fonts";
 
 export const getExcalidrawFontId = (fontFamily: string): number => {
   let hash = 0;
@@ -33,6 +34,21 @@ export const registerExcalidrawFonts = async (fontFaces: CustomFontFace[]) => {
     (FONT_FAMILY as { [k: string]: number })[fontFamily] =
       getExcalidrawFontId(fontFamily);
   });
+};
+
+export const loadExcalidrawFonts = async (excalidrawFontIds: number[]) => {
+  const { customFonts } = useFontsStore.getState();
+
+  const fonts: CustomFontFace[] = [];
+  Object.entries(customFonts).forEach(([fontFamily, fontFaces]) => {
+    if (!excalidrawFontIds.includes(getExcalidrawFontId(fontFamily))) return;
+
+    console.info("registering font", fontFamily);
+    fonts.push(...fontFaces);
+  });
+
+  await registerExcalidrawFonts(fonts);
+  return true;
 };
 
 export const parseFontFaces = (content: string): CustomFontFace[] => {

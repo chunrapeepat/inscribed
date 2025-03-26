@@ -62,7 +62,7 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
       return;
     }
 
-    const loadFonts = async () => {
+    const loadAllFonts = async () => {
       const customFonts = [];
       for (const fontFamily in data.fonts.customFonts) {
         customFonts.push(...data.fonts.customFonts[fontFamily]);
@@ -71,7 +71,7 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
       setFontsLoaded(true);
     };
 
-    loadFonts();
+    loadAllFonts();
   }, [data]);
 
   if (loading || !fontsLoaded) {

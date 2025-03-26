@@ -113,7 +113,7 @@ export const CustomFontsModal: React.FC<CustomFontsModalProps> = ({
                 className="flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 rounded transition-colors"
               >
                 <span
-                  style={{ fontFamily: fontFamily }}
+                  style={{ fontFamily: `${fontFamily}, sans-serif` }}
                   onClick={() => handleFontClick(fontFamily)}
                   className="cursor-pointer hover:opacity-75"
                 >
