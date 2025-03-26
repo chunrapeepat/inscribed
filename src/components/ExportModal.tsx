@@ -572,7 +572,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       }
                     }}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter GitHub Gist URL"
+                    placeholder="Enter GitHub Gist URL (or raw gist URL)"
                     required
                   />
 
@@ -797,9 +797,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       }
                     }}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter GitHub Gist URL"
+                    placeholder="Enter GitHub Gist URL (or raw gist URL)"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-2">
+                    <b>Pro tip:</b> use raw gist URL to increase the rate limit.
+                  </p>
 
                   {isLoadingGist && (
                     <div className="mt-2 text-sm text-gray-600 flex items-center">
