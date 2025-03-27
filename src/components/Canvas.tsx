@@ -106,7 +106,11 @@ export const Canvas: React.FC = () => {
   useEffect(() => {
     if (fontsLoaded) return;
     if (!hasInitialized) return;
-    if (Object.keys(customFonts).length === 0) return;
+    if (Object.keys(customFonts).length === 0) {
+      setFontsLoaded(true);
+      useFontsStore.setState({ _initialized: true });
+      return;
+    }
 
     const excalidrawFontIds = [];
     for (const slide of slides) {
