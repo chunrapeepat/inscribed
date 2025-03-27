@@ -66,14 +66,12 @@ export const Embed: React.FC<EmbedProps> = ({ gistUrl, filename, type }) => {
 
   // register fonts when data is loaded
   useEffect(() => {
-    if (!data?.fonts?.customFonts) {
-      return;
-    }
+    if (!data) return;
 
     const loadAllFonts = async () => {
       const customFonts = [];
-      for (const fontFamily in data.fonts.customFonts) {
-        customFonts.push(...data.fonts.customFonts[fontFamily]);
+      for (const fontFamily in data?.fonts?.customFonts || {}) {
+        customFonts.push(...(data?.fonts?.customFonts[fontFamily] || []));
       }
       await registerExcalidrawFonts(customFonts);
       setFontsLoaded(true);
