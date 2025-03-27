@@ -104,13 +104,7 @@ export const Canvas: React.FC = () => {
 
   // register fonts to Excalidraw
   useEffect(() => {
-    if (fontsLoaded) return;
     if (!hasInitialized) return;
-    if (Object.keys(customFonts).length === 0) {
-      setFontsLoaded(true);
-      useFontsStore.setState({ _initialized: true });
-      return;
-    }
 
     const excalidrawFontIds = [];
     for (const slide of slides) {
@@ -125,7 +119,7 @@ export const Canvas: React.FC = () => {
       setFontsLoaded(true);
       useFontsStore.setState({ _initialized: true });
     });
-  }, [customFonts, slides, hasInitialized, fontsLoaded]);
+  }, [customFonts, slides, hasInitialized]);
 
   // apply font to selected items after user selects a font
   useEffect(() => {
