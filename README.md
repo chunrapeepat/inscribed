@@ -1,6 +1,6 @@
-# inscribed.app
+# Inscribed
 
-A slide-based tool for fast sketching and animating ideas.
+A slide-based tool for creating stop motion animations and slides with Excalidraw
 
 ![Inscribed App Interface](./docs/imgs/screenshot.png)
 
