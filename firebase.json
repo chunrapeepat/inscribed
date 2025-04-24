@@ -1,14 +1,7 @@
 {
   "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "region": "asia-east1"
-    },
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "/share/**",
@@ -16,6 +9,10 @@
       },
       {
         "source": "/embed/**",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**",
         "destination": "/index.html"
       }
     ]
