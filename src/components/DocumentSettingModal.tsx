@@ -18,10 +18,16 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
 }) => {
   const { documentSize, setDocumentSize, backgroundColor, setBackgroundColor } =
     useDocumentStore();
-  const [width, setWidth] = useState(documentSize.width.toString());
-  const [height, setHeight] = useState(documentSize.height.toString());
+  const [width, setWidth] = useState(documentSize.width);
+  const [height, setHeight] = useState(documentSize.height);
   const [color, setColor] = useState(backgroundColor);
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  useEffect(() => {
+    setWidth(documentSize.width);
+    setHeight(documentSize.height);
+    setColor(backgroundColor);
+  }, [documentSize, backgroundColor]);
 
   // ESC shortcut
   useEffect(() => {
@@ -42,17 +48,11 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
     setDocumentSize({
       width: Math.max(
         100,
-        Math.min(
-          DEFAULT_FRAME_WIDTH * 5,
-          parseInt(width) || DEFAULT_FRAME_WIDTH
-        )
+        Math.min(DEFAULT_FRAME_WIDTH * 5, width || DEFAULT_FRAME_WIDTH)
       ),
       height: Math.max(
         100,
-        Math.min(
-          DEFAULT_FRAME_HEIGHT * 5,
-          parseInt(height) || DEFAULT_FRAME_HEIGHT
-        )
+        Math.min(DEFAULT_FRAME_HEIGHT * 5, height || DEFAULT_FRAME_HEIGHT)
       ),
     });
     setBackgroundColor(color);
