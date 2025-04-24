@@ -84,7 +84,7 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
                 type="number"
                 id="width"
                 value={width}
-                onChange={(e) => setWidth(e.target.value)}
+                onChange={(e) => setWidth(Number(e.target.value || 100))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 min="100"
                 max="4000"
@@ -102,7 +102,7 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
                 type="number"
                 id="height"
                 value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                onChange={(e) => setHeight(Number(e.target.value || 100))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 min="100"
                 max="4000"
