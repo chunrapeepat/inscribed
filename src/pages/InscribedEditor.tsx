@@ -125,7 +125,6 @@ export const InscribedEditor: React.FC = () => {
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement> | DragEvent) => {
       e.preventDefault();
-      e.stopPropagation();
       setShowDropOverlay(false);
 
       if (e.dataTransfer?.files) {
@@ -133,6 +132,7 @@ export const InscribedEditor: React.FC = () => {
         for (let i = 0; i < e.dataTransfer.files.length; i++) {
           const file = e.dataTransfer.files[i];
           if (file.name.toLowerCase().endsWith(".ins")) {
+            e.stopPropagation();
             setFileToImport(file);
             setShowImportConfirm(true);
             break;
