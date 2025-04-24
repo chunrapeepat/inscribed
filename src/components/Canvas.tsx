@@ -43,6 +43,7 @@ export const Canvas: React.FC = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const isSidebarCollapsed = getSidebarCollapsed();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const totalSlidesRef = useRef<number>(slides.length);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -332,6 +333,18 @@ export const Canvas: React.FC = () => {
     },
     [currentSlide.elements, currentSlideIndex]
   );
+
+  // handle when user delete slides
+  useEffect(() => {
+    if (totalSlidesRef.current !== slides.length) {
+      totalSlidesRef.current = slides.length;
+      if (excalidrawAPIRef.current) {
+        excalidrawAPIRef.current.updateScene({
+          elements: currentSlide.elements,
+        });
+      }
+    }
+  }, [slides]);
 
   if (!hasInitialized || !fontsLoaded)
     return (

@@ -354,7 +354,13 @@ export const SlideList: React.FC = () => {
                       Slide {index + 1}
                     </div>
                   </div>
-                  <SlidePreview elements={slide.elements} />
+                  <div className="relative">
+                    <SlidePreview elements={slide.elements} />
+                    <div
+                      className="absolute inset-0 z-10 cursor-pointer"
+                      aria-label="Slide overlay"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
