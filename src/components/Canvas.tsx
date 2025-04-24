@@ -45,6 +45,7 @@ export const Canvas: React.FC = () => {
   const previousPointerRef = useRef<PointerEvent | null>(null);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const isSidebarCollapsed = getSidebarCollapsed();
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -101,6 +102,37 @@ export const Canvas: React.FC = () => {
 
     addCustomFontsLabel();
   };
+
+  // Save the current slide when user change focus from the canvas
+  const handleCanvasBlur = useCallback(() => {
+    if (excalidrawAPIRef.current) {
+      const elements = excalidrawAPIRef.current.getSceneElements();
+      updateSlide(currentSlideIndex, copy(elements));
+    }
+  }, [currentSlideIndex, updateSlide]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        canvasRef.current &&
+        !canvasRef.current.contains(event.target as Node)
+      ) {
+        handleCanvasBlur();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleCanvasBlur();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [handleCanvasBlur]);
 
   // register fonts to Excalidraw
   useEffect(() => {
@@ -307,6 +339,7 @@ export const Canvas: React.FC = () => {
 
   return (
     <div
+      ref={canvasRef}
       style={{
         left: isSidebarCollapsed ? "1rem" : "17rem",
         transition: "left 0.3s ease", // Match the sidebar transition duration
