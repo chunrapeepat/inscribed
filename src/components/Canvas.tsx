@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, parseLibraryTokensFromUrl } from "@excalidraw/excalidraw";
 import { createDefaultFrame, useDocumentStore } from "../store/document";
 import {
   ExcalidrawElement,
@@ -53,6 +53,25 @@ export const Canvas: React.FC = () => {
       viewportZoomFactor: 0.9,
     });
   };
+
+  // add Excalidraw library from urls
+  useEffect(() => {
+    const parsed = parseLibraryTokensFromUrl();
+    if (!parsed) return;
+
+    const { libraryUrl } = parsed;
+
+    fetch(libraryUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        setItems([...libraryItems, ...(data?.library || [])]);
+        window.history.replaceState(null, "", window.location.pathname);
+        excalidrawAPIRef.current?.updateLibrary({
+          libraryItems: [...libraryItems, ...(data?.library || [])],
+        });
+      })
+      .catch(console.error);
+  }, []);
 
   const handleTextSelectionChange = (ids: string[]) => {
     // check if label already exists
