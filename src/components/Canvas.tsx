@@ -36,9 +36,6 @@ export const Canvas: React.FC = () => {
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];
-  const previousElementsRef = useRef<ExcalidrawElement[]>(
-    currentSlide.elements
-  );
   const previousFilesRef = useRef<BinaryFiles | null>(null);
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
@@ -236,16 +233,6 @@ export const Canvas: React.FC = () => {
       },
     });
   }, [backgroundColor]);
-
-  // Update the ref and excalidraw elements when currentSlideIndex changes
-  useEffect(() => {
-    previousElementsRef.current = currentSlide.elements;
-    if (excalidrawAPIRef.current) {
-      excalidrawAPIRef.current.updateScene({
-        elements: currentSlide.elements,
-      });
-    }
-  }, [currentSlideIndex, currentSlide.elements]);
 
   const onPointerUpdate = (payload: {
     pointer: {
