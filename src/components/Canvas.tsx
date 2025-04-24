@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, parseLibraryTokensFromUrl } from "@excalidraw/excalidraw";
 import { createDefaultFrame, useDocumentStore } from "../store/document";
 import {
   ExcalidrawElement,
@@ -36,15 +36,13 @@ export const Canvas: React.FC = () => {
   const { openModal } = useModalStore();
   const { libraryItems, setItems } = useLibraryStore();
   const currentSlide = slides[currentSlideIndex];
-  const previousElementsRef = useRef<ExcalidrawElement[]>(
-    currentSlide.elements
-  );
   const previousFilesRef = useRef<BinaryFiles | null>(null);
   const previousSelectionIdsRef = useRef<{ [id: string]: boolean }>({});
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const previousPointerRef = useRef<PointerEvent | null>(null);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const isSidebarCollapsed = getSidebarCollapsed();
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const scrollToFrame = (frame: ExcalidrawElement) => {
     excalidrawAPIRef.current?.scrollToContent(frame, {
@@ -52,6 +50,25 @@ export const Canvas: React.FC = () => {
       viewportZoomFactor: 0.9,
     });
   };
+
+  // add Excalidraw library from urls
+  useEffect(() => {
+    const parsed = parseLibraryTokensFromUrl();
+    if (!parsed) return;
+
+    const { libraryUrl } = parsed;
+
+    fetch(libraryUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        setItems([...libraryItems, ...(data?.library || [])]);
+        window.history.replaceState(null, "", window.location.pathname);
+        excalidrawAPIRef.current?.updateLibrary({
+          libraryItems: [...libraryItems, ...(data?.library || [])],
+        });
+      })
+      .catch(console.error);
+  }, []);
 
   const handleTextSelectionChange = (ids: string[]) => {
     // check if label already exists
@@ -101,6 +118,37 @@ export const Canvas: React.FC = () => {
 
     addCustomFontsLabel();
   };
+
+  // Save the current slide when user change focus from the canvas
+  const handleCanvasBlur = useCallback(() => {
+    if (excalidrawAPIRef.current) {
+      const elements = excalidrawAPIRef.current.getSceneElements();
+      updateSlide(currentSlideIndex, copy(elements));
+    }
+  }, [currentSlideIndex, updateSlide]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        canvasRef.current &&
+        !canvasRef.current.contains(event.target as Node)
+      ) {
+        handleCanvasBlur();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleCanvasBlur();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [handleCanvasBlur]);
 
   // register fonts to Excalidraw
   useEffect(() => {
@@ -185,16 +233,6 @@ export const Canvas: React.FC = () => {
       },
     });
   }, [backgroundColor]);
-
-  // Update the ref and excalidraw elements when currentSlideIndex changes
-  useEffect(() => {
-    previousElementsRef.current = currentSlide.elements;
-    if (excalidrawAPIRef.current) {
-      excalidrawAPIRef.current.updateScene({
-        elements: currentSlide.elements,
-      });
-    }
-  }, [currentSlideIndex, currentSlide.elements]);
 
   const onPointerUpdate = (payload: {
     pointer: {
@@ -307,6 +345,7 @@ export const Canvas: React.FC = () => {
 
   return (
     <div
+      ref={canvasRef}
       style={{
         left: isSidebarCollapsed ? "1rem" : "17rem",
         transition: "left 0.3s ease", // Match the sidebar transition duration

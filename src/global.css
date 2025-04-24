@@ -8,3 +8,7 @@
 button.dropdown-menu-button.main-menu-trigger.zen-mode-transition {
   display: none !important;
 }
+
+.excalidraw-modal-container {
+  z-index: 999999 !important;
+}

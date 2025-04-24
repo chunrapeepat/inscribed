@@ -18,10 +18,16 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
 }) => {
   const { documentSize, setDocumentSize, backgroundColor, setBackgroundColor } =
     useDocumentStore();
-  const [width, setWidth] = useState(documentSize.width.toString());
-  const [height, setHeight] = useState(documentSize.height.toString());
+  const [width, setWidth] = useState(documentSize.width);
+  const [height, setHeight] = useState(documentSize.height);
   const [color, setColor] = useState(backgroundColor);
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  useEffect(() => {
+    setWidth(documentSize.width);
+    setHeight(documentSize.height);
+    setColor(backgroundColor);
+  }, [documentSize, backgroundColor]);
 
   // ESC shortcut
   useEffect(() => {
@@ -42,17 +48,11 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
     setDocumentSize({
       width: Math.max(
         100,
-        Math.min(
-          DEFAULT_FRAME_WIDTH * 5,
-          parseInt(width) || DEFAULT_FRAME_WIDTH
-        )
+        Math.min(DEFAULT_FRAME_WIDTH * 5, width || DEFAULT_FRAME_WIDTH)
       ),
       height: Math.max(
         100,
-        Math.min(
-          DEFAULT_FRAME_HEIGHT * 5,
-          parseInt(height) || DEFAULT_FRAME_HEIGHT
-        )
+        Math.min(DEFAULT_FRAME_HEIGHT * 5, height || DEFAULT_FRAME_HEIGHT)
       ),
     });
     setBackgroundColor(color);
@@ -84,7 +84,7 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
                 type="number"
                 id="width"
                 value={width}
-                onChange={(e) => setWidth(e.target.value)}
+                onChange={(e) => setWidth(Number(e.target.value || 100))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 min="100"
                 max="4000"
@@ -102,7 +102,7 @@ export const DocumentSettingModal: React.FC<DocumentSettingModalProps> = ({
                 type="number"
                 id="height"
                 value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                onChange={(e) => setHeight(Number(e.target.value || 100))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 min="100"
                 max="4000"
