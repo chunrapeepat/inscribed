@@ -36,6 +36,8 @@ A slide-based tool for creating stop motion animations and slides with Excalidra
 
 ## Changelog
 
+- [25/4/2025] [v1.1.0](https://github.com/chunrapeepat/inscribed/pull/34) - export as video, integrate [excalidraw-animate](https://github.com/dai-shi/excalidraw-animate)
+
 - [24/4/2025] [v1.0.7](https://github.com/chunrapeepat/inscribed/pull/33) - fix all reported bugs on Github issues
 
 - [26/3/2025] [v1.0.6](https://github.com/chunrapeepat/inscribed/pull/12) - raw gist url supported, drag and drop to import, cmd/ctrl + s shortcut for export, minor ux improvements.
