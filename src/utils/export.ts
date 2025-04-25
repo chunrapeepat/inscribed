@@ -143,8 +143,15 @@ export interface GistFileData {
 }
 
 // Function to check if content is valid inscribed data
-const isValidInscribedData = (data: any): boolean => {
-  return Boolean(data?.document?.slides);
+const isValidInscribedData = (data: unknown): boolean => {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      "document" in data &&
+      data.document &&
+      typeof data.document === "object" &&
+      "slides" in data.document
+  );
 };
 
 // Function to fetch data from raw Gist URL
@@ -204,7 +211,7 @@ const extractTargetedFilename = (url: string): string | null => {
     // Fallback to fragment identifier for backward compatibility
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
     return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
-  } catch (e) {
+  } catch {
     // If URL parsing fails, try fragment as fallback
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
     return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
@@ -261,7 +268,7 @@ export const fetchDataFromGist = async (
           `File "${filename}" does not contain valid Inscribed data`
         );
       }
-    } catch (e) {
+    } catch {
       throw new Error(`Error parsing JSON from file "${filename}"`);
     }
   }
@@ -278,7 +285,7 @@ export const fetchDataFromGist = async (
           content,
         });
       }
-    } catch (e) {
+    } catch {
       // Skip invalid files
       continue;
     }
@@ -493,12 +500,16 @@ export const exportToPdf = async ({
 interface ExportVideoOptions {
   fileName: string;
   frameDelay: number;
+  loopToReachDuration?: boolean;
+  durationInSeconds?: number;
   onProgress?: (progress: number) => void;
 }
 
 export const exportToVideo = async ({
   fileName,
   frameDelay,
+  loopToReachDuration = false,
+  durationInSeconds = 0,
   onProgress,
 }: ExportVideoOptions): Promise<string | void> => {
   const state = useDocumentStore.getState();
@@ -561,9 +572,31 @@ export const exportToVideo = async ({
       });
     };
 
-    // Process all frames
-    for (let i = 0; i < imageUrls.length; i++) {
-      await drawFrame(i);
+    // Calculate how many times to loop the slides
+    let totalLoops = 1;
+    if (loopToReachDuration && durationInSeconds > 0) {
+      // Calculate total duration of one loop in milliseconds
+      const singleLoopDurationMs = imageUrls.length * frameDelay;
+      // Convert target duration to milliseconds
+      const targetDurationMs = durationInSeconds * 1000;
+      // Calculate how many loops we need to reach target duration
+      totalLoops = Math.ceil(targetDurationMs / singleLoopDurationMs);
+    }
+
+    // Process all frames with looping if needed
+    for (let loop = 0; loop < totalLoops; loop++) {
+      for (let i = 0; i < imageUrls.length; i++) {
+        await drawFrame(i);
+
+        // Update progress to reflect current loop
+        if (onProgress && totalLoops > 1) {
+          const loopProgress =
+            (loop * imageUrls.length + i) / (totalLoops * imageUrls.length);
+          // Scale progress from 10-90% during frame rendering
+          const progress = 10 + loopProgress * 80;
+          onProgress(progress);
+        }
+      }
     }
 
     // Stop recording and create video

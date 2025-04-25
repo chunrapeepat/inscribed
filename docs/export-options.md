@@ -32,6 +32,14 @@ Export your slides as an MP4 video with customizable frame timing. This is ideal
 - Embedding in websites or presentations that support video
 - Sharing on social media platforms that prioritize video content
 
+You can also enable the loop option to create a video with a specific duration:
+
+- Check the "Loop video to reach total duration" option
+- Set your desired total duration in seconds
+- The slides will automatically loop to reach the specified duration
+
+This is useful for creating looping videos for digital signage, kiosks, or continuous displays.
+
 ### Embed Presentation
 
 Create an iframe embed code in **"presentation format"** to embed everywhere. Recommended for explaining something in a step-by-step presentation format.

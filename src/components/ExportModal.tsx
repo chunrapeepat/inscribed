@@ -51,7 +51,7 @@ const exportOptions = [
   },
   {
     id: "video",
-    title: "Export as Video (MP4, WebM)",
+    title: "Export as Video (WebM)",
     description:
       "Create an MP4 video of your slides. Good for presentations and sharing on video platforms.",
   },
@@ -85,6 +85,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [exportFileName, setExportFileName] = React.useState("");
   const [gistId, setGistId] = React.useState("");
   const [frameDelay, setFrameDelay] = React.useState("100");
+  const [loopVideo, setLoopVideo] = React.useState(false);
+  const [videoDuration, setVideoDuration] = React.useState("10");
   const [exportProgress, setExportProgress] = React.useState<number | null>(
     null
   );
@@ -189,6 +191,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     if (
       (selectedOption === "gif" || selectedOption === "video") &&
       (!frameDelay || parseInt(frameDelay) < 1)
+    )
+      return;
+    if (
+      selectedOption === "video" &&
+      loopVideo &&
+      (!videoDuration || parseInt(videoDuration) < 1)
     )
       return;
 
@@ -334,6 +342,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         await exportToVideo({
           fileName: exportFileName,
           frameDelay: parseInt(frameDelay),
+          loopToReachDuration: loopVideo,
+          durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
           onProgress: (progress) => setExportProgress(progress),
         });
         setExportProgress(null);
@@ -540,6 +550,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       const url = (await exportToVideo({
         fileName: "preview",
         frameDelay: parseInt(frameDelay) || 100,
+        loopToReachDuration: loopVideo,
+        durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
         onProgress: (progress) => setPreviewVideoProgress(progress),
       })) as string;
 
@@ -911,6 +923,43 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       required
                     />
                   </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="loopVideo"
+                      checked={loopVideo}
+                      onChange={(e) => setLoopVideo(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="loopVideo"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      Loop video to reach total duration
+                    </label>
+                  </div>
+
+                  {loopVideo && (
+                    <div>
+                      <label
+                        htmlFor="videoDuration"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Total Duration (seconds)
+                      </label>
+                      <input
+                        type="number"
+                        id="videoDuration"
+                        value={videoDuration}
+                        onChange={(e) => setVideoDuration(e.target.value)}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Enter duration in seconds"
+                        min="1"
+                        required={loopVideo}
+                      />
+                    </div>
+                  )}
 
                   {/* Preview Video Progress */}
                   {isGeneratingVideoPreview &&
