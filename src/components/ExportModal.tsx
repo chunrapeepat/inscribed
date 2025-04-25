@@ -11,6 +11,7 @@ import {
   generateExportData,
   exportToPdf,
   exportToVideo,
+  exportToHandDrawnGif,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -318,6 +319,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setExportFileName("");
         setSelectedOption(null);
       } else if (selectedOption === "gif") {
+        //debug
+        exportToHandDrawnGif();
+
         setExportProgress(0);
         await exportToGif({
           fileName: exportFileName,
