@@ -1273,6 +1273,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       </li>
                     </ol>
                   </div>
+
+                  <div className="text-xs text-gray-500">
+                    This amazing feature is made possible by{" "}
+                    <a
+                      href="https://github.com/dai-shi/excalidraw-animate"
+                      target="_blank"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      excalidraw-animate
+                    </a>
+                  </div>
                 </form>
               )}
 
