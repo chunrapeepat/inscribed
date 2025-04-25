@@ -11,7 +11,7 @@ import {
   generateExportData,
   exportToPdf,
   exportToVideo,
-  exportToHandDrawnGif,
+  exportToHandDrawnSVG,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -340,7 +340,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setExportProgress(0);
 
         // Get the animated SVG elements
-        const animatedSvgs = await exportToHandDrawnGif();
+        const animatedSvgs = await exportToHandDrawnSVG();
 
         // Display the SVGs for preview
         if (animatedSvgs && animatedSvgs.length > 0) {
@@ -601,6 +601,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
     // Create container for SVG display - make it fullscreen
     const svgContainer = document.createElement("div");
+    svgContainer.id = "hand-drawn-preview-container";
     svgContainer.style.position = "fixed";
     svgContainer.style.top = "0";
     svgContainer.style.left = "0";

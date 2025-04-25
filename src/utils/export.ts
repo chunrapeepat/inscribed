@@ -11,14 +11,20 @@ import { copy } from "./general";
 import { getExcalidrawFontId } from "./fonts";
 import { animateSvg } from "excalidraw-animate";
 
-export const exportToHandDrawnGif = async (): Promise<SVGSVGElement[]> => {
+export const exportToHandDrawnSVG = async (): Promise<SVGSVGElement[]> => {
   const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize, files } = state;
 
   const animatedSvgList = await Promise.all(
     slides.map(async (slide) => {
+      const elements = copy(slide.elements);
+      const frame = elements.find((el: ExcalidrawElement) => el.id === "frame");
+      if (frame) {
+        frame.strokeColor = "transparent";
+      }
+
       const svg = await exportToSvg({
-        elements: slide.elements,
+        elements,
         appState: {
           exportWithDarkMode: false,
           exportBackground: true,
@@ -29,7 +35,7 @@ export const exportToHandDrawnGif = async (): Promise<SVGSVGElement[]> => {
         files: files,
       });
 
-      const { finishedMs } = animateSvg(svg, slide.elements as unknown as any);
+      const { finishedMs } = animateSvg(svg, elements as unknown as any);
       return { svg, finishedMs };
     })
   );
