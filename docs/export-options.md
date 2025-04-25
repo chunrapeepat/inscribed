@@ -14,15 +14,24 @@ Export as GIF file to use on your blog, documentation, or posting on social medi
 
    <img src="./imgs/example-flowchart.gif" width="40%" alt="Example GIF">
 
+### Export as PDF
+
+Export all your slides as a multi-page PDF document. This is useful for:
+
+- Sharing your presentation as a document
+- Printing your slides
+- Archiving your presentation in a standard document format
+- Including your presentation in reports or documentation
+
 ### Embed Presentation
 
-Create an iframe embed code in **“presentation format”** to embed everywhere. Recommended for explaining something in a step-by-step presentation format.
+Create an iframe embed code in **"presentation format"** to embed everywhere. Recommended for explaining something in a step-by-step presentation format.
 
    <img src="./imgs/example-presentation-embed.gif" width="60%" alt="Example Presentation Embed">
 
 ### Embed with Slider Template
 
-Create an iframe embed code in **“slider template format”** to embed everywhere. Recommended for visualizing some ideas or process e.g. algorithm.
+Create an iframe embed code in **"slider template format"** to embed everywhere. Recommended for visualizing some ideas or process e.g. algorithm.
 
    <img src="./imgs/example-slider-template-embed.gif" width="60%" alt="Example Slider Template Embed">
 
@@ -41,6 +50,7 @@ If your Gist contains multiple valid Inscribed files, the system will automatica
 ### Direct File Links
 
 You can link directly to a specific file in a Gist using the filename parameter in the URL. For example:
+
 ```
 https://gist.github.com/username/gistid?filename=presentation.ins
 ```

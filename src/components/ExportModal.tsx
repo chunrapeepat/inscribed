@@ -9,6 +9,7 @@ import {
   handleImport,
   GistFileData,
   generateExportData,
+  exportToPdf,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -40,6 +41,12 @@ const exportOptions = [
     id: "gif",
     title: "Export as GIF",
     description: "Create an animated GIF. Good for sharing on social media.",
+  },
+  {
+    id: "pdf",
+    title: "Export as PDF",
+    description:
+      "Create a PDF document with all your slides. Good for printing or sharing as documents.",
   },
   {
     id: "embed-presentation",
@@ -141,7 +148,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleExport = async () => {
     if (!selectedOption) return;
     if (
-      (selectedOption === "export-data" || selectedOption === "gif") &&
+      (selectedOption === "export-data" ||
+        selectedOption === "gif" ||
+        selectedOption === "pdf") &&
       !exportFileName.trim()
     )
       return;
@@ -284,6 +293,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setSelectedOption(null);
         setExportFileName("");
         setFrameDelay("100");
+      } else if (selectedOption === "pdf") {
+        setExportProgress(0);
+        await exportToPdf({
+          fileName: exportFileName,
+          onProgress: (progress) => setExportProgress(progress),
+        });
+        setExportProgress(null);
+        setSelectedOption(null);
+        setExportFileName("");
       } else if (
         selectedOption === "embed-presentation" ||
         selectedOption === "embed-slider-template" ||
@@ -736,6 +754,46 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </form>
               )}
 
+              {selectedOption === "pdf" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="pdfFileName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      PDF File Name
+                    </label>
+                    <input
+                      type="text"
+                      id="pdfFileName"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter file name (.pdf)"
+                      required
+                    />
+                  </div>
+
+                  {/* Export Progress */}
+                  {exportProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-300"
+                          style={{ width: `${exportProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating PDF: {Math.round(exportProgress)}%
+                      </p>
+                    </div>
+                  )}
+                </form>
+              )}
+
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template" ||
                 selectedOption === "get-shareable-link") && (
@@ -894,6 +952,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
+                (selectedOption === "pdf" && !exportFileName.trim()) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link" ||
@@ -909,6 +968,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     !frameDelay ||
                     parseInt(frameDelay) < 1)
                 ) &&
+                !(selectedOption === "pdf" && !exportFileName.trim()) &&
                 !(
                   (selectedOption === "embed-presentation" ||
                     selectedOption === "embed-slider-template" ||

@@ -424,3 +424,68 @@ export const generateExportData = (fileName: string) => {
     },
   };
 };
+
+interface ExportPdfOptions {
+  fileName: string;
+  onProgress?: (progress: number) => void;
+}
+
+export const exportToPdf = async ({
+  fileName,
+  onProgress,
+}: ExportPdfOptions): Promise<void> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  try {
+    // Dynamically import jspdf to reduce bundle size
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({
+      orientation:
+        documentSize.width > documentSize.height ? "landscape" : "portrait",
+      unit: "px",
+      format: [documentSize.width, documentSize.height],
+    });
+
+    // Export each slide as an image and add to PDF
+    const imageUrls = await exportToImageUrls({
+      slides,
+      backgroundColor,
+      documentSize,
+      files: state.files,
+    });
+
+    for (let i = 0; i < imageUrls.length; i++) {
+      // Add a new page for each slide after the first one
+      if (i > 0) {
+        pdf.addPage([documentSize.width, documentSize.height]);
+      }
+
+      // Add the image to the PDF
+      pdf.addImage(
+        imageUrls[i],
+        "PNG",
+        0,
+        0,
+        documentSize.width,
+        documentSize.height
+      );
+
+      if (onProgress) {
+        onProgress(((i + 1) / imageUrls.length) * 100);
+      }
+    }
+
+    // Clean up image URLs
+    imageUrls.forEach(URL.revokeObjectURL);
+
+    // Save the PDF
+    const fullFileName = fileName.endsWith(".pdf")
+      ? fileName
+      : `${fileName}.pdf`;
+    pdf.save(fullFileName);
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    throw error;
+  }
+};
