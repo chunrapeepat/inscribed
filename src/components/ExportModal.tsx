@@ -57,6 +57,12 @@ const exportOptions = [
       "Create an MP4 video of your slides. Good for presentations and sharing on video platforms.",
   },
   {
+    id: "hand-drawn-video",
+    title: "Hand Drawn Animation Preview",
+    description:
+      "Preview hand-drawn animation effect for screen recording with your own tools.",
+  },
+  {
     id: "embed-presentation",
     title: "Embed Presentation",
     description:
@@ -177,7 +183,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       (selectedOption === "export-data" ||
         selectedOption === "gif" ||
         selectedOption === "pdf" ||
-        selectedOption === "video") &&
+        selectedOption === "video" ||
+        selectedOption === "hand-drawn-video") &&
       !exportFileName.trim()
     )
       return;
@@ -319,9 +326,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setExportFileName("");
         setSelectedOption(null);
       } else if (selectedOption === "gif") {
-        //debug
-        exportToHandDrawnGif();
-
         setExportProgress(0);
         await exportToGif({
           fileName: exportFileName,
@@ -332,6 +336,23 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setSelectedOption(null);
         setExportFileName("");
         setFrameDelay("100");
+      } else if (selectedOption === "hand-drawn-video") {
+        setExportProgress(0);
+
+        // Get the animated SVG elements
+        const animatedSvgs = await exportToHandDrawnGif();
+
+        // Display the SVGs for preview
+        if (animatedSvgs && animatedSvgs.length > 0) {
+          displayHandDrawnPreview(animatedSvgs);
+          // Close the modal when showing the preview
+          onClose();
+        } else {
+          throw new Error("Failed to generate animated SVGs");
+        }
+
+        setExportProgress(100);
+        return;
       } else if (selectedOption === "pdf") {
         setExportProgress(0);
         await exportToPdf({
@@ -566,6 +587,218 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       setIsGeneratingVideoPreview(false);
       setPreviewVideoProgress(null);
     }
+  };
+
+  // Function to display SVG animation preview
+  const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
+    const state = useDocumentStore.getState();
+    const { backgroundColor } = state;
+
+    // Variables to track current state
+    let currentFrameIndex = 0;
+    let isPlaying = true;
+    let animationTimer: number | null = null;
+
+    // Create container for SVG display - make it fullscreen
+    const svgContainer = document.createElement("div");
+    svgContainer.style.position = "fixed";
+    svgContainer.style.top = "0";
+    svgContainer.style.left = "0";
+    svgContainer.style.right = "0";
+    svgContainer.style.bottom = "0";
+    svgContainer.style.zIndex = "9999999";
+    svgContainer.style.background = backgroundColor;
+    svgContainer.style.display = "flex";
+    svgContainer.style.flexDirection = "column";
+    svgContainer.style.alignItems = "center";
+    svgContainer.style.justifyContent = "center";
+    svgContainer.style.padding = "20px";
+
+    // Create a wrapper for the SVG to help with centering
+    const svgWrapper = document.createElement("div");
+    svgWrapper.style.flexGrow = "1";
+    svgWrapper.style.display = "flex";
+    svgWrapper.style.alignItems = "center";
+    svgWrapper.style.justifyContent = "center";
+    svgWrapper.style.width = "100%";
+    svgContainer.appendChild(svgWrapper);
+
+    // Create frame counter display
+    const frameCounter = document.createElement("div");
+    frameCounter.style.position = "absolute";
+    frameCounter.style.top = "15px";
+    frameCounter.style.right = "25px";
+    frameCounter.style.color = "black";
+    frameCounter.style.fontSize = "16px";
+    frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
+      svgElements.length
+    }`;
+    svgContainer.appendChild(frameCounter);
+
+    // Function to display a specific SVG frame
+    const displayFrame = (frameIndex: number) => {
+      // Clear any existing animation timer
+      if (animationTimer !== null) {
+        window.clearTimeout(animationTimer);
+        animationTimer = null;
+      }
+
+      // Update current frame index
+      currentFrameIndex = frameIndex;
+      frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
+        svgElements.length
+      }`;
+
+      // Clear the wrapper
+      svgWrapper.innerHTML = "";
+
+      // Clone the SVG for this frame
+      const svgClone = svgElements[frameIndex].cloneNode(true) as SVGSVGElement;
+      svgClone.id = "hand-drawn-preview-svg";
+
+      // Style the SVG element - larger size for recording
+      svgClone.style.display = "block";
+      svgClone.style.maxWidth = "90%";
+      svgClone.style.maxHeight = "80vh";
+
+      // Add the SVG to wrapper
+      svgWrapper.appendChild(svgClone);
+
+      // Find all animations in the SVG to determine when they end
+      const animations = svgClone.querySelectorAll(
+        "animate, animateTransform, animateMotion"
+      );
+
+      // If playing and there are more frames, schedule the next frame
+      if (isPlaying && frameIndex < svgElements.length - 1) {
+        // Find the max duration of animations in current frame
+        let maxDuration = 0;
+        animations.forEach((anim: Element) => {
+          const dur = anim.getAttribute("dur");
+          if (dur) {
+            // Parse the duration (usually in seconds, like "2s")
+            const seconds = parseFloat(dur.replace("s", ""));
+            if (!isNaN(seconds)) {
+              maxDuration = Math.max(maxDuration, seconds * 1000);
+            }
+          }
+        });
+
+        // If no animation duration found, use default
+        const frameDuration = maxDuration > 0 ? maxDuration : 2000;
+
+        // Schedule next frame
+        animationTimer = window.setTimeout(() => {
+          displayFrame(frameIndex + 1);
+        }, frameDuration + 100); // Add slight buffer to ensure animations complete
+      }
+    };
+
+    // Create controls container
+    const controlsContainer = document.createElement("div");
+    controlsContainer.style.display = "flex";
+    controlsContainer.style.gap = "10px";
+    controlsContainer.style.padding = "15px";
+    controlsContainer.style.marginTop = "20px";
+    controlsContainer.style.background = "#f8f9fa";
+    controlsContainer.style.borderRadius = "8px";
+    controlsContainer.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+
+    // Add Previous Frame button
+    const prevButton = document.createElement("button");
+    prevButton.innerText = "Previous Frame";
+    prevButton.style.padding = "10px 15px";
+    prevButton.style.background = "#5f6368";
+    prevButton.style.color = "white";
+    prevButton.style.border = "none";
+    prevButton.style.borderRadius = "4px";
+    prevButton.style.cursor = "pointer";
+    prevButton.style.fontSize = "16px";
+    prevButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      if (currentFrameIndex > 0) {
+        displayFrame(currentFrameIndex - 1);
+      }
+    };
+    controlsContainer.appendChild(prevButton);
+
+    // Add Start/Play button
+    const playButton = document.createElement("button");
+    playButton.innerText = "Play All Frames";
+    playButton.style.padding = "10px 15px";
+    playButton.style.background = "#4285f4";
+    playButton.style.color = "white";
+    playButton.style.border = "none";
+    playButton.style.borderRadius = "4px";
+    playButton.style.cursor = "pointer";
+    playButton.style.fontSize = "16px";
+    playButton.onclick = () => {
+      isPlaying = true;
+      displayFrame(0); // Start from the first frame
+    };
+    controlsContainer.appendChild(playButton);
+
+    // Add Next Frame button
+    const nextButton = document.createElement("button");
+    nextButton.innerText = "Next Frame";
+    nextButton.style.padding = "10px 15px";
+    nextButton.style.background = "#5f6368";
+    nextButton.style.color = "white";
+    nextButton.style.border = "none";
+    nextButton.style.borderRadius = "4px";
+    nextButton.style.cursor = "pointer";
+    nextButton.style.fontSize = "16px";
+    nextButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      if (currentFrameIndex < svgElements.length - 1) {
+        displayFrame(currentFrameIndex + 1);
+      }
+    };
+    controlsContainer.appendChild(nextButton);
+
+    // Add Replay Current button
+    const replayCurrentButton = document.createElement("button");
+    replayCurrentButton.innerText = "Replay Current";
+    replayCurrentButton.style.padding = "10px 15px";
+    replayCurrentButton.style.background = "#34a853";
+    replayCurrentButton.style.color = "white";
+    replayCurrentButton.style.border = "none";
+    replayCurrentButton.style.borderRadius = "4px";
+    replayCurrentButton.style.cursor = "pointer";
+    replayCurrentButton.style.fontSize = "16px";
+    replayCurrentButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      displayFrame(currentFrameIndex); // Replay current frame
+    };
+    controlsContainer.appendChild(replayCurrentButton);
+
+    // Add close button
+    const closeButton = document.createElement("button");
+    closeButton.innerText = "Exit Preview";
+    closeButton.style.padding = "10px 15px";
+    closeButton.style.background = "#ea4335";
+    closeButton.style.color = "white";
+    closeButton.style.border = "none";
+    closeButton.style.borderRadius = "4px";
+    closeButton.style.cursor = "pointer";
+    closeButton.style.fontSize = "16px";
+    closeButton.onclick = () => {
+      // Clear any timer before removing
+      if (animationTimer !== null) {
+        window.clearTimeout(animationTimer);
+      }
+      document.body.removeChild(svgContainer);
+    };
+    controlsContainer.appendChild(closeButton);
+
+    // Add controls to the container
+    svgContainer.appendChild(controlsContainer);
+
+    // Add container to the body
+    document.body.appendChild(svgContainer);
+
+    // Start displaying frames
+    displayFrame(0);
   };
 
   return (
@@ -1015,6 +1248,33 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </form>
               )}
 
+              {selectedOption === "hand-drawn-video" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div className="bg-blue-50 p-4 rounded-md">
+                    <h3 className="text-blue-800 font-medium text-sm mb-2">
+                      Screen Recording Instructions:
+                    </h3>
+                    <ol className="text-sm text-gray-700 space-y-1 pl-5 list-decimal">
+                      <li>
+                        Use your own screen recording tool (e.g., OBS,
+                        QuickTime, etc.)
+                      </li>
+                      <li>
+                        Position your recording window to capture the animation
+                      </li>
+                      <li>Record the animation and save as video</li>
+                      <li>
+                        Use the "Replay Animation" button if you need to restart
+                        the animation
+                      </li>
+                    </ol>
+                  </div>
+                </form>
+              )}
+
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template" ||
                 selectedOption === "get-shareable-link") && (
@@ -1178,6 +1438,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
+                (selectedOption === "hand-drawn-video" &&
+                  !exportFileName.trim()) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link" ||
@@ -1201,6 +1463,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     parseInt(frameDelay) < 1)
                 ) &&
                 !(
+                  selectedOption === "hand-drawn-video" &&
+                  !exportFileName.trim()
+                ) &&
+                !(
                   (selectedOption === "embed-presentation" ||
                     selectedOption === "embed-slider-template" ||
                     selectedOption === "get-shareable-link" ||
@@ -1215,6 +1481,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ? "Upload File"
                 : selectedOption === "import-gist"
                 ? "Import"
+                : selectedOption === "hand-drawn-video"
+                ? "Preview and Self-Record"
                 : selectedOption
                 ? "Export"
                 : "Select an option"}
