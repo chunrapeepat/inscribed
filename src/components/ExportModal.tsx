@@ -9,6 +9,9 @@ import {
   handleImport,
   GistFileData,
   generateExportData,
+  exportToPdf,
+  exportToVideo,
+  exportToHandDrawnSVG,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -42,6 +45,24 @@ const exportOptions = [
     description: "Create an animated GIF. Good for sharing on social media.",
   },
   {
+    id: "pdf",
+    title: "Export as PDF",
+    description:
+      "Create a PDF document with all your slides. Good for printing or sharing as documents.",
+  },
+  {
+    id: "video",
+    title: "Export as Video (WebM)",
+    description:
+      "Create an MP4 video of your slides. Good for presentations and sharing on video platforms.",
+  },
+  {
+    id: "hand-drawn-video",
+    title: "Export as Hand Drawn Animation Video (Self recording)",
+    description:
+      "Create a video with hand-drawn animation effect for your social media posts or educational videos. Self-record and use it with your own video editing tools.",
+  },
+  {
     id: "embed-presentation",
     title: "Embed Presentation",
     description:
@@ -71,6 +92,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [exportFileName, setExportFileName] = React.useState("");
   const [gistId, setGistId] = React.useState("");
   const [frameDelay, setFrameDelay] = React.useState("100");
+  const [loopVideo, setLoopVideo] = React.useState(false);
+  const [videoDuration, setVideoDuration] = React.useState("10");
   const [exportProgress, setExportProgress] = React.useState<number | null>(
     null
   );
@@ -85,6 +108,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [previewGifUrl, setPreviewGifUrl] = useState<string | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewProgress, setPreviewProgress] = useState<number | null>(null);
+
+  // Video preview states
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
+  const [isGeneratingVideoPreview, setIsGeneratingVideoPreview] =
+    useState(false);
+  const [previewVideoProgress, setPreviewVideoProgress] = useState<
+    number | null
+  >(null);
 
   const { filename } = useDocumentStore();
 
@@ -133,6 +164,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setPreviewProgress(null);
     setIsGeneratingPreview(false);
 
+    // Clean up any video preview
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
+      setPreviewVideoUrl(null);
+    }
+    setPreviewVideoProgress(null);
+    setIsGeneratingVideoPreview(false);
+
     // Don't reset importedGistUrl here, as we want to persist it between modal openings
 
     onClose();
@@ -141,7 +180,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const handleExport = async () => {
     if (!selectedOption) return;
     if (
-      (selectedOption === "export-data" || selectedOption === "gif") &&
+      (selectedOption === "export-data" ||
+        selectedOption === "gif" ||
+        selectedOption === "pdf" ||
+        selectedOption === "video" ||
+        selectedOption === "hand-drawn-video") &&
       !exportFileName.trim()
     )
       return;
@@ -153,7 +196,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       !gistId.trim()
     )
       return;
-    if (selectedOption === "gif" && (!frameDelay || parseInt(frameDelay) < 1))
+    if (
+      (selectedOption === "gif" || selectedOption === "video") &&
+      (!frameDelay || parseInt(frameDelay) < 1)
+    )
+      return;
+    if (
+      selectedOption === "video" &&
+      loopVideo &&
+      (!videoDuration || parseInt(videoDuration) < 1)
+    )
       return;
 
     try {
@@ -278,6 +330,45 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         await exportToGif({
           fileName: exportFileName,
           frameDelay: parseInt(frameDelay),
+          onProgress: (progress) => setExportProgress(progress),
+        });
+        setExportProgress(null);
+        setSelectedOption(null);
+        setExportFileName("");
+        setFrameDelay("100");
+      } else if (selectedOption === "hand-drawn-video") {
+        setExportProgress(0);
+
+        // Get the animated SVG elements
+        const animatedSvgs = await exportToHandDrawnSVG();
+
+        // Display the SVGs for preview
+        if (animatedSvgs && animatedSvgs.length > 0) {
+          displayHandDrawnPreview(animatedSvgs);
+          // Close the modal when showing the preview
+          onClose();
+        } else {
+          throw new Error("Failed to generate animated SVGs");
+        }
+
+        setExportProgress(100);
+        return;
+      } else if (selectedOption === "pdf") {
+        setExportProgress(0);
+        await exportToPdf({
+          fileName: exportFileName,
+          onProgress: (progress) => setExportProgress(progress),
+        });
+        setExportProgress(null);
+        setSelectedOption(null);
+        setExportFileName("");
+      } else if (selectedOption === "video") {
+        setExportProgress(0);
+        await exportToVideo({
+          fileName: exportFileName,
+          frameDelay: parseInt(frameDelay),
+          loopToReachDuration: loopVideo,
+          durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
           onProgress: (progress) => setExportProgress(progress),
         });
         setExportProgress(null);
@@ -465,6 +556,250 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       setIsGeneratingPreview(false);
       setPreviewProgress(null);
     }
+  };
+
+  // Function to generate a preview Video
+  const handlePreviewVideo = async () => {
+    // Clear any existing preview
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
+      setPreviewVideoUrl(null);
+    }
+
+    setIsGeneratingVideoPreview(true);
+    setPreviewVideoProgress(0);
+
+    try {
+      // Use the existing exportToVideo function with 'preview' as the filename
+      // to indicate we want to get the URL rather than download
+      const url = (await exportToVideo({
+        fileName: "preview",
+        frameDelay: parseInt(frameDelay) || 100,
+        loopToReachDuration: loopVideo,
+        durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
+        onProgress: (progress) => setPreviewVideoProgress(progress),
+      })) as string;
+
+      setPreviewVideoUrl(url);
+    } catch (error) {
+      console.error("Error generating preview Video:", error);
+    } finally {
+      setIsGeneratingVideoPreview(false);
+      setPreviewVideoProgress(null);
+    }
+  };
+
+  // Function to display SVG animation preview
+  const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
+    const state = useDocumentStore.getState();
+    const { backgroundColor } = state;
+
+    // Variables to track current state
+    let currentFrameIndex = 0;
+    let isPlaying = true;
+    let animationTimer: number | null = null;
+
+    // Create container for SVG display - make it fullscreen
+    const svgContainer = document.createElement("div");
+    svgContainer.id = "hand-drawn-preview-container";
+    svgContainer.style.position = "fixed";
+    svgContainer.style.top = "0";
+    svgContainer.style.left = "0";
+    svgContainer.style.right = "0";
+    svgContainer.style.bottom = "0";
+    svgContainer.style.zIndex = "9999999";
+    svgContainer.style.background = backgroundColor;
+    svgContainer.style.display = "flex";
+    svgContainer.style.flexDirection = "column";
+    svgContainer.style.alignItems = "center";
+    svgContainer.style.justifyContent = "center";
+    svgContainer.style.padding = "20px";
+
+    // Create a wrapper for the SVG to help with centering
+    const svgWrapper = document.createElement("div");
+    svgWrapper.style.flexGrow = "1";
+    svgWrapper.style.display = "flex";
+    svgWrapper.style.alignItems = "center";
+    svgWrapper.style.justifyContent = "center";
+    svgWrapper.style.width = "100%";
+    svgContainer.appendChild(svgWrapper);
+
+    // Create frame counter display
+    const frameCounter = document.createElement("div");
+    frameCounter.style.position = "absolute";
+    frameCounter.style.top = "15px";
+    frameCounter.style.right = "25px";
+    frameCounter.style.color = "black";
+    frameCounter.style.fontSize = "16px";
+    frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
+      svgElements.length
+    }`;
+    svgContainer.appendChild(frameCounter);
+
+    // Function to display a specific SVG frame
+    const displayFrame = (frameIndex: number) => {
+      // Clear any existing animation timer
+      if (animationTimer !== null) {
+        window.clearTimeout(animationTimer);
+        animationTimer = null;
+      }
+
+      // Update current frame index
+      currentFrameIndex = frameIndex;
+      frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
+        svgElements.length
+      }`;
+
+      // Clear the wrapper
+      svgWrapper.innerHTML = "";
+
+      // Clone the SVG for this frame
+      const svgClone = svgElements[frameIndex].cloneNode(true) as SVGSVGElement;
+      svgClone.id = "hand-drawn-preview-svg";
+
+      // Style the SVG element - larger size for recording
+      svgClone.style.display = "block";
+      svgClone.style.maxWidth = "100%";
+      svgClone.style.maxHeight = "80vh";
+
+      // Add the SVG to wrapper
+      svgWrapper.appendChild(svgClone);
+
+      // Find all animations in the SVG to determine when they end
+      const animations = svgClone.querySelectorAll(
+        "animate, animateTransform, animateMotion"
+      );
+
+      // If playing and there are more frames, schedule the next frame
+      if (isPlaying && frameIndex < svgElements.length - 1) {
+        // Find the max duration of animations in current frame
+        let maxDuration = 0;
+        animations.forEach((anim: Element) => {
+          const dur = anim.getAttribute("dur");
+          if (dur) {
+            // Parse the duration (usually in seconds, like "2s")
+            const seconds = parseFloat(dur.replace("s", ""));
+            if (!isNaN(seconds)) {
+              maxDuration = Math.max(maxDuration, seconds * 1000);
+            }
+          }
+        });
+
+        // If no animation duration found, use default
+        const frameDuration = maxDuration > 0 ? maxDuration : 2000;
+
+        // Schedule next frame
+        animationTimer = window.setTimeout(() => {
+          displayFrame(frameIndex + 1);
+        }, frameDuration + 100); // Add slight buffer to ensure animations complete
+      }
+    };
+
+    // Create controls container
+    const controlsContainer = document.createElement("div");
+    controlsContainer.style.display = "flex";
+    controlsContainer.style.gap = "10px";
+    controlsContainer.style.padding = "7px";
+    controlsContainer.style.marginTop = "20px";
+    controlsContainer.style.background = "#f8f9fa";
+    controlsContainer.style.borderRadius = "8px";
+    controlsContainer.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+
+    // Add Previous Frame button
+    const prevButton = document.createElement("button");
+    prevButton.innerText = "Previous Frame";
+    prevButton.style.padding = "7px 12px";
+    prevButton.style.background = "#5f6368";
+    prevButton.style.color = "white";
+    prevButton.style.border = "none";
+    prevButton.style.borderRadius = "4px";
+    prevButton.style.cursor = "pointer";
+    prevButton.style.fontSize = "16px";
+    prevButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      if (currentFrameIndex > 0) {
+        displayFrame(currentFrameIndex - 1);
+      }
+    };
+    controlsContainer.appendChild(prevButton);
+
+    // Add Start/Play button
+    const playButton = document.createElement("button");
+    playButton.innerText = "Play All Frames";
+    playButton.style.padding = "7px 12px";
+    playButton.style.background = "#4285f4";
+    playButton.style.color = "white";
+    playButton.style.border = "none";
+    playButton.style.borderRadius = "4px";
+    playButton.style.cursor = "pointer";
+    playButton.style.fontSize = "16px";
+    playButton.onclick = () => {
+      isPlaying = true;
+      displayFrame(0); // Start from the first frame
+    };
+    controlsContainer.appendChild(playButton);
+
+    // Add Next Frame button
+    const nextButton = document.createElement("button");
+    nextButton.innerText = "Next Frame";
+    nextButton.style.padding = "7px 12px";
+    nextButton.style.background = "#5f6368";
+    nextButton.style.color = "white";
+    nextButton.style.border = "none";
+    nextButton.style.borderRadius = "4px";
+    nextButton.style.cursor = "pointer";
+    nextButton.style.fontSize = "16px";
+    nextButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      if (currentFrameIndex < svgElements.length - 1) {
+        displayFrame(currentFrameIndex + 1);
+      }
+    };
+    controlsContainer.appendChild(nextButton);
+
+    // Add Replay Current button
+    const replayCurrentButton = document.createElement("button");
+    replayCurrentButton.innerText = "Replay Current";
+    replayCurrentButton.style.padding = "7px 12px";
+    replayCurrentButton.style.background = "#34a853";
+    replayCurrentButton.style.color = "white";
+    replayCurrentButton.style.border = "none";
+    replayCurrentButton.style.borderRadius = "4px";
+    replayCurrentButton.style.cursor = "pointer";
+    replayCurrentButton.style.fontSize = "16px";
+    replayCurrentButton.onclick = () => {
+      isPlaying = false; // Stop auto-playback
+      displayFrame(currentFrameIndex); // Replay current frame
+    };
+    controlsContainer.appendChild(replayCurrentButton);
+
+    // Add close button
+    const closeButton = document.createElement("button");
+    closeButton.innerText = "Exit Preview";
+    closeButton.style.padding = "7px 12px";
+    closeButton.style.background = "#ea4335";
+    closeButton.style.color = "white";
+    closeButton.style.border = "none";
+    closeButton.style.borderRadius = "4px";
+    closeButton.style.cursor = "pointer";
+    closeButton.style.fontSize = "16px";
+    closeButton.onclick = () => {
+      // Clear any timer before removing
+      if (animationTimer !== null) {
+        window.clearTimeout(animationTimer);
+      }
+      document.body.removeChild(svgContainer);
+    };
+    controlsContainer.appendChild(closeButton);
+
+    // Add controls to the container
+    svgContainer.appendChild(controlsContainer);
+
+    // Add container to the body
+    document.body.appendChild(svgContainer);
+
+    // Start displaying frames
+    displayFrame(0);
   };
 
   return (
@@ -736,6 +1071,211 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </form>
               )}
 
+              {selectedOption === "pdf" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="pdfFileName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      PDF File Name
+                    </label>
+                    <input
+                      type="text"
+                      id="pdfFileName"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter file name (.pdf)"
+                      required
+                    />
+                  </div>
+
+                  {/* Export Progress */}
+                  {exportProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-300"
+                          style={{ width: `${exportProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating PDF: {Math.round(exportProgress)}%
+                      </p>
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {selectedOption === "video" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="videoFileName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Video File Name
+                    </label>
+                    <input
+                      type="text"
+                      id="videoFileName"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter file name (.mp4)"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <label
+                        htmlFor="videoFrameDelay"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Frame Delay (ms)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePreviewVideo}
+                        disabled={isGeneratingVideoPreview}
+                        className="text-blue-600 hover:text-blue-800 space-x-1 text-sm"
+                      >
+                        <span>(preview video)</span>
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      id="videoFrameDelay"
+                      value={frameDelay}
+                      onChange={(e) => setFrameDelay(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter delay in milliseconds"
+                      min="1"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="loopVideo"
+                      checked={loopVideo}
+                      onChange={(e) => setLoopVideo(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="loopVideo"
+                      className="ml-2 block text-sm text-gray-700"
+                    >
+                      Loop video to reach total duration
+                    </label>
+                  </div>
+
+                  {loopVideo && (
+                    <div>
+                      <label
+                        htmlFor="videoDuration"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Total Duration (seconds)
+                      </label>
+                      <input
+                        type="number"
+                        id="videoDuration"
+                        value={videoDuration}
+                        onChange={(e) => setVideoDuration(e.target.value)}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Enter duration in seconds"
+                        min="1"
+                        required={loopVideo}
+                      />
+                    </div>
+                  )}
+
+                  {/* Preview Video Progress */}
+                  {isGeneratingVideoPreview &&
+                    previewVideoProgress !== null && (
+                      <div className="mt-2">
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-300"
+                            style={{ width: `${previewVideoProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1 text-center">
+                          Generating preview: {Math.round(previewVideoProgress)}
+                          %
+                        </p>
+                      </div>
+                    )}
+
+                  {/* Preview Video Display */}
+                  {previewVideoUrl && (
+                    <div className="mt-2 border rounded-lg p-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="flex justify-center">
+                        <video
+                          src={previewVideoUrl}
+                          controls
+                          autoPlay
+                          loop
+                          className="max-h-64 max-w-full object-contain rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Export Progress */}
+                  {exportProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-300"
+                          style={{ width: `${exportProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating Video: {Math.round(exportProgress)}%
+                      </p>
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {selectedOption === "hand-drawn-video" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div className="bg-blue-50 p-4 rounded-md">
+                    <h3 className="text-blue-800 font-medium text-sm mb-2">
+                      Screen Recording Instructions:
+                    </h3>
+                    <ol className="text-sm text-gray-700 space-y-1 pl-5 list-decimal">
+                      <li>
+                        Use your own screen recording tool (e.g., QuickTime,
+                        OBS, etc.)
+                      </li>
+                      <li>
+                        Position your recording window to capture the animation
+                      </li>
+                      <li>Record the animation and save as video</li>
+                      <li>
+                        Use the "Replay Animation" button if you need to restart
+                        the animation
+                      </li>
+                    </ol>
+                  </div>
+                </form>
+              )}
+
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template" ||
                 selectedOption === "get-shareable-link") && (
@@ -894,6 +1434,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
+                (selectedOption === "pdf" && !exportFileName.trim()) ||
+                (selectedOption === "video" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)) ||
+                (selectedOption === "hand-drawn-video" &&
+                  !exportFileName.trim()) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link" ||
@@ -908,6 +1455,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)
+                ) &&
+                !(selectedOption === "pdf" && !exportFileName.trim()) &&
+                !(
+                  selectedOption === "video" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)
+                ) &&
+                !(
+                  selectedOption === "hand-drawn-video" &&
+                  !exportFileName.trim()
                 ) &&
                 !(
                   (selectedOption === "embed-presentation" ||
@@ -924,6 +1482,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 ? "Upload File"
                 : selectedOption === "import-gist"
                 ? "Import"
+                : selectedOption === "hand-drawn-video"
+                ? "Preview and Self-Record"
                 : selectedOption
                 ? "Export"
                 : "Select an option"}

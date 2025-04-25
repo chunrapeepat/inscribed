@@ -1,5 +1,5 @@
 import GIF from "gif.js";
-import { exportToBlob } from "@excalidraw/excalidraw";
+import { exportToBlob, exportToSvg } from "@excalidraw/excalidraw";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
 import {
@@ -9,6 +9,39 @@ import {
 import { CustomFontFace, ExportData } from "../types";
 import { copy } from "./general";
 import { getExcalidrawFontId } from "./fonts";
+import { animateSvg } from "excalidraw-animate";
+
+export const exportToHandDrawnSVG = async (): Promise<SVGSVGElement[]> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize, files } = state;
+
+  const animatedSvgList = await Promise.all(
+    slides.map(async (slide) => {
+      const elements = copy(slide.elements);
+      const frame = elements.find((el: ExcalidrawElement) => el.id === "frame");
+      if (frame) {
+        frame.strokeColor = "transparent";
+      }
+
+      const svg = await exportToSvg({
+        elements,
+        appState: {
+          exportWithDarkMode: false,
+          exportBackground: true,
+          viewBackgroundColor: backgroundColor,
+          width: documentSize.width,
+          height: documentSize.height,
+        },
+        files: files,
+      });
+
+      const { finishedMs } = animateSvg(svg, elements as unknown as any);
+      return { svg, finishedMs };
+    })
+  );
+
+  return animatedSvgList.map(({ svg }) => svg.cloneNode(true) as SVGSVGElement);
+};
 
 export const exportToImageUrls = async (
   data: ExportData["document"]
@@ -143,8 +176,15 @@ export interface GistFileData {
 }
 
 // Function to check if content is valid inscribed data
-const isValidInscribedData = (data: any): boolean => {
-  return Boolean(data?.document?.slides);
+const isValidInscribedData = (data: unknown): boolean => {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      "document" in data &&
+      data.document &&
+      typeof data.document === "object" &&
+      "slides" in data.document
+  );
 };
 
 // Function to fetch data from raw Gist URL
@@ -204,7 +244,7 @@ const extractTargetedFilename = (url: string): string | null => {
     // Fallback to fragment identifier for backward compatibility
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
     return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
-  } catch (e) {
+  } catch {
     // If URL parsing fails, try fragment as fallback
     const fileMatch = url.match(/#file-([a-zA-Z0-9_-]+)/);
     return fileMatch ? fileMatch[1].replace(/-/g, ".") : null;
@@ -261,7 +301,7 @@ export const fetchDataFromGist = async (
           `File "${filename}" does not contain valid Inscribed data`
         );
       }
-    } catch (e) {
+    } catch {
       throw new Error(`Error parsing JSON from file "${filename}"`);
     }
   }
@@ -278,7 +318,7 @@ export const fetchDataFromGist = async (
           content,
         });
       }
-    } catch (e) {
+    } catch {
       // Skip invalid files
       continue;
     }
@@ -423,4 +463,221 @@ export const generateExportData = (fileName: string) => {
       customFonts,
     },
   };
+};
+
+interface ExportPdfOptions {
+  fileName: string;
+  onProgress?: (progress: number) => void;
+}
+
+export const exportToPdf = async ({
+  fileName,
+  onProgress,
+}: ExportPdfOptions): Promise<void> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  try {
+    // Dynamically import jspdf to reduce bundle size
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({
+      orientation:
+        documentSize.width > documentSize.height ? "landscape" : "portrait",
+      unit: "px",
+      format: [documentSize.width, documentSize.height],
+    });
+
+    // Export each slide as an image and add to PDF
+    const imageUrls = await exportToImageUrls({
+      slides,
+      backgroundColor,
+      documentSize,
+      files: state.files,
+    });
+
+    for (let i = 0; i < imageUrls.length; i++) {
+      // Add a new page for each slide after the first one
+      if (i > 0) {
+        pdf.addPage([documentSize.width, documentSize.height]);
+      }
+
+      // Add the image to the PDF
+      pdf.addImage(
+        imageUrls[i],
+        "PNG",
+        0,
+        0,
+        documentSize.width,
+        documentSize.height
+      );
+
+      if (onProgress) {
+        onProgress(((i + 1) / imageUrls.length) * 100);
+      }
+    }
+
+    // Clean up image URLs
+    imageUrls.forEach(URL.revokeObjectURL);
+
+    // Save the PDF
+    const fullFileName = fileName.endsWith(".pdf")
+      ? fileName
+      : `${fileName}.pdf`;
+    pdf.save(fullFileName);
+  } catch (error) {
+    console.error("Error exporting to PDF:", error);
+    throw error;
+  }
+};
+
+interface ExportVideoOptions {
+  fileName: string;
+  frameDelay: number;
+  loopToReachDuration?: boolean;
+  durationInSeconds?: number;
+  onProgress?: (progress: number) => void;
+}
+
+export const exportToVideo = async ({
+  fileName,
+  frameDelay,
+  loopToReachDuration = false,
+  durationInSeconds = 0,
+  onProgress,
+}: ExportVideoOptions): Promise<string | void> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  try {
+    // Get all slide images
+    const imageUrls = await exportToImageUrls({
+      slides,
+      backgroundColor,
+      documentSize,
+      files: state.files,
+    });
+
+    if (onProgress) {
+      onProgress(10); // Image export complete
+    }
+
+    // Create a canvas element
+    const canvas = document.createElement("canvas");
+    canvas.width = documentSize.width;
+    canvas.height = documentSize.height;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Failed to get canvas context");
+    }
+
+    // Set up recorder with canvas stream
+    const stream = canvas.captureStream(30); // 30 FPS
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm;codecs=vp9",
+      videoBitsPerSecond: 5000000, // 5 Mbps
+    });
+
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+
+    // Start recording
+    recorder.start();
+
+    // Function to draw frames
+    const drawFrame = (index: number) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Update progress
+          if (onProgress) {
+            // Scale progress from 10-90% during frame rendering
+            const progress = 10 + (index / imageUrls.length) * 80;
+            onProgress(progress);
+          }
+
+          setTimeout(resolve, frameDelay); // Maintain frame delay
+        };
+        img.src = imageUrls[index];
+      });
+    };
+
+    // Calculate how many times to loop the slides
+    let totalLoops = 1;
+    if (loopToReachDuration && durationInSeconds > 0) {
+      // Calculate total duration of one loop in milliseconds
+      const singleLoopDurationMs = imageUrls.length * frameDelay;
+      // Convert target duration to milliseconds
+      const targetDurationMs = durationInSeconds * 1000;
+      // Calculate how many loops we need to reach target duration
+      totalLoops = Math.ceil(targetDurationMs / singleLoopDurationMs);
+    }
+
+    // Process all frames with looping if needed
+    for (let loop = 0; loop < totalLoops; loop++) {
+      for (let i = 0; i < imageUrls.length; i++) {
+        await drawFrame(i);
+
+        // Update progress to reflect current loop
+        if (onProgress && totalLoops > 1) {
+          const loopProgress =
+            (loop * imageUrls.length + i) / (totalLoops * imageUrls.length);
+          // Scale progress from 10-90% during frame rendering
+          const progress = 10 + loopProgress * 80;
+          onProgress(progress);
+        }
+      }
+    }
+
+    // Stop recording and create video
+    return new Promise((resolve, reject) => {
+      recorder.onstop = () => {
+        try {
+          if (onProgress) onProgress(95); // Almost done
+
+          const blob = new Blob(chunks, { type: "video/mp4" });
+          const videoUrl = URL.createObjectURL(blob);
+
+          if (onProgress) onProgress(100); // Done
+
+          // If fileName is 'preview', return the URL
+          if (fileName === "preview") {
+            resolve(videoUrl);
+            return;
+          }
+
+          // Otherwise download the file
+          const link = document.createElement("a");
+          link.href = videoUrl;
+          link.download = fileName.endsWith(".mp4")
+            ? fileName
+            : `${fileName}.mp4`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Clean up
+          imageUrls.forEach(URL.revokeObjectURL);
+
+          // Only revoke the URL if not a preview
+          if (fileName !== "preview") {
+            URL.revokeObjectURL(videoUrl);
+          }
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      // Stop recording after all frames have been drawn
+      recorder.stop();
+    });
+  } catch (error) {
+    console.error("Error exporting to video:", error);
+    throw error;
+  }
 };

@@ -12,3 +12,8 @@ button.dropdown-menu-button.main-menu-trigger.zen-mode-transition {
 .excalidraw-modal-container {
   z-index: 999999 !important;
 }
+#hand-drawn-preview-container svg rect {
+  stroke: #333;
+  stroke-width: 2px;
+  stroke-dasharray: 10;
+}
