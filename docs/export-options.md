@@ -14,6 +14,29 @@ Export as GIF file to use on your blog, documentation, or posting on social medi
 
    <img src="./imgs/example-flowchart.gif" width="40%" alt="Example GIF">
 
+### Export as Hand Drawn Animation Video (Self recording)
+
+Export your slides as a sequence of hand-drawn animations that play one after another. This feature lets you:
+
+- Show your content with an engaging hand-drawn animation effect
+- Record the animations using your own screen recording tools
+- Create professional-looking videos for social media or educational content
+- Control playback with frame navigation and playback controls
+
+How it works:
+
+1. Click "Preview and Self-Record" to display the animation in fullscreen
+2. Use the control panel to play all frames sequentially or navigate between frames
+3. Use your preferred screen recording tool (QuickTime, OBS, etc.) to capture the animation
+4. Create your video with perfectly timed hand-drawn animations
+
+This is ideal for creating:
+
+- Tutorial videos showing step-by-step processes
+- Social media content with engaging animations
+- Educational videos where concepts build upon each other
+- Presentation recordings with hand-drawn visual elements
+
 ### Export as PDF
 
 Export all your slides as a multi-page PDF document. This is useful for:

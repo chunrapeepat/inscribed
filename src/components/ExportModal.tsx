@@ -58,9 +58,9 @@ const exportOptions = [
   },
   {
     id: "hand-drawn-video",
-    title: "Hand Drawn Animation Preview",
+    title: "Export as Hand Drawn Animation Video (Self recording)",
     description:
-      "Preview hand-drawn animation effect for screen recording with your own tools.",
+      "Create a video with hand-drawn animation effect for your social media posts or educational videos. Self-record and use it with your own video editing tools.",
   },
   {
     id: "embed-presentation",
@@ -658,7 +658,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
       // Style the SVG element - larger size for recording
       svgClone.style.display = "block";
-      svgClone.style.maxWidth = "90%";
+      svgClone.style.maxWidth = "100%";
       svgClone.style.maxHeight = "80vh";
 
       // Add the SVG to wrapper
@@ -698,7 +698,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     const controlsContainer = document.createElement("div");
     controlsContainer.style.display = "flex";
     controlsContainer.style.gap = "10px";
-    controlsContainer.style.padding = "15px";
+    controlsContainer.style.padding = "7px";
     controlsContainer.style.marginTop = "20px";
     controlsContainer.style.background = "#f8f9fa";
     controlsContainer.style.borderRadius = "8px";
@@ -707,7 +707,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Add Previous Frame button
     const prevButton = document.createElement("button");
     prevButton.innerText = "Previous Frame";
-    prevButton.style.padding = "10px 15px";
+    prevButton.style.padding = "7px 12px";
     prevButton.style.background = "#5f6368";
     prevButton.style.color = "white";
     prevButton.style.border = "none";
@@ -725,7 +725,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Add Start/Play button
     const playButton = document.createElement("button");
     playButton.innerText = "Play All Frames";
-    playButton.style.padding = "10px 15px";
+    playButton.style.padding = "7px 12px";
     playButton.style.background = "#4285f4";
     playButton.style.color = "white";
     playButton.style.border = "none";
@@ -741,7 +741,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Add Next Frame button
     const nextButton = document.createElement("button");
     nextButton.innerText = "Next Frame";
-    nextButton.style.padding = "10px 15px";
+    nextButton.style.padding = "7px 12px";
     nextButton.style.background = "#5f6368";
     nextButton.style.color = "white";
     nextButton.style.border = "none";
@@ -759,7 +759,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Add Replay Current button
     const replayCurrentButton = document.createElement("button");
     replayCurrentButton.innerText = "Replay Current";
-    replayCurrentButton.style.padding = "10px 15px";
+    replayCurrentButton.style.padding = "7px 12px";
     replayCurrentButton.style.background = "#34a853";
     replayCurrentButton.style.color = "white";
     replayCurrentButton.style.border = "none";
@@ -775,7 +775,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     // Add close button
     const closeButton = document.createElement("button");
     closeButton.innerText = "Exit Preview";
-    closeButton.style.padding = "10px 15px";
+    closeButton.style.padding = "7px 12px";
     closeButton.style.background = "#ea4335";
     closeButton.style.color = "white";
     closeButton.style.border = "none";
@@ -1259,8 +1259,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     </h3>
                     <ol className="text-sm text-gray-700 space-y-1 pl-5 list-decimal">
                       <li>
-                        Use your own screen recording tool (e.g., OBS,
-                        QuickTime, etc.)
+                        Use your own screen recording tool (e.g., QuickTime,
+                        OBS, etc.)
                       </li>
                       <li>
                         Position your recording window to capture the animation
