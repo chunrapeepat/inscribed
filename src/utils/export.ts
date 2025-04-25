@@ -489,3 +489,129 @@ export const exportToPdf = async ({
     throw error;
   }
 };
+
+interface ExportVideoOptions {
+  fileName: string;
+  frameDelay: number;
+  onProgress?: (progress: number) => void;
+}
+
+export const exportToVideo = async ({
+  fileName,
+  frameDelay,
+  onProgress,
+}: ExportVideoOptions): Promise<string | void> => {
+  const state = useDocumentStore.getState();
+  const { slides, backgroundColor, documentSize } = state;
+
+  try {
+    // Get all slide images
+    const imageUrls = await exportToImageUrls({
+      slides,
+      backgroundColor,
+      documentSize,
+      files: state.files,
+    });
+
+    if (onProgress) {
+      onProgress(10); // Image export complete
+    }
+
+    // Create a canvas element
+    const canvas = document.createElement("canvas");
+    canvas.width = documentSize.width;
+    canvas.height = documentSize.height;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Failed to get canvas context");
+    }
+
+    // Set up recorder with canvas stream
+    const stream = canvas.captureStream(30); // 30 FPS
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm;codecs=vp9",
+      videoBitsPerSecond: 5000000, // 5 Mbps
+    });
+
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+
+    // Start recording
+    recorder.start();
+
+    // Function to draw frames
+    const drawFrame = (index: number) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Update progress
+          if (onProgress) {
+            // Scale progress from 10-90% during frame rendering
+            const progress = 10 + (index / imageUrls.length) * 80;
+            onProgress(progress);
+          }
+
+          setTimeout(resolve, frameDelay); // Maintain frame delay
+        };
+        img.src = imageUrls[index];
+      });
+    };
+
+    // Process all frames
+    for (let i = 0; i < imageUrls.length; i++) {
+      await drawFrame(i);
+    }
+
+    // Stop recording and create video
+    return new Promise((resolve, reject) => {
+      recorder.onstop = () => {
+        try {
+          if (onProgress) onProgress(95); // Almost done
+
+          const blob = new Blob(chunks, { type: "video/mp4" });
+          const videoUrl = URL.createObjectURL(blob);
+
+          if (onProgress) onProgress(100); // Done
+
+          // If fileName is 'preview', return the URL
+          if (fileName === "preview") {
+            resolve(videoUrl);
+            return;
+          }
+
+          // Otherwise download the file
+          const link = document.createElement("a");
+          link.href = videoUrl;
+          link.download = fileName.endsWith(".mp4")
+            ? fileName
+            : `${fileName}.mp4`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Clean up
+          imageUrls.forEach(URL.revokeObjectURL);
+
+          // Only revoke the URL if not a preview
+          if (fileName !== "preview") {
+            URL.revokeObjectURL(videoUrl);
+          }
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      // Stop recording after all frames have been drawn
+      recorder.stop();
+    });
+  } catch (error) {
+    console.error("Error exporting to video:", error);
+    throw error;
+  }
+};

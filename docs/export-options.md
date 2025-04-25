@@ -23,6 +23,15 @@ Export all your slides as a multi-page PDF document. This is useful for:
 - Archiving your presentation in a standard document format
 - Including your presentation in reports or documentation
 
+### Export as Video
+
+Export your slides as an MP4 video with customizable frame timing. This is ideal for:
+
+- Presenting your slides as a video during conferences or meetings
+- Uploading to video platforms like YouTube or Vimeo
+- Embedding in websites or presentations that support video
+- Sharing on social media platforms that prioritize video content
+
 ### Embed Presentation
 
 Create an iframe embed code in **"presentation format"** to embed everywhere. Recommended for explaining something in a step-by-step presentation format.

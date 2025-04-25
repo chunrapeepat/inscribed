@@ -10,6 +10,7 @@ import {
   GistFileData,
   generateExportData,
   exportToPdf,
+  exportToVideo,
 } from "../utils/export";
 import { useDocumentStore } from "../store/document";
 import { useFontsStore } from "../store/custom-fonts";
@@ -47,6 +48,12 @@ const exportOptions = [
     title: "Export as PDF",
     description:
       "Create a PDF document with all your slides. Good for printing or sharing as documents.",
+  },
+  {
+    id: "video",
+    title: "Export as Video (MP4, WebM)",
+    description:
+      "Create an MP4 video of your slides. Good for presentations and sharing on video platforms.",
   },
   {
     id: "embed-presentation",
@@ -92,6 +99,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [previewGifUrl, setPreviewGifUrl] = useState<string | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewProgress, setPreviewProgress] = useState<number | null>(null);
+
+  // Video preview states
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
+  const [isGeneratingVideoPreview, setIsGeneratingVideoPreview] =
+    useState(false);
+  const [previewVideoProgress, setPreviewVideoProgress] = useState<
+    number | null
+  >(null);
 
   const { filename } = useDocumentStore();
 
@@ -140,6 +155,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setPreviewProgress(null);
     setIsGeneratingPreview(false);
 
+    // Clean up any video preview
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
+      setPreviewVideoUrl(null);
+    }
+    setPreviewVideoProgress(null);
+    setIsGeneratingVideoPreview(false);
+
     // Don't reset importedGistUrl here, as we want to persist it between modal openings
 
     onClose();
@@ -150,7 +173,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     if (
       (selectedOption === "export-data" ||
         selectedOption === "gif" ||
-        selectedOption === "pdf") &&
+        selectedOption === "pdf" ||
+        selectedOption === "video") &&
       !exportFileName.trim()
     )
       return;
@@ -162,7 +186,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       !gistId.trim()
     )
       return;
-    if (selectedOption === "gif" && (!frameDelay || parseInt(frameDelay) < 1))
+    if (
+      (selectedOption === "gif" || selectedOption === "video") &&
+      (!frameDelay || parseInt(frameDelay) < 1)
+    )
       return;
 
     try {
@@ -302,6 +329,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         setExportProgress(null);
         setSelectedOption(null);
         setExportFileName("");
+      } else if (selectedOption === "video") {
+        setExportProgress(0);
+        await exportToVideo({
+          fileName: exportFileName,
+          frameDelay: parseInt(frameDelay),
+          onProgress: (progress) => setExportProgress(progress),
+        });
+        setExportProgress(null);
+        setSelectedOption(null);
+        setExportFileName("");
+        setFrameDelay("100");
       } else if (
         selectedOption === "embed-presentation" ||
         selectedOption === "embed-slider-template" ||
@@ -482,6 +520,35 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     } finally {
       setIsGeneratingPreview(false);
       setPreviewProgress(null);
+    }
+  };
+
+  // Function to generate a preview Video
+  const handlePreviewVideo = async () => {
+    // Clear any existing preview
+    if (previewVideoUrl) {
+      URL.revokeObjectURL(previewVideoUrl);
+      setPreviewVideoUrl(null);
+    }
+
+    setIsGeneratingVideoPreview(true);
+    setPreviewVideoProgress(0);
+
+    try {
+      // Use the existing exportToVideo function with 'preview' as the filename
+      // to indicate we want to get the URL rather than download
+      const url = (await exportToVideo({
+        fileName: "preview",
+        frameDelay: parseInt(frameDelay) || 100,
+        onProgress: (progress) => setPreviewVideoProgress(progress),
+      })) as string;
+
+      setPreviewVideoUrl(url);
+    } catch (error) {
+      console.error("Error generating preview Video:", error);
+    } finally {
+      setIsGeneratingVideoPreview(false);
+      setPreviewVideoProgress(null);
     }
   };
 
@@ -794,6 +861,107 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </form>
               )}
 
+              {selectedOption === "video" && (
+                <form
+                  onSubmit={handleSubmit}
+                  className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="videoFileName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Video File Name
+                    </label>
+                    <input
+                      type="text"
+                      id="videoFileName"
+                      value={exportFileName}
+                      onChange={(e) => setExportFileName(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter file name (.mp4)"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <label
+                        htmlFor="videoFrameDelay"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Frame Delay (ms)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePreviewVideo}
+                        disabled={isGeneratingVideoPreview}
+                        className="text-blue-600 hover:text-blue-800 space-x-1 text-sm"
+                      >
+                        <span>(preview video)</span>
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      id="videoFrameDelay"
+                      value={frameDelay}
+                      onChange={(e) => setFrameDelay(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter delay in milliseconds"
+                      min="1"
+                      required
+                    />
+                  </div>
+
+                  {/* Preview Video Progress */}
+                  {isGeneratingVideoPreview &&
+                    previewVideoProgress !== null && (
+                      <div className="mt-2">
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-300"
+                            style={{ width: `${previewVideoProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1 text-center">
+                          Generating preview: {Math.round(previewVideoProgress)}
+                          %
+                        </p>
+                      </div>
+                    )}
+
+                  {/* Preview Video Display */}
+                  {previewVideoUrl && (
+                    <div className="mt-2 border rounded-lg p-2">
+                      <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                      <div className="flex justify-center">
+                        <video
+                          src={previewVideoUrl}
+                          controls
+                          autoPlay
+                          loop
+                          className="max-h-64 max-w-full object-contain rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Export Progress */}
+                  {exportProgress !== null && (
+                    <div className="mt-2">
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 transition-all duration-300"
+                          style={{ width: `${exportProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 text-center">
+                        Generating Video: {Math.round(exportProgress)}%
+                      </p>
+                    </div>
+                  )}
+                </form>
+              )}
+
               {(selectedOption === "embed-presentation" ||
                 selectedOption === "embed-slider-template" ||
                 selectedOption === "get-shareable-link") && (
@@ -953,6 +1121,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
                 (selectedOption === "pdf" && !exportFileName.trim()) ||
+                (selectedOption === "video" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link" ||
@@ -969,6 +1141,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     parseInt(frameDelay) < 1)
                 ) &&
                 !(selectedOption === "pdf" && !exportFileName.trim()) &&
+                !(
+                  selectedOption === "video" &&
+                  (!exportFileName.trim() ||
+                    !frameDelay ||
+                    parseInt(frameDelay) < 1)
+                ) &&
                 !(
                   (selectedOption === "embed-presentation" ||
                     selectedOption === "embed-slider-template" ||
