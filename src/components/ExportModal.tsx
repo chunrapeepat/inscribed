@@ -183,8 +183,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       (selectedOption === "export-data" ||
         selectedOption === "gif" ||
         selectedOption === "pdf" ||
-        selectedOption === "video" ||
-        selectedOption === "hand-drawn-video") &&
+        selectedOption === "video") &&
       !exportFileName.trim()
     )
       return;
@@ -1450,8 +1449,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)) ||
-                (selectedOption === "hand-drawn-video" &&
-                  !exportFileName.trim()) ||
                 ((selectedOption === "embed-presentation" ||
                   selectedOption === "embed-slider-template" ||
                   selectedOption === "get-shareable-link" ||
@@ -1473,10 +1470,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   (!exportFileName.trim() ||
                     !frameDelay ||
                     parseInt(frameDelay) < 1)
-                ) &&
-                !(
-                  selectedOption === "hand-drawn-video" &&
-                  !exportFileName.trim()
                 ) &&
                 !(
                   (selectedOption === "embed-presentation" ||
