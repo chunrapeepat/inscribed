@@ -714,7 +714,6 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
 
   // Variables to track current state
   let currentFrameIndex = 0;
-  let isPlaying = true;
   let animationTimer: number | null = null;
 
   // Create container for SVG display - make it fullscreen
@@ -724,86 +723,18 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
 
   // Create a wrapper for the SVG to help with centering
   const svgWrapper = document.createElement("div");
-  svgWrapper.style = `flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%;`;
+  svgWrapper.style = `flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; transform: translateY(calc(-2.5vh + 0.5rem));`;
   svgContainer.appendChild(svgWrapper);
-
-  // Create frame counter display
-  const frameCounter = document.createElement("div");
-  frameCounter.style = `position: absolute; top: 15px; right: 25px; color: black; font-size: 16px;`;
-  frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
-    svgElements.length
-  }`;
-  svgContainer.appendChild(frameCounter);
-
-  // Function to display a specific SVG frame
-  const displayFrame = (frameIndex: number) => {
-    // Clear any existing animation timer
-    if (animationTimer !== null) {
-      window.clearTimeout(animationTimer);
-      animationTimer = null;
-    }
-
-    // Update current frame index
-    currentFrameIndex = frameIndex;
-    frameCounter.textContent = `Frame: ${currentFrameIndex + 1}/${
-      svgElements.length
-    }`;
-
-    // Clear the wrapper
-    svgWrapper.innerHTML = "";
-
-    // Clone the SVG for this frame
-    const svgClone = svgElements[frameIndex].cloneNode(true) as SVGSVGElement;
-    svgClone.id = "hand-drawn-preview-svg";
-
-    // Style the SVG element - larger size for recording
-    svgClone.style.display = "block";
-    svgClone.style.maxWidth = "100%";
-    svgClone.style.maxHeight = "80vh";
-
-    // Add the SVG to wrapper
-    svgWrapper.appendChild(svgClone);
-
-    // Find all animations in the SVG to determine when they end
-    const animations = svgClone.querySelectorAll(
-      "animate, animateTransform, animateMotion"
-    );
-
-    // If playing and there are more frames, schedule the next frame
-    if (isPlaying && frameIndex < svgElements.length - 1) {
-      // Find the max duration of animations in current frame
-      let maxDuration = 0;
-      animations.forEach((anim: Element) => {
-        const dur = anim.getAttribute("dur");
-        if (dur) {
-          // Parse the duration (usually in seconds, like "2s")
-          const seconds = parseFloat(dur.replace("s", ""));
-          if (!isNaN(seconds)) {
-            maxDuration = Math.max(maxDuration, seconds * 1000);
-          }
-        }
-      });
-
-      // If no animation duration found, use default
-      const frameDuration = maxDuration > 0 ? maxDuration : 2000;
-
-      // Schedule next frame
-      animationTimer = window.setTimeout(() => {
-        displayFrame(frameIndex + 1);
-      }, frameDuration + 100); // Add slight buffer to ensure animations complete
-    }
-  };
 
   // Create controls container
   const controlsContainer = document.createElement("div");
-  controlsContainer.style = `display: flex; gap: 10px; padding: 7px; margin-top: 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);`;
+  controlsContainer.style = `display: flex; gap: 10px; padding: 7px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);`;
 
   // Add Previous Frame button
   const prevButton = document.createElement("button");
-  prevButton.style = `padding: 7px 12px; background: #5f6368; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
+  prevButton.style = `padding: 3px 7px; background: #5f6368; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
   prevButton.innerText = "Previous Frame";
   prevButton.onclick = () => {
-    isPlaying = false; // Stop auto-playback
     if (currentFrameIndex > 0) {
       displayFrame(currentFrameIndex - 1);
     }
@@ -812,10 +743,9 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
 
   // Add Next Frame button
   const nextButton = document.createElement("button");
-  nextButton.style = `padding: 7px 12px; background: #5f6368; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
+  nextButton.style = `padding: 3px 7px; background: #5f6368; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
   nextButton.innerText = "Next Frame";
   nextButton.onclick = () => {
-    isPlaying = false; // Stop auto-playback
     if (currentFrameIndex < svgElements.length - 1) {
       displayFrame(currentFrameIndex + 1);
     }
@@ -824,10 +754,9 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
 
   // Add Replay Current button
   const replayCurrentButton = document.createElement("button");
-  replayCurrentButton.style = `padding: 7px 12px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
+  replayCurrentButton.style = `padding: 3px 7px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
   replayCurrentButton.innerText = "Replay Current";
   replayCurrentButton.onclick = () => {
-    isPlaying = false; // Stop auto-playback
     displayFrame(currentFrameIndex); // Replay current frame
   };
   controlsContainer.appendChild(replayCurrentButton);
@@ -835,7 +764,7 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
   // Add close button
   const closeButton = document.createElement("button");
   closeButton.innerText = "Exit Preview";
-  closeButton.style = `padding: 7px 12px; background: #ea4335; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
+  closeButton.style = `padding: 3px 7px; background: #ea4335; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
   closeButton.onclick = () => {
     // Clear any timer before removing
     if (animationTimer !== null) {
@@ -853,4 +782,29 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
 
   // Start displaying frames
   displayFrame(0);
+
+  // Function to display a specific SVG frame
+  function displayFrame(frameIndex: number) {
+    if (animationTimer !== null) {
+      window.clearTimeout(animationTimer);
+      animationTimer = null;
+    }
+
+    currentFrameIndex = frameIndex;
+
+    // Clear the wrapper
+    svgWrapper.innerHTML = "";
+
+    // Clone the SVG for this frame
+    const svgClone = svgElements[frameIndex].cloneNode(true) as SVGSVGElement;
+    svgClone.id = "hand-drawn-preview-svg";
+
+    // Style the SVG element - larger size for recording
+    svgClone.style.display = "block";
+    svgClone.style.maxWidth = "100%";
+    svgClone.style.maxHeight = "90vh";
+
+    // Add the SVG to wrapper
+    svgWrapper.appendChild(svgClone);
+  }
 };
