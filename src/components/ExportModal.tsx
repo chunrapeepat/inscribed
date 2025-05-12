@@ -54,7 +54,7 @@ const exportOptions = [
     id: "video",
     title: "Export as Video (WebM)",
     description:
-      "Create an MP4 video of your slides. Good for presentations and sharing on video platforms.",
+      "Create a WebM video of your slides. Good for presentations and sharing on video platforms.",
   },
   {
     id: "hand-drawn-video",
@@ -1190,7 +1190,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       value={exportFileName}
                       onChange={(e) => setExportFileName(e.target.value)}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="Enter file name (.mp4)"
+                      placeholder="Enter file name (.webm)"
                       required
                     />
                   </div>

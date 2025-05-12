@@ -663,7 +663,7 @@ export const exportToVideo = async ({
         try {
           if (onProgress) onProgress(95); // Almost done
 
-          const blob = new Blob(chunks, { type: "video/mp4" });
+          const blob = new Blob(chunks, { type: "video/webm" });
           const videoUrl = URL.createObjectURL(blob);
 
           if (onProgress) onProgress(100); // Done
@@ -677,9 +677,9 @@ export const exportToVideo = async ({
           // Otherwise download the file
           const link = document.createElement("a");
           link.href = videoUrl;
-          link.download = fileName.endsWith(".mp4")
+          link.download = fileName.endsWith(".webm")
             ? fileName
-            : `${fileName}.mp4`;
+            : `${fileName}.webm`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
