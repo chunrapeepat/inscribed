@@ -97,6 +97,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   const [exportProgress, setExportProgress] = React.useState<number | null>(
     null
   );
+  const [exportScale, setExportScale] = React.useState<number>(1);
   const [showEmbedCode, setShowEmbedCode] = useState(false);
   const [embedCode, setEmbedCode] = useState("");
   const [gistFiles, setGistFiles] = useState<GistFileData[]>([]);
@@ -330,6 +331,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           fileName: exportFileName,
           frameDelay: parseInt(frameDelay),
           onProgress: (progress) => setExportProgress(progress),
+          scale: exportScale,
         });
         setExportProgress(null);
         setSelectedOption(null);
@@ -357,6 +359,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         await exportToPdf({
           fileName: exportFileName,
           onProgress: (progress) => setExportProgress(progress),
+          scale: exportScale,
         });
         setExportProgress(null);
         setSelectedOption(null);
@@ -369,6 +372,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           loopToReachDuration: loopVideo,
           durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
           onProgress: (progress) => setExportProgress(progress),
+          scale: exportScale,
         });
         setExportProgress(null);
         setSelectedOption(null);
@@ -546,6 +550,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         fileName: "preview",
         frameDelay: parseInt(frameDelay) || 100,
         onProgress: (progress) => setPreviewProgress(progress),
+        scale: exportScale,
       })) as string;
 
       setPreviewGifUrl(url);
@@ -577,6 +582,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         loopToReachDuration: loopVideo,
         durationInSeconds: loopVideo ? parseInt(videoDuration) : undefined,
         onProgress: (progress) => setPreviewVideoProgress(progress),
+        scale: exportScale,
       })) as string;
 
       setPreviewVideoUrl(url);
@@ -1024,6 +1030,34 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                   </div>
 
+                  <div>
+                    <label
+                      htmlFor="gifResolution"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Resolution
+                    </label>
+                    <div className="mt-1 flex space-x-4">
+                      {[1, 2, 3].map((scale) => (
+                        <label key={scale} className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            className="form-radio h-4 w-4 text-blue-600"
+                            checked={exportScale === scale}
+                            onChange={() => setExportScale(scale)}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {scale}x
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Higher resolution results in larger file size but better
+                      quality.
+                    </p>
+                  </div>
+
                   {/* Preview GIF Progress */}
                   {isGeneratingPreview && previewProgress !== null && (
                     <div className="mt-2">
@@ -1093,6 +1127,34 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     />
                   </div>
 
+                  <div>
+                    <label
+                      htmlFor="pdfResolution"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Resolution
+                    </label>
+                    <div className="mt-1 flex space-x-4">
+                      {[1, 2, 3].map((scale) => (
+                        <label key={scale} className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            className="form-radio h-4 w-4 text-blue-600"
+                            checked={exportScale === scale}
+                            onChange={() => setExportScale(scale)}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {scale}x
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Higher resolution results in larger file size but better
+                      quality.
+                    </p>
+                  </div>
+
                   {/* Export Progress */}
                   {exportProgress !== null && (
                     <div className="mt-2">
@@ -1159,6 +1221,34 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       min="1"
                       required
                     />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="videoResolution"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Resolution
+                    </label>
+                    <div className="mt-1 flex space-x-4">
+                      {[1, 2, 3].map((scale) => (
+                        <label key={scale} className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            className="form-radio h-4 w-4 text-blue-600"
+                            checked={exportScale === scale}
+                            onChange={() => setExportScale(scale)}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {scale}x
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Higher resolution results in larger file size but better
+                      quality.
+                    </p>
                   </div>
 
                   <div className="flex items-center">

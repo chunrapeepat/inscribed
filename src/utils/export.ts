@@ -35,7 +35,10 @@ export const exportToHandDrawnSVG = async (): Promise<SVGSVGElement[]> => {
         files: files,
       });
 
-      const { finishedMs } = animateSvg(svg, elements as unknown as any);
+      // The animateSvg function expects a specific format of elements
+      // Using 'any' type here due to version/type mismatches between excalidraw and excalidraw-animate
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { finishedMs } = animateSvg(svg, elements as any);
       return { svg, finishedMs };
     })
   );
@@ -44,7 +47,8 @@ export const exportToHandDrawnSVG = async (): Promise<SVGSVGElement[]> => {
 };
 
 export const exportToImageUrls = async (
-  data: ExportData["document"]
+  data: ExportData["document"],
+  scale: number = 1
 ): Promise<string[]> => {
   const { slides, backgroundColor, documentSize, files } = data;
 
@@ -69,9 +73,11 @@ export const exportToImageUrls = async (
       },
       files,
       getDimensions: () => ({
-        width: documentSize.width,
-        height: documentSize.height,
+        width: documentSize.width * scale,
+        height: documentSize.height * scale,
+        scale,
       }),
+      quality: 1,
     });
 
     const url = URL.createObjectURL(blob);
@@ -85,12 +91,16 @@ interface ExportGifOptions {
   fileName: string;
   frameDelay: number;
   onProgress?: (progress: number) => void;
+  scale?: number;
 }
 export const exportToGif = async ({
   fileName,
   frameDelay,
   onProgress,
+  scale,
 }: ExportGifOptions): Promise<string | void> => {
+  if (!scale) scale = 1;
+
   const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize } = state;
 
@@ -103,12 +113,15 @@ export const exportToGif = async ({
   });
 
   try {
-    const imageUrls = await exportToImageUrls({
-      slides,
-      backgroundColor,
-      documentSize,
-      files: state.files,
-    });
+    const imageUrls = await exportToImageUrls(
+      {
+        slides,
+        backgroundColor,
+        documentSize,
+        files: state.files,
+      },
+      scale
+    );
 
     // Convert URLs to Images and add to GIF
     for (let i = 0; i < imageUrls.length; i++) {
@@ -468,12 +481,15 @@ export const generateExportData = (fileName: string) => {
 interface ExportPdfOptions {
   fileName: string;
   onProgress?: (progress: number) => void;
+  scale?: number;
 }
 
 export const exportToPdf = async ({
   fileName,
   onProgress,
+  scale,
 }: ExportPdfOptions): Promise<void> => {
+  if (!scale) scale = 1;
   const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize } = state;
 
@@ -488,12 +504,15 @@ export const exportToPdf = async ({
     });
 
     // Export each slide as an image and add to PDF
-    const imageUrls = await exportToImageUrls({
-      slides,
-      backgroundColor,
-      documentSize,
-      files: state.files,
-    });
+    const imageUrls = await exportToImageUrls(
+      {
+        slides,
+        backgroundColor,
+        documentSize,
+        files: state.files,
+      },
+      scale
+    );
 
     for (let i = 0; i < imageUrls.length; i++) {
       // Add a new page for each slide after the first one
@@ -536,6 +555,7 @@ interface ExportVideoOptions {
   loopToReachDuration?: boolean;
   durationInSeconds?: number;
   onProgress?: (progress: number) => void;
+  scale?: number;
 }
 
 export const exportToVideo = async ({
@@ -544,18 +564,23 @@ export const exportToVideo = async ({
   loopToReachDuration = false,
   durationInSeconds = 0,
   onProgress,
+  scale,
 }: ExportVideoOptions): Promise<string | void> => {
+  if (!scale) scale = 1;
   const state = useDocumentStore.getState();
   const { slides, backgroundColor, documentSize } = state;
 
   try {
     // Get all slide images
-    const imageUrls = await exportToImageUrls({
-      slides,
-      backgroundColor,
-      documentSize,
-      files: state.files,
-    });
+    const imageUrls = await exportToImageUrls(
+      {
+        slides,
+        backgroundColor,
+        documentSize,
+        files: state.files,
+      },
+      scale
+    );
 
     if (onProgress) {
       onProgress(10); // Image export complete
