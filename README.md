@@ -111,6 +111,8 @@ Then access the application at `http://localhost:<HOST_PORT>`.
 
 ## Changelog
 
+- [12/5/2025] [v1.1.1](https://github.com/chunrapeepat/inscribed/pull/47) - minor improvements for animation recording usecase
+
 - [25/4/2025] [v1.1.0](https://github.com/chunrapeepat/inscribed/pull/34) - export as video, integrate [excalidraw-animate](https://github.com/dai-shi/excalidraw-animate)
 
 - [24/4/2025] [v1.0.7](https://github.com/chunrapeepat/inscribed/pull/33) - fix all reported bugs on Github issues
