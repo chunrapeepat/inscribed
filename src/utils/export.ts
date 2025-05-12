@@ -710,7 +710,9 @@ export const exportToVideo = async ({
 // Function to display SVG animation preview
 export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
   const state = useDocumentStore.getState();
-  const { backgroundColor } = state;
+  const { backgroundColor, setHandDrawnPreviewOpen } = state;
+
+  setHandDrawnPreviewOpen(true);
 
   // Variables to track current state
   let currentFrameIndex = 0;
@@ -770,6 +772,7 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
     if (animationTimer !== null) {
       window.clearTimeout(animationTimer);
     }
+    setHandDrawnPreviewOpen(false);
     document.body.removeChild(svgContainer);
   };
   controlsContainer.appendChild(closeButton);
