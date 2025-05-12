@@ -51,15 +51,15 @@ const exportOptions = [
     description:
       "Create a PDF document with all your slides. Good for printing or sharing as documents.",
   },
-  {
-    id: "video",
-    title: "Export as Video (WebM)",
-    description:
-      "Create a WebM video of your slides. Good for presentations and sharing on video platforms.",
-  },
+  // {
+  //   id: "video",
+  //   title: "Export as Video (WebM)",
+  //   description:
+  //     "Create a WebM video of your slides. Good for presentations and sharing on video platforms.",
+  // },
   {
     id: "hand-drawn-video",
-    title: "Export as Hand Drawn Animation Video (Self recording)",
+    title: "Export as Hand Drawn Animation (Self recording)",
     description:
       "Create a video with hand-drawn animation effect for your social media posts or educational videos. Self-record and use it with your own video editing tools.",
   },

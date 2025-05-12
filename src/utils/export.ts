@@ -588,8 +588,8 @@ export const exportToVideo = async ({
 
     // Create a canvas element
     const canvas = document.createElement("canvas");
-    canvas.width = documentSize.width;
-    canvas.height = documentSize.height;
+    canvas.width = documentSize.width * scale;
+    canvas.height = documentSize.height * scale;
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
@@ -598,75 +598,89 @@ export const exportToVideo = async ({
 
     // Set up recorder with canvas stream
     const stream = canvas.captureStream(30); // 30 FPS
+    const mimeType = "video/webm;codecs=vp9";
+
+    // Check if this codec is supported
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      throw new Error(
+        "WebM with VP9 codec is not supported in this browser. Try using a different browser."
+      );
+    }
+
     const recorder = new MediaRecorder(stream, {
-      mimeType: "video/webm;codecs=vp9",
+      mimeType,
       videoBitsPerSecond: 5000000, // 5 Mbps
     });
 
     const chunks: Blob[] = [];
     recorder.ondataavailable = (e) => chunks.push(e.data);
 
-    // Start recording
-    recorder.start();
-
-    // Function to draw frames
-    const drawFrame = (index: number) => {
-      return new Promise<void>((resolve) => {
+    // Function to draw a frame and wait the specified delay
+    const drawFrame = (index: number): Promise<void> => {
+      return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
+          // Clear the canvas and draw the image
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          // Update progress
-          if (onProgress) {
-            // Scale progress from 10-90% during frame rendering
-            const progress = 10 + (index / imageUrls.length) * 80;
-            onProgress(progress);
-          }
-
-          setTimeout(resolve, frameDelay); // Maintain frame delay
+          // We need to wait for the frame delay before resolving
+          // This ensures proper timing in the video
+          setTimeout(resolve, frameDelay);
         };
         img.src = imageUrls[index];
       });
     };
 
-    // Calculate how many times to loop the slides
-    let totalLoops = 1;
+    // Start recording
+    recorder.start();
+    console.log("Started recording");
+
+    let iterations = 1;
+
+    // Calculate iterations needed if looping to reach duration
     if (loopToReachDuration && durationInSeconds > 0) {
-      // Calculate total duration of one loop in milliseconds
       const singleLoopDurationMs = imageUrls.length * frameDelay;
-      // Convert target duration to milliseconds
       const targetDurationMs = durationInSeconds * 1000;
-      // Calculate how many loops we need to reach target duration
-      totalLoops = Math.ceil(targetDurationMs / singleLoopDurationMs);
+      iterations = Math.max(
+        1,
+        Math.ceil(targetDurationMs / singleLoopDurationMs)
+      );
+      console.log(`Looping ${iterations} times to reach ${durationInSeconds}s`);
     }
 
-    // Process all frames with looping if needed
-    for (let loop = 0; loop < totalLoops; loop++) {
+    // Draw all frames with proper timing
+    for (let loop = 0; loop < iterations; loop++) {
       for (let i = 0; i < imageUrls.length; i++) {
         await drawFrame(i);
 
-        // Update progress to reflect current loop
-        if (onProgress && totalLoops > 1) {
-          const loopProgress =
-            (loop * imageUrls.length + i) / (totalLoops * imageUrls.length);
-          // Scale progress from 10-90% during frame rendering
-          const progress = 10 + loopProgress * 80;
-          onProgress(progress);
+        if (onProgress) {
+          const overallProgress =
+            (loop * imageUrls.length + i) / (iterations * imageUrls.length);
+          onProgress(10 + overallProgress * 80);
         }
+
+        console.log(
+          `Frame ${i + 1}/${imageUrls.length}, Loop ${loop + 1}/${iterations}`
+        );
       }
     }
+
+    console.log("Finished drawing frames, stopping recorder");
 
     // Stop recording and create video
     return new Promise((resolve, reject) => {
       recorder.onstop = () => {
         try {
-          if (onProgress) onProgress(95); // Almost done
+          if (onProgress) onProgress(95);
+          console.log("Recorder stopped, creating blob");
 
+          // Create a blob from the recorded chunks
           const blob = new Blob(chunks, { type: "video/webm" });
-          const videoUrl = URL.createObjectURL(blob);
+          console.log(`Created blob of size ${blob.size} bytes`);
 
-          if (onProgress) onProgress(100); // Done
+          const videoUrl = URL.createObjectURL(blob);
+          if (onProgress) onProgress(100);
 
           // If fileName is 'preview', return the URL
           if (fileName === "preview") {
@@ -681,6 +695,8 @@ export const exportToVideo = async ({
             ? fileName
             : `${fileName}.webm`;
           document.body.appendChild(link);
+
+          console.log(`Downloading video as ${link.download}`);
           link.click();
           document.body.removeChild(link);
 
@@ -694,12 +710,16 @@ export const exportToVideo = async ({
 
           resolve();
         } catch (error) {
+          console.error("Error in recorder.onstop:", error);
           reject(error);
         }
       };
 
-      // Stop recording after all frames have been drawn
-      recorder.stop();
+      // Add a short delay before stopping to ensure all frames are processed
+      setTimeout(() => {
+        console.log("Stopping recorder after delay");
+        recorder.stop();
+      }, 500);
     });
   } catch (error) {
     console.error("Error exporting to video:", error);
