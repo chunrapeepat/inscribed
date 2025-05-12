@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+dist
+node_modules
+.firebase
+.cursor
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+
+# Editor directories and files
+.vscode/*
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw? 

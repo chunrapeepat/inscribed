@@ -28,11 +28,46 @@ A slide-based tool for creating stop motion animations and slides with Excalidra
 
 ## Getting Started
 
+### Local Development
+
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/inscribed.git`
 3. Create a new branch: `git checkout -b feature/your-feature-name`
 4. Install dependencies: `pnpm install`
 5. Start the development server: `pnpm dev`
+
+### Using Docker
+
+#### Development
+
+```bash
+# Start the development server
+docker compose up dev
+
+# Or build and run in one command
+docker compose up dev --build
+```
+
+#### Production
+
+```bash
+# Build and start the production server
+docker compose up prod --build -d
+
+# Or use Docker directly
+docker build -t inscribed:latest .
+docker run -p 80:80 inscribed:latest
+```
+
+## Deployment
+
+### Self-Hosting with Docker
+
+1. Clone the repository: `git clone https://github.com/chunrapeepat/inscribed.git`
+2. Build the Docker image: `docker build -t inscribed:latest .`
+3. Run the container: `docker run -d -p 80:80 inscribed:latest`
+
+The application will be available at `http://localhost` or your server's IP/domain.
 
 ## Changelog
 
