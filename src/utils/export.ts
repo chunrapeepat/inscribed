@@ -746,7 +746,7 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
   // Add Next Frame button
   const nextButton = document.createElement("button");
   nextButton.style = `padding: 3px 7px; background: #5f6368; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
-  nextButton.innerText = "Next Frame";
+  nextButton.innerText = `Next Frame`;
   nextButton.onclick = () => {
     if (currentFrameIndex < svgElements.length - 1) {
       displayFrame(currentFrameIndex + 1);
@@ -757,7 +757,9 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
   // Add Replay Current button
   const replayCurrentButton = document.createElement("button");
   replayCurrentButton.style = `padding: 3px 7px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;`;
-  replayCurrentButton.innerText = "Replay Current";
+  replayCurrentButton.innerText = `Replay Current (Frame: ${
+    currentFrameIndex + 1
+  }/${svgElements.length})`;
   replayCurrentButton.onclick = () => {
     displayFrame(currentFrameIndex); // Replay current frame
   };
@@ -794,6 +796,9 @@ export const displayHandDrawnPreview = (svgElements: SVGSVGElement[]) => {
     }
 
     currentFrameIndex = frameIndex;
+    replayCurrentButton.innerText = `Replay Current (Frame: ${
+      currentFrameIndex + 1
+    }/${svgElements.length})`;
 
     // Clear the wrapper
     svgWrapper.innerHTML = "";
