@@ -48,6 +48,20 @@ docker compose up dev
 docker compose up dev --build
 ```
 
+After running either of these commands, open your browser and navigate to:
+
+```
+http://localhost:5173
+```
+
+To use a different port (e.g., 3000), change the first number in the port mapping in docker-compose.yml:
+
+```bash
+# Edit the docker-compose.yml file, changing "5173:5173" to "3000:5173"
+```
+
+Then access the development server at `http://localhost:<HOST_PORT>`.
+
 #### Production
 
 ```bash
@@ -56,7 +70,23 @@ docker compose up prod --build -d
 
 # Or use Docker directly
 docker build -t inscribed:latest .
-docker run -p 80:80 inscribed:latest
+docker run -p 8888:80 inscribed:latest
+```
+
+After running either of these commands, open your browser and navigate to:
+
+```
+http://localhost:8888
+```
+
+To use a different port (e.g., 3000), change the first number in the port mapping:
+
+```bash
+# Using docker-compose
+# Edit the docker-compose.yml file, changing "8888:80" to "3000:80"
+
+# Using Docker directly
+docker run -p 3000:80 inscribed:latest
 ```
 
 ## Deployment
@@ -65,9 +95,19 @@ docker run -p 80:80 inscribed:latest
 
 1. Clone the repository: `git clone https://github.com/chunrapeepat/inscribed.git`
 2. Build the Docker image: `docker build -t inscribed:latest .`
-3. Run the container: `docker run -d -p 80:80 inscribed:latest`
+3. Run the container: `docker run -d -p 8888:80 inscribed:latest`
 
-The application will be available at `http://localhost` or your server's IP/domain.
+The application will be available at `http://localhost:8888` or your server's IP/domain on port 8888.
+
+To customize the port, change the host port mapping in the docker run command:
+
+```bash
+# Format: docker run -d -p <HOST_PORT>:80 inscribed:latest
+# Example for port 9000:
+docker run -d -p 9000:80 inscribed:latest
+```
+
+Then access the application at `http://localhost:<HOST_PORT>`.
 
 ## Changelog
 
