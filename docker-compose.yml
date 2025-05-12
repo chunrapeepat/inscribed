@@ -1,0 +1,23 @@
+services:
+  # Development service
+  dev:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    command: pnpm dev --host
+
+  # Production service
+  prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8888:80"
+    restart: unless-stopped

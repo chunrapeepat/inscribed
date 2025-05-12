@@ -13,6 +13,7 @@ interface DocumentState {
   _initialized: boolean;
   _isSidebarCollapsed: boolean;
   _isSlideListFocused: boolean;
+  _isHandDrawnPreviewOpen: boolean;
 
   filename?: string;
   backgroundColor: string;
@@ -40,6 +41,7 @@ interface DocumentState {
   resetStore: (data: ExportData["document"]) => void;
   toggleSidebar: () => void;
   getSidebarCollapsed: () => boolean;
+  setHandDrawnPreviewOpen: (isOpen: boolean) => void;
 }
 
 export const DEFAULT_FRAME_WIDTH = 1080;
@@ -104,6 +106,7 @@ export const useDocumentStore = create<DocumentState>()(
       _initialized: false,
       _isSidebarCollapsed: false,
       _isSlideListFocused: false,
+      _isHandDrawnPreviewOpen: false,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
       slides: [
         {
@@ -254,6 +257,8 @@ export const useDocumentStore = create<DocumentState>()(
         }),
       toggleSidebar: () =>
         set((state) => ({ _isSidebarCollapsed: !state._isSidebarCollapsed })),
+      setHandDrawnPreviewOpen: (isOpen: boolean) =>
+        set(() => ({ _isHandDrawnPreviewOpen: isOpen })),
       getSidebarCollapsed: () => get()._isSidebarCollapsed,
     }),
     {

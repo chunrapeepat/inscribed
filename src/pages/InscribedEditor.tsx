@@ -10,7 +10,7 @@ import {
 import { useDocumentStore } from "../store/document";
 
 export const InscribedEditor: React.FC = () => {
-  const { filename } = useDocumentStore();
+  const { filename, _isHandDrawnPreviewOpen } = useDocumentStore();
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
   const [showAboutOverlay, setShowAboutOverlay] = useState(() => {
     // Check if user has visited before
@@ -64,6 +64,8 @@ export const InscribedEditor: React.FC = () => {
 
   // Custom save shortcut: ctrl/cmd + s triggers the save function.
   useEffect(() => {
+    if (_isHandDrawnPreviewOpen) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
@@ -76,7 +78,7 @@ export const InscribedEditor: React.FC = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [filename]);
+  }, [filename, _isHandDrawnPreviewOpen]);
 
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
